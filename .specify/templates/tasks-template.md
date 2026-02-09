@@ -18,6 +18,17 @@ description: "Task list template for feature implementation"
 - **[Story]**: Which user story this task belongs to (e.g., US1, US2, US3)
 - Include exact file paths in descriptions
 
+## Constitution-Aware Task Types
+
+작업 계획 시 헌법 원칙을 반영하세요:
+
+- **SSOT 작업**: 중복 설정 통합, 단일 소스 참조 구현
+- **Type-Safety 작업**: 타입 정의, 인터페이스 작성, strict mode 활성화
+- **Boundaries 작업**: 모듈 인터페이스 정의, 의존성 주입 설정
+- **Local-First 작업**: 모킹 설정, 로컬 개발 환경 구축
+- **Cost-Aware 작업**: 캐싱 구현, 배치 처리, API 호출 최소화
+- **Spec-Before-Code**: 각 작업은 spec.md의 요구사항에 대응되어야 함
+
 ## Path Conventions
 
 - **Single project**: `src/`, `tests/` at repository root
