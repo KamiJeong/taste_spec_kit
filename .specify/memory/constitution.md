@@ -1,50 +1,250 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+---
 
-## Core Principles
+============================================================================
+동기화 영향 보고서 (Sync Impact Report)
+============================================================================
+  
+버전 변경: 없음 → 1.0.0
+  
+수정된 원칙:
+- 8개 핵심 원칙 추가 (SSOT, Overrides-Only, Pinned-Stack, Local-First,
+  Cost-Aware, Boundaries, Type-Safety, Spec-Before-Code)
+  
+추가된 섹션:
+- 모든 핵심 원칙 섹션
+- 기술 스택 참조 섹션
+- 개발 워크플로우 섹션
+- 거버넌스 섹션
+  
+제거된 섹션: 없음
+  
+템플릿 업데이트 상태:
+- ✅ .specify/templates/plan-template.md (헌법 체크 섹션 업데이트)
+- ✅ .specify/templates/spec-template.md (명세 요구사항 정렬)
+- ✅ .specify/templates/tasks-template.md (작업 분류 정렬)
+- ✅ specs/00-tech-stack.md (생성됨 - SSOT 기준 문서)
+  
+후속 작업:
+- 없음 (모든 필수 업데이트 완료)
+  
+============================================================================
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+---
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+# taste_spec_kit 프로젝트 헌법
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+## 핵심 원칙 (Core Principles)
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### I. SSOT (Single Source of Truth) - 단일 진실 공급원
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+**원칙**: 모든 설정, 구성, 데이터는 반드시 **단일 출처**를 가져야 합니다.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+**규칙**:
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+- 동일한 정보를 여러 파일에 중복 정의하는 것을 **금지**합니다
+- 모든 기술 스택 결정은 `specs/00-tech-stack.md`에 **반드시** 명시되어야 합니다
+- 환경 변수, 설정값은 단일 소스에서 관리하고 다른 곳에서 참조만 합니다
+- 중복이 발견되면 즉시 통합하고 단일 소스로 리팩토링해야 합니다
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+**근거**: 중복된 정보는 불일치를 초래하고, 유지보수 비용을 증가시키며, 버그의 원인이 됩니다. SSOT는 일관성을 보장하고 변경의 영향 범위를 명확히 합니다.
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+**테스트 가능성**: 동일한 정보가 2개 이상의 위치에 존재하는지 자동 검증 가능
 
-## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
+---
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+### II. Overrides-Only - 재정의 최소화
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**원칙**: 기본값(defaults)을 최대한 상속하고, **필요한 경우에만** 재정의합니다.
+
+**규칙**:
+
+- 전체 설정 파일을 복사하는 것을 **금지**합니다
+- 기본 설정/구성을 정의하고, 프로젝트별/환경별로 차이만 오버라이드합니다
+- 오버라이드하는 모든 값에는 **이유를 주석으로 명시**해야 합니다
+- 기본값 변경 시 모든 오버라이드 검토 필요
+
+**근거**: 전체 복사는 기본값 변경 시 모든 사본을 수동으로 업데이트해야 하는 유지보수 악몽을 만듭니다. 오버라이드 방식은 변경 범위를 최소화하고 기본값의 개선이 자동으로 전파됩니다.
+
+**테스트 가능성**: 오버라이드 없이 동일한 설정이 복사된 파일을 자동 탐지 가능
+
+---
+
+### III. Pinned-Stack - 고정된 기술 스택
+
+**원칙**: 모든 기술 스택 결정은 `specs/00-tech-stack.md`에 **버전과 함께 고정**되어야 합니다.
+
+**규칙**:
+
+- 모든 의존성은 **명시적 버전 범위**를 지정해야 합니다 (예: `5.3.x`, `^14.0.0`)
+- `latest`, `*` 버전 태그 사용을 **금지**합니다
+- 새 라이브러리/프레임워크 도입 전 `specs/00-tech-stack.md` 업데이트 **필수**
+- 버전 업그레이드는 문서화된 프로세스를 따라야 합니다
+
+**근거**: 버전 고정 없이는 재현 가능한(reproducible) 빌드가 불가능합니다. 예기치 않은 의존성 업데이트는 프로덕션 장애를 유발할 수 있습니다. 명시적 버전 관리는 안정성과 예측 가능성을 보장합니다.
+
+**테스트 가능성**: 모든 의존성 파일에서 버전 미지정 패키지 자동 검출 가능
+
+---
+
+### IV. Local-First - 로컬 우선 개발
+
+**원칙**: 모든 개발 도구와 워크플로우는 **네트워크 연결 없이도** 작동해야 합니다.
+
+**규칙**:
+
+- 로컬 환경에서 **모든 테스트**가 실행 가능해야 합니다
+- 외부 API 의존성은 로컬 모킹/스텁 제공 **필수**
+- 문서는 로컬에서 읽고 편집 가능해야 합니다 (Markdown 우선)
+- 데이터베이스는 로컬 인스턴스 또는 인메모리 대안 제공 필수
+
+**근거**: 네트워크 의존성은 개발 속도를 저하시키고, 비용을 증가시키며, 외부 서비스 장애 시 생산성을 완전히 차단합니다. 로컬 우선 접근은 개발자 경험과 생산성을 극대화합니다.
+
+**테스트 가능성**: 네트워크 차단 상태에서 테스트 스위트 실행 성공 여부로 검증
+
+---
+
+### V. Cost-Aware - 비용 인지 설계
+
+**원칙**: 모든 설계 결정은 **비용 영향**을 고려해야 합니다.
+
+**규칙**:
+
+- API 호출 횟수를 최소화해야 합니다 (배치, 캐싱, 로컬 우선)
+- 대용량 데이터 처리는 스트리밍 또는 청크 방식 **필수**
+- 클라우드 리소스 사용 시 비용 추정 **필수**
+- 무료 티어 한도를 명시하고 모니터링해야 합니다
+
+**근거**: 비용을 고려하지 않은 설계는 확장 시 예산 폭발로 이어집니다. 특히 AI API, 클라우드 저장소, 데이터베이스 읽기/쓰기는 급격한 비용 증가의 주범입니다. 설계 단계에서 비용을 고려하면 리팩토링 비용을 절감할 수 있습니다.
+
+**테스트 가능성**: 단위 테스트에서 외부 API 호출 횟수 측정 및 임계값 검증 가능
+
+---
+
+### VI. Boundaries - 명확한 경계
+
+**원칙**: 모듈, 컴포넌트, 서비스 간 **명확한 책임 경계**를 설정해야 합니다.
+
+**규칙**:
+
+- 각 모듈은 **단일 책임**을 가져야 합니다 (Single Responsibility Principle)
+- 모듈 간 의존성은 **명시적 인터페이스**를 통해서만 가능합니다
+- 순환 의존성(circular dependency)을 **금지**합니다
+- 경계를 넘는 데이터는 **검증(validation)** 필수
+
+**근거**: 불명확한 경계는 스파게티 코드, 테스트 불가능한 구조, 변경의 파급 효과 예측 불가를 초래합니다. 명확한 경계는 모듈 독립성, 테스트 용이성, 재사용성을 보장합니다.
+
+**테스트 가능성**: 정적 분석 도구로 순환 의존성 자동 검출 가능
+
+---
+
+### VII. Type-Safety - 타입 안전성
+
+**원칙**: **가능한 모든 곳**에서 정적 타입을 사용해야 합니다.
+
+**규칙**:
+
+- TypeScript strict mode **필수** (`"strict": true`)
+- Python 코드는 타입 힌트 작성 및 mypy 검증 **필수**
+- `any`, `unknown` 사용 시 **정당화 주석** 필수
+- API 경계(request/response)는 **명시적 타입 정의** 필수
+
+**근거**: 타입 시스템은 컴파일 타임에 대부분의 버그를 사전 차단합니다. 동적 타입은 런타임 에러, 리팩토링 어려움, IDE 지원 부족으로 이어집니다. 타입 안전성은 코드 품질과 개발 속도를 모두 향상시킵니다.
+
+**테스트 가능성**: 타입 체커(tsc, mypy) 실행으로 위반 사항 자동 검출 가능
+
+---
+
+### VIII. Spec-Before-Code - 명세 우선 (NON-NEGOTIABLE)
+
+**원칙**: **코드 작성 전** 반드시 명세(specification)를 작성해야 합니다.
+
+**규칙**:
+
+- 모든 기능은 `specs/[###-feature-name]/spec.md` 작성으로 시작합니다
+- 명세에는 **사용자 시나리오**, **수락 기준**, **비기능 요구사항**이 포함되어야 합니다
+- 명세 승인 없이 구현을 시작하는 것을 **금지**합니다
+- 구현 중 명세 변경은 **문서 업데이트 후** 진행해야 합니다
+
+**근거**: 명세 없이 코드를 작성하면 요구사항 불일치, 범위 확장(scope creep), 재작업이 발생합니다. 명세는 구현 전 요구사항을 명확히 하고, 이해관계자 승인을 받으며, 테스트 기준을 제공합니다. 이는 프로젝트 실패율을 극적으로 낮춥니다.
+
+**테스트 가능성**: PR 체크리스트에서 대응되는 spec.md 존재 여부 검증 가능
+
+---
+
+## 기술 스택 참조 (Tech Stack Reference)
+
+모든 기술 스택 결정은 **`specs/00-tech-stack.md`**를 SSOT로 사용합니다.
+
+**필수 확인 사항**:
+
+- 새 프로젝트 시작 시 해당 문서를 **먼저** 읽어야 합니다
+- 새 의존성 추가 전 해당 문서 **업데이트 필수**
+- 버전 업그레이드는 해당 문서의 변경 이력에 **기록 필수**
+
+---
+
+## 개발 워크플로우 (Development Workflow)
+
+### 기능 개발 프로세스
+
+1. **명세 작성**: `specs/[###-feature]/spec.md` 생성 (**Spec-Before-Code**)
+2. **계획 수립**: `/speckit.plan` 명령으로 `plan.md` 생성
+3. **헌법 준수 검증**: 8가지 원칙 체크리스트 통과 확인
+4. **작업 분해**: `/speckit.tasks` 명령으로 `tasks.md` 생성
+5. **구현**: 작업 순서대로 구현 (테스트 우선)
+6. **검토**: 헌법 원칙 재검증 및 코드 리뷰
+7. **배포**: 문서 업데이트 후 배포
+
+### 코드 리뷰 체크리스트
+
+모든 PR은 다음을 검증해야 합니다:
+
+- [ ] 대응되는 `spec.md`가 존재하고 승인되었는가? (**Spec-Before-Code**)
+- [ ] 중복 설정/데이터가 없는가? (**SSOT**)
+- [ ] 새 의존성이 `specs/00-tech-stack.md`에 문서화되었는가? (**Pinned-Stack**)
+- [ ] 네트워크 없이 테스트가 실행되는가? (**Local-First**)
+- [ ] API 호출이 최소화되었는가? (**Cost-Aware**)
+- [ ] 모듈 경계가 명확한가? (**Boundaries**)
+- [ ] 타입 체커가 통과하는가? (**Type-Safety**)
+- [ ] 오버라이드에 이유가 주석으로 명시되었는가? (**Overrides-Only**)
+
+---
+
+## 거버넌스 (Governance)
+
+### 헌법 우선순위
+
+이 헌법은 **모든 다른 관행, 가이드, 의견보다 우선**합니다. 헌법과 충돌하는 코드 리뷰 코멘트는 거부할 수 있습니다.
+
+### 헌법 수정 절차
+
+헌법 수정은 다음 절차를 따릅니다:
+
+1. **제안서 작성**: 변경 이유, 영향 범위, 대안 분석 포함
+2. **팀 검토**: 모든 이해관계자의 승인 필요
+3. **버전 업데이트**: Semantic Versioning 준수
+   - **MAJOR**: 원칙 제거 또는 근본적 재정의
+   - **MINOR**: 새 원칙 추가 또는 섹션 확장
+   - **PATCH**: 명확화, 오타 수정, 표현 개선
+4. **마이그레이션 계획**: 기존 코드 영향 분석 및 전환 계획 수립
+5. **템플릿 동기화**: 모든 관련 템플릿 업데이트
+6. **공지**: 팀 전체에 변경 사항 즉시 공유
+
+### 준수 검증
+
+- 모든 PR은 헌법 준수 체크리스트를 **필수**로 포함해야 합니다
+- 헌법 위반은 즉시 차단되고 수정을 요구합니다
+- 복잡도 증가는 **문서화된 정당화** 필요 (예: 성능, 비용, 법적 요구사항)
+
+### 예외 처리
+
+원칙에 대한 예외는 다음 조건에서만 허용됩니다:
+
+- **문서화**: 예외 이유를 명시적으로 기록
+- **한시적**: 영구 예외 금지, 해결 기한 명시
+- **최소화**: 예외 범위를 최소한으로 제한
+- **승인**: 기술 리더의 명시적 승인 필요
+
+---
+
+**버전**: 1.0.0 | **제정일**: 2026-02-09 | **최종 수정일**: 2026-02-09
