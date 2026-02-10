@@ -20,7 +20,7 @@
     "lint": "turbo run lint",
     "type-check": "turbo run type-check",
     "db:migrate": "turbo run db:migrate --filter=@repo/database",
-    "db:studio": "cd packages/database && bun drizzle-kit studio",
+    "db:studio": "cd packages/database && pnpm drizzle-kit studio",
     "clean": "turbo run clean && rm -rf node_modules"
   },
   "devDependencies": {
@@ -31,10 +31,9 @@
     "apps/*",
     "packages/*"
   ],
-  "packageManager": "bun@1.1.40",
+  "packageManager": "pnpm@^8.6.0",
   "engines": {
-    "node": ">=22.x",
-    "bun": ">=1.1.40"
+    "node": ">=22.x"
   }
 }
 ```
@@ -447,7 +446,7 @@
 
 ```bash
 # 모든 패키지와 앱을 의존성 순서대로 빌드
-bun turbo run build
+pnpm turbo run build
 
 # 캐시 사용으로 변경된 패키지만 빌드 (매우 빠름)
 ```
@@ -456,20 +455,20 @@ bun turbo run build
 
 ```bash
 # API만 실행 (의존 패키지 자동 빌드)
-bun turbo run dev --filter=api
+pnpm turbo run dev --filter=api
 
 # Web만 실행
-bun turbo run dev --filter=web
+pnpm turbo run dev --filter=web
 
 # 둘 다 병렬 실행
-bun turbo run dev --filter=api --filter=web
+pnpm turbo run dev --filter=api --filter=web
 ```
 
 ### 3. 특정 패키지 변경 후 영향받는 앱만 테스트
 
 ```bash
 # @repo/validators 변경 후 의존하는 앱만 테스트
-bun turbo run test --filter=...@repo/validators
+pnpm turbo run test --filter=...@repo/validators
 
 # 결과: api와 web 앱의 테스트가 실행됨
 ```
@@ -478,11 +477,11 @@ bun turbo run test --filter=...@repo/validators
 
 ```bash
 # 모든 패키지 빌드 (캐시 사용)
-bun turbo run build
+pnpm turbo run build
 
 # 특정 앱만 배포용 빌드
-bun turbo run build --filter=api
-bun turbo run build --filter=web
+pnpm turbo run build --filter=api
+pnpm turbo run build --filter=web
 
 # 빌드 결과물:
 # - apps/api/dist
@@ -493,13 +492,13 @@ bun turbo run build --filter=web
 
 ```bash
 # 모든 패키지의 테스트를 병렬로 실행
-bun turbo run test
+pnpm turbo run test
 
 # E2E 테스트만 실행
-bun turbo run test:e2e
+pnpm turbo run test:e2e
 
 # 커버리지 포함
-bun turbo run test:cov
+pnpm turbo run test:cov
 ```
 
 ---
@@ -513,15 +512,15 @@ bun turbo run test:cov
 ls -la node_modules/.cache/turbo
 
 # 캐시 초기화
-bun turbo run build --force
+pnpm turbo run build --force
 ```
 
 ### Remote Cache (선택 사항)
 
 ```bash
 # Vercel Remote Cache 연결
-bunx turbo login
-bunx turbo link
+pnpm dlx turbo login
+pnpm dlx turbo link
 
 # 이후 모든 팀원이 빌드 캐시 공유
 ```
@@ -572,4 +571,3 @@ bunx turbo link
 | 아무것도 변경 안 함 | 60초 | 1초 |
 
 **Turborepo의 증분 빌드와 캐싱으로 개발 속도가 크게 향상됩니다.**
-

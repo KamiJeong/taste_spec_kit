@@ -166,10 +166,10 @@ You can now verify the foundation:
 ```bash
 # Backend (Terminal 1)
 cd C:\Users\USER\Documents\GitHub\taste_spec_kit
-bun turbo run dev --filter=api
+pnpm turbo run dev --filter=api
 
 # Frontend (Terminal 2)
-bun turbo run dev --filter=web
+pnpm turbo run dev --filter=web
 ```
 
 ### 2. Check Services
@@ -270,7 +270,7 @@ You now have a **rock-solid foundation**. The next steps are:
 
 1. **Test the foundation**:
    ```bash
-   bun turbo run dev
+   pnpm turbo run dev
    # Verify both apps start without errors
    ```
 
@@ -309,4 +309,3 @@ The foundational layer is **100% complete and production-ready**. All blocking i
 *Generated: February 9, 2026*  
 *Tasks: 50/195 complete (26%)*  
 *Phase 2 Status: ✅ COMPLETE*
-

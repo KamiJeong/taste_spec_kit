@@ -1,5 +1,7 @@
 # 기술 스택 명세서 (Tech Stack Specification)
 
+**중요**: 모든 `/speckit` 명령은 이 파일 `specs/00-tech-stack.md`를 반드시 참조해야 합니다. 이 문서는 프로젝트의 SSOT(단일 진실 공급원)입니다.
+
 **프로젝트**: taste_spec_kit  
 **버전**: 1.2.0  
 **작성일**: 2026-02-09  
@@ -27,6 +29,29 @@
 - **프로젝트 구조**: Monorepo (모노레포)
 - **배포 방식**: Docker Image
 - **API 스타일**: REST (기본), GraphQL (선택적 고려)
+
+### Monorepo 구조 (Turborepo 권장)
+
+- 권장 가이드: https://turborepo.dev/docs/crafting-your-repository/structuring-a-repository
+- 설명: 위 Turborepo 문서를 참고하여 리포지토리를 구성합니다. Turborepo는 작업(작업공간) 단위를 명확히 분리하고, 파이프라인과 캐싱으로 빌드/테스트 효율을 높입니다.
+
+- 권장 폴더 구조 예시:
+
+```
+repo-root/
+├── apps/               # 배포 가능한 애플리케이션 (예: api, web)
+├── packages/           # 재사용 가능한 라이브러리(@repo/* - types, ui, validators, database 등)
+├── tooling/            # 빌드/스크립트/자동화 도구
+├── .github/            # CI/CD 워크플로우
+├── pnpm-workspace.yaml # pnpm 워크스페이스 설정
+├── turbo.json          # Turborepo 파이프라인 설정
+└── package.json        # 루트 워크스페이스 및 공통 스크립트
+```
+
+- 권장 관행:
+  - 각 `apps/*`와 `packages/*`는 자체 `package.json`과 명확한 `scripts`(build/dev/test/lint)를 가집니다.
+  - 루트에 `pnpm-workspace.yaml`과 `turbo.json`을 두어 워크스페이스와 파이프라인을 관리합니다.
+  - 내부 패키지는 `@repo/*` 네임스페이스를 사용하여 명확한 의존성을 유지합니다.
 
 ### 핵심 언어 (Core Languages)
 
@@ -64,7 +89,8 @@
 
 ### 개발 도구 (Development Tools)
 
-- **bun**: `^1.1.40` (패키지 관리자 & 런타임 - Monorepo 지원, 빠른 성능)
+<!-- 가정: pnpm 버전 ^8.6.0은 2026년 기준으로 적절하다고 가정함 -->
+- **pnpm**: `^8.6.0` (패키지 관리자 & 워크스페이스 지원)
 - **ESLint**: `^9.0.0` (린팅)
 - **Prettier**: `^3.4.0` (포매팅)
 - **Docker**: `27.x` (컨테이너화)
@@ -118,7 +144,7 @@
 - ❌ 프로젝트별로 다른 Node.js 버전 사용
 - ❌ 타입 정의 없이 JavaScript 사용 (`.js` 대신 `.ts` 필수)
 - ❌ `any` 타입 무분별한 사용 (정당화 필요)
-- ❌ Monorepo 외부에서 패키지 직접 설치 (`bun` workspace 사용 필수)
+- ❌ Monorepo 외부에서 패키지 직접 설치 (`pnpm` workspace 사용 필수)
 
 ## 새 기술 도입 프로세스
 
@@ -150,7 +176,7 @@
 - **변경**: ESLint `^8.0.0` → `^9.0.0` (최신 메이저 버전)
 - **변경**: Prettier `^3.0.0` → `^3.4.0` (최신 마이너 버전)
 - **변경**: Docker `24.x` → `27.x` (최신 버전)
-- **변경**: 패키지 매니저 `pnpm` → `bun` (성능 및 속도 개선)
+- **변경**: 패키지 매니저 `bun` → `pnpm` (정책 복구 — pnpm 사용)
 - **정책**: 모든 라이브러리를 최신 안정 버전으로 업데이트
 
 ### 1.1.0 (2026-02-09)
@@ -180,4 +206,3 @@
 - [프로젝트 헌법](../.specify/memory/constitution.md)
 - [명세 템플릿](../.specify/templates/spec-template.md)
 - [구현 계획 템플릿](../.specify/templates/plan-template.md)
-

@@ -60,8 +60,8 @@ taste_spec_kit/
 - [X] T011 Initialize apps/web with Next.js (^15.1.0) and App Router structure
 - [X] T012 Setup Docker Compose with PostgreSQL 16.x, Redis 7.x, and Mailhog services
 - [X] T013 Create .env.example with all required environment variables per quickstart.md
-- [X] T014 [P] Configure bun workspaces to link all packages and apps
-- [X] T015 Run `bun install` to verify all workspace dependencies resolve correctly
+- [X] T014 [P] Configure pnpm workspaces to link all packages and apps
+- [X] T015 Run `pnpm install` to verify all workspace dependencies resolve correctly
 
 ---
 
@@ -80,8 +80,8 @@ taste_spec_kit/
 - [X] T020 Create schema barrel export in packages/database/src/schema/index.ts
 - [X] T021 Setup Drizzle client in packages/database/src/client.ts with connection pooling
 - [X] T022 Create @repo/database public API in packages/database/src/index.ts
-- [X] T023 Generate initial database migrations using `bun drizzle-kit generate:pg`
-- [X] T024 Apply migrations to local PostgreSQL using `bun drizzle-kit push:pg`
+- [X] T023 Generate initial database migrations using `pnpm drizzle-kit generate:pg`
+- [X] T024 Apply migrations to local PostgreSQL using `pnpm drizzle-kit push:pg`
 
 ### Shared Type Definitions
 
@@ -380,9 +380,9 @@ taste_spec_kit/
 
 - [ ] T188 Run full quickstart.md validation from scratch (30-minute setup test)
 - [ ] T189 Verify all Constitution Check items from plan.md are satisfied
-- [ ] T190 Run `bun turbo run build` to verify all packages and apps build successfully
-- [ ] T191 Run `bun turbo run type-check` to verify TypeScript strict mode compliance
-- [ ] T192 Run `bun turbo run lint` to verify code style compliance
+- [ ] T190 Run `pnpm turbo run build` to verify all packages and apps build successfully
+- [ ] T191 Run `pnpm turbo run type-check` to verify TypeScript strict mode compliance
+- [ ] T192 Run `pnpm turbo run lint` to verify code style compliance
 - [ ] T193 Verify all Success Criteria from spec.md are measurable and documented
 - [ ] T194 Create feature demo video or walkthrough document
 - [ ] T195 Final code review against constitution principles (SSOT, Type-Safety, Boundaries, etc.)
@@ -482,7 +482,7 @@ taste_spec_kit/
 
 **Turborepo Advantages**:
 - Package changes auto-rebuild dependent apps
-- Parallel task execution with `bun turbo run dev`
+- Parallel task execution with `pnpm turbo run dev`
 - Cached builds speed up development
 - Independent package testing
 

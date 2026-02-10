@@ -318,10 +318,10 @@ export default defineConfig({
 });
 
 # 마이그레이션 생성
-bun drizzle-kit generate:pg
+pnpm drizzle-kit generate:pg
 
 # 마이그레이션 실행
-bun drizzle-kit push:pg
+pnpm drizzle-kit push:pg
 ```
 
 ---

@@ -32,17 +32,6 @@
 - [ ] CHK005 Item with specific criteria
 - [ ] CHK006 Final item in this category
 
-## Constitution Compliance (항상 포함)
-
-- [ ] CHK-CONST-01 **SSOT**: 중복 설정/데이터가 제거되었는가?
-- [ ] CHK-CONST-02 **Overrides-Only**: 전체 복사 대신 오버라이드 방식을 사용했는가?
-- [ ] CHK-CONST-03 **Pinned-Stack**: 새 의존성이 `specs/00-tech-stack.md`에 문서화되었는가?
-- [ ] CHK-CONST-04 **Local-First**: 네트워크 없이 테스트가 실행되는가?
-- [ ] CHK-CONST-05 **Cost-Aware**: API 호출 최소화 및 비용 영향이 고려되었는가?
-- [ ] CHK-CONST-06 **Boundaries**: 모듈 경계가 명확하고 순환 의존성이 없는가?
-- [ ] CHK-CONST-07 **Type-Safety**: 타입 체커(tsc, mypy)가 통과하는가?
-- [ ] CHK-CONST-08 **Spec-Before-Code**: 대응되는 spec.md가 존재하고 승인되었는가?
-
 ## Notes
 
 - Check items off as completed: `[x]`

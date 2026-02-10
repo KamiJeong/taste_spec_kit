@@ -54,7 +54,7 @@ Require stack:
 ```bash
 # Build succeeded
 cd apps/api
-bun run build
+pnpm run build
 # ✅ dist/main.js created in apps/api/dist/
 
 # Correct location verified
@@ -70,11 +70,11 @@ Both servers have been restarted with the fix:
 
 **API Server**:
 - Location: `apps/api/dist/main.js` ✅
-- Command: `bun run dev`
+- Command: `pnpm run dev`
 - Terminal ID: `744206e4-d42d-4df6-b2a9-f6b4e21e599a`
 
 **Web Server**:
-- Command: `bun run dev`
+- Command: `pnpm run dev`
 - Terminal ID: `94c820e9-e873-488d-a2e8-25867b194839`
 
 ---
@@ -145,13 +145,13 @@ To prevent this in the future:
 1. **Shared configs** should NOT set `outDir` - let each app define its own
 2. **Always verify build output**:
    ```bash
-   bun run build
+   pnpm run build
    ls dist/main.js  # Should exist
    ```
 3. **Test after config changes**:
    ```bash
-   bun run build
-   bun run start  # Test production build
+   pnpm run build
+   pnpm run start  # Test production build
    ```
 
 ---
@@ -168,4 +168,3 @@ To prevent this in the future:
 **Fix Applied**: February 9, 2026  
 **Status**: ✅ **Ready for Testing**  
 **Build Location**: ✅ **Correct** (`apps/api/dist/`)
-
