@@ -15,6 +15,12 @@ Tech-Stack: specs/00-tech-stack.md
 - `[Story]`: User story mapping (`US1`, `US2`, `US3`, `US4`)
 - All tasks include concrete paths
 
+## Analysis Sync (2026-02-11)
+
+- This task list was reset to pending after analysis confirmed implementation artifacts are not yet present in this repository state.
+- Completion must be marked only after corresponding file/test evidence exists.
+- Execution priority is aligned as `US1 -> US2 -> US4 -> US3`.
+
 ## Path Conventions
 
 - Storybook app root: `apps/storybook/`
@@ -27,11 +33,11 @@ Tech-Stack: specs/00-tech-stack.md
 
 **Purpose**: Storybook runtime and baseline tooling setup.
 
-- [x] T001 Create Storybook workspace skeleton in `apps/storybook/package.json`, `apps/storybook/tsconfig.json`, `apps/storybook/.storybook/main.ts`, `apps/storybook/.storybook/preview.ts`
-- [x] T002 Configure Storybook addons (`essentials`, `a11y`) in `apps/storybook/.storybook/main.ts`
-- [x] T003 [P] Add TypeScript strict config and alias mapping in `apps/storybook/tsconfig.json`
-- [x] T004 [P] Add shared style/bootstrap entry in `apps/storybook/src/styles.css` and import from `apps/storybook/.storybook/preview.ts`
-- [x] T005 Document setup and run commands in `specs/01-storybook-shadcn-forms/README-setup.md`
+- [ ] T001 Create Storybook workspace skeleton in `apps/storybook/package.json`, `apps/storybook/tsconfig.json`, `apps/storybook/.storybook/main.ts`, `apps/storybook/.storybook/preview.ts`
+- [ ] T002 Configure Storybook addons (`essentials`, `a11y`) in `apps/storybook/.storybook/main.ts`
+- [ ] T003 [P] Add TypeScript strict config and alias mapping in `apps/storybook/tsconfig.json`
+- [ ] T004 [P] Add shared style/bootstrap entry in `apps/storybook/src/styles.css` and import from `apps/storybook/.storybook/preview.ts`
+- [ ] T005 Document setup and run commands in `specs/01-storybook-shadcn-forms/README-setup.md`
 
 ---
 
@@ -41,11 +47,11 @@ Tech-Stack: specs/00-tech-stack.md
 
 **CRITICAL**: No US tasks start before this phase is done.
 
-- [x] T006 Resolve RQ1 (`packages/ui` vs external dependency) and record decision in `specs/01-storybook-shadcn-forms/resolve-ui.md`
-- [x] T007 Resolve RQ2 (Chromatic vs OSS snapshot) and record decision in `specs/01-storybook-shadcn-forms/plan.md`
-- [x] T008 Create shared story helper wrappers in `apps/storybook/src/stories/_shared/decorators.tsx`
-- [x] T009 [P] Create shared form fixtures and validators in `apps/storybook/src/stories/_shared/form-fixtures.ts`
-- [x] T010 [P] Create viewport/breakpoint constants in `apps/storybook/src/stories/_shared/breakpoints.ts`
+- [ ] T006 Resolve RQ1 (`packages/ui` vs external dependency) and record decision in `specs/01-storybook-shadcn-forms/resolve-ui.md`
+- [ ] T007 Resolve RQ2 (Chromatic vs OSS snapshot) and record decision in `specs/01-storybook-shadcn-forms/plan.md`
+- [ ] T008 Create shared story helper wrappers in `apps/storybook/src/stories/_shared/decorators.tsx`
+- [ ] T009 [P] Create shared form fixtures and validators in `apps/storybook/src/stories/_shared/form-fixtures.ts`
+- [ ] T010 [P] Create viewport/breakpoint constants in `apps/storybook/src/stories/_shared/breakpoints.ts`
 
 **Checkpoint**: Foundation ready; US1/US2/US3/US4 can proceed.
 
@@ -59,15 +65,15 @@ Tech-Stack: specs/00-tech-stack.md
 
 ### Tests for User Story 1
 
-- [x] T011 [P] [US1] Add smoke interaction tests for component stories in `apps/storybook/src/tests/us1-component-stories.test.tsx`
+- [ ] T011 [P] [US1] Add smoke interaction tests for component stories in `apps/storybook/src/tests/us1-component-stories.test.tsx`
 
 ### Implementation for User Story 1
 
-- [x] T012 [P] [US1] Implement button stories in `apps/storybook/src/stories/components/Button.stories.tsx`
-- [x] T013 [P] [US1] Implement input stories (register + controller samples) in `apps/storybook/src/stories/components/Input.stories.tsx`
-- [x] T014 [P] [US1] Implement select stories (single/multi/options) in `apps/storybook/src/stories/components/Select.stories.tsx`
-- [x] T015 [P] [US1] Implement checkbox/radio stories in `apps/storybook/src/stories/components/Choice.stories.tsx`
-- [x] T016 [US1] Add code-panel snippets and args docs for US1 stories in `apps/storybook/src/stories/components/*.stories.tsx`
+- [ ] T012 [P] [US1] Implement button stories in `apps/storybook/src/stories/components/Button.stories.tsx`
+- [ ] T013 [P] [US1] Implement input stories (register + controller samples) in `apps/storybook/src/stories/components/Input.stories.tsx`
+- [ ] T014 [P] [US1] Implement select stories (single/multi/options) in `apps/storybook/src/stories/components/Select.stories.tsx`
+- [ ] T015 [P] [US1] Implement checkbox/radio stories in `apps/storybook/src/stories/components/Choice.stories.tsx`
+- [ ] T016 [US1] Add code-panel snippets and args docs for US1 stories in `apps/storybook/src/stories/components/*.stories.tsx`
 
 **Checkpoint**: US1 independently usable.
 
@@ -81,15 +87,15 @@ Tech-Stack: specs/00-tech-stack.md
 
 ### Tests for User Story 2
 
-- [x] T017 [P] [US2] Add RHF validation tests in `apps/storybook/src/tests/us2-rhf-validation.test.tsx`
-- [x] T018 [P] [US2] Add async validation mock tests in `apps/storybook/src/tests/us2-rhf-async.test.tsx`
+- [ ] T017 [P] [US2] Add RHF validation tests in `apps/storybook/src/tests/us2-rhf-validation.test.tsx`
+- [ ] T018 [P] [US2] Add async validation mock tests in `apps/storybook/src/tests/us2-rhf-async.test.tsx`
 
 ### Implementation for User Story 2
 
-- [x] T019 [P] [US2] Implement composed RHF form stories in `apps/storybook/src/stories/forms/ComposedForm.stories.tsx`
-- [x] T020 [P] [US2] Implement dialog-embedded form story in `apps/storybook/src/stories/forms/FormInDialog.stories.tsx`
-- [x] T021 [US2] Implement async validation mock handlers in `apps/storybook/src/stories/forms/mocks/handlers.ts`
-- [x] T022 [US2] Document controller vs register usage in `apps/storybook/src/stories/docs/RHF-Guide.mdx`
+- [ ] T019 [P] [US2] Implement composed RHF form stories in `apps/storybook/src/stories/forms/ComposedForm.stories.tsx`
+- [ ] T020 [P] [US2] Implement dialog-embedded form story in `apps/storybook/src/stories/forms/FormInDialog.stories.tsx`
+- [ ] T021 [US2] Implement async validation mock handlers in `apps/storybook/src/stories/forms/mocks/handlers.ts`
+- [ ] T022 [US2] Document controller vs register usage in `apps/storybook/src/stories/docs/RHF-Guide.mdx`
 
 **Checkpoint**: US2 independently usable.
 
@@ -103,13 +109,13 @@ Tech-Stack: specs/00-tech-stack.md
 
 ### Tests for User Story 3
 
-- [x] T023 [P] [US3] Add viewport regression checklist tests in `apps/storybook/src/tests/us3-layout-viewport.test.tsx`
+- [ ] T023 [P] [US3] Add viewport regression checklist tests in `apps/storybook/src/tests/us3-layout-viewport.test.tsx`
 
 ### Implementation for User Story 3
 
-- [x] T024 [P] [US3] Implement container/grid/stack stories in `apps/storybook/src/stories/layouts/LayoutPrimitives.stories.tsx`
-- [x] T025 [P] [US3] Implement auth-form and dashboard-grid layout scenarios in `apps/storybook/src/stories/layouts/LayoutScenarios.stories.tsx`
-- [x] T026 [US3] Add breakpoint behavior documentation in `apps/storybook/src/stories/docs/Layout-Guide.mdx`
+- [ ] T024 [P] [US3] Implement container/grid/stack stories in `apps/storybook/src/stories/layouts/LayoutPrimitives.stories.tsx`
+- [ ] T025 [P] [US3] Implement auth-form and dashboard-grid layout scenarios in `apps/storybook/src/stories/layouts/LayoutScenarios.stories.tsx`
+- [ ] T026 [US3] Add breakpoint behavior documentation in `apps/storybook/src/stories/docs/Layout-Guide.mdx`
 
 **Checkpoint**: US3 independently usable.
 
@@ -123,14 +129,14 @@ Tech-Stack: specs/00-tech-stack.md
 
 ### Tests for User Story 4
 
-- [x] T027 [P] [US4] Add a11y assertions for critical stories in `apps/storybook/src/tests/us4-a11y-critical.test.tsx`
-- [x] T028 [P] [US4] Add visual regression example test in `apps/storybook/src/tests/us4-visual-regression.test.ts`
+- [ ] T027 [P] [US4] Add a11y assertions for critical stories in `apps/storybook/src/tests/us4-a11y-critical.test.tsx`
+- [ ] T028 [P] [US4] Add visual regression example test in `apps/storybook/src/tests/us4-visual-regression.test.ts`
 
 ### Implementation for User Story 4
 
-- [x] T029 [US4] Add a11y parameters and keyboard notes to core stories in `apps/storybook/src/stories/components/*.stories.tsx` and `apps/storybook/src/stories/forms/*.stories.tsx`
-- [x] T030 [US4] Add CI test run guide in `specs/01-storybook-shadcn-forms/README-setup.md`
-- [x] T031 [US4] Record acceptance evidence checklist in `specs/01-storybook-shadcn-forms/tasks.md` (this file)
+- [ ] T029 [US4] Add a11y parameters and keyboard notes to core stories in `apps/storybook/src/stories/components/*.stories.tsx` and `apps/storybook/src/stories/forms/*.stories.tsx`
+- [ ] T030 [US4] Add CI test run guide in `specs/01-storybook-shadcn-forms/README-setup.md`
+- [ ] T031 [US4] Record acceptance evidence checklist in `specs/01-storybook-shadcn-forms/tasks.md` (this file)
 
 **Checkpoint**: US4 independently usable.
 
@@ -140,12 +146,12 @@ Tech-Stack: specs/00-tech-stack.md
 
 **Purpose**: Final consistency, docs, and release readiness.
 
-- [x] T032 [P] Normalize story naming/export style across `apps/storybook/src/stories/**/*.stories.tsx`
-- [x] T033 [P] Run full quality gate (`storybook build`, tests, type-check) and capture results in `specs/01-storybook-shadcn-forms/README-setup.md`
-- [x] T034 Update final delivery notes and open items in `specs/01-storybook-shadcn-forms/plan.md`
-- [x] T035 Add UI policy checklist (shadcn/ui mandatory, Tailwind for new UI) in `specs/01-storybook-shadcn-forms/README-setup.md`
-- [x] T036 Add review rule to validate story imports use local shadcn/ui package in `specs/01-storybook-shadcn-forms/tasks.md`
-- [x] T037 Add sample guideline for new Tailwind-based custom UI story in `specs/01-storybook-shadcn-forms/spec.md`
+- [ ] T032 [P] Normalize story naming/export style across `apps/storybook/src/stories/**/*.stories.tsx`
+- [ ] T033 [P] Run full quality gate (`storybook build`, tests, type-check) and capture results in `specs/01-storybook-shadcn-forms/README-setup.md`
+- [ ] T034 Update final delivery notes and open items in `specs/01-storybook-shadcn-forms/plan.md`
+- [ ] T035 Add UI policy checklist (shadcn/ui mandatory, Tailwind for new UI) in `specs/01-storybook-shadcn-forms/README-setup.md`
+- [ ] T036 Add review rule to validate story imports use local shadcn/ui package in `specs/01-storybook-shadcn-forms/tasks.md`
+- [ ] T037 Add sample guideline for new Tailwind-based custom UI story in `specs/01-storybook-shadcn-forms/spec.md`
 
 ---
 
@@ -162,8 +168,8 @@ Tech-Stack: specs/00-tech-stack.md
 
 - US1: starts right after Phase 2
 - US2: starts right after Phase 2 (independent from US1)
-- US3: starts right after Phase 2 (independent from US1/US2)
 - US4: starts right after Phase 2 but should consume artifacts from US1/US2 stories
+- US3: starts after US4 baseline verification (layout-focused, independent from auth/form logic)
 
 ### Within Each User Story
 
@@ -191,8 +197,8 @@ Tech-Stack: specs/00-tech-stack.md
 ### Incremental Delivery
 
 1. Add US2 for RHF depth
-2. Add US3 for responsive layout validation
-3. Add US4 for a11y and test gates
+2. Add US4 for a11y and test gates
+3. Add US3 for responsive layout validation
 4. Finish with Phase 7 polish
 
 ### Parallel Team Strategy
@@ -201,19 +207,23 @@ Tech-Stack: specs/00-tech-stack.md
 2. After foundation:
 3. Engineer A -> US1
 4. Engineer B -> US2
-5. Engineer C -> US3/US4
+5. Engineer C -> US4/US3
 
 ## Acceptance Evidence Checklist (T031)
 
-- [x] US1 component stories added with docs/code snippets
-- [x] US2 RHF composed form + dialog form stories added
-- [x] US3 layout primitives/scenarios and layout guide added
-- [x] US4 a11y baseline test and visual snapshot tests added
-- [x] Full quality gate executed and logged (`T033`)
+- [ ] US1 component stories added with docs/code snippets
+- [ ] US2 RHF composed form + dialog form stories added
+- [ ] US3 layout primitives/scenarios and layout guide added
+- [ ] US4 a11y baseline test and visual snapshot tests added
+- [ ] Full quality gate executed and logged (`T033`)
 
 ## UI Policy Review Rule (T036)
 
 - Review all story/component imports and ensure UI primitives come from local shadcn/ui package first.
 - Reject PRs that introduce alternative UI libraries for overlapping components without explicit decision record.
 - For new custom UI stories, verify Tailwind CSS utilities are used and token consistency is documented.
+
+
+
+
 

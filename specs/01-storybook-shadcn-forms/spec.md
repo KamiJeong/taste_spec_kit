@@ -2,7 +2,7 @@
 
 **브랜치**: `01-storybook-shadcn-forms`  
 **작성일**: 2026-02-10  
-**상태**: 드래프트  
+**상태**: 리뷰 반영됨 (Refined)  
 **입력**: 사용자 설명: "Storybook: shadcn/ui components + react-hook-form + layout stories"
 
 ## 요약 (한 줄)
@@ -283,7 +283,7 @@ export function FormInDialog() {
 
 ## 가정
 - 프로젝트는 React + TypeScript, pnpm 사용.
-- Storybook이 이미 구성되어 있다고 가정(없으면 plan.md의 설치/설정 절차 따름).
+- Storybook은 본 저장소 기준으로 아직 미구성일 수 있으며, 구현은 `tasks.md` Phase 1 설정 작업을 선행한다.
 - shadcn/ui 컴포넌트는 로컬 `ui` 패키지이거나 npm 의존성으로 제공된다고 가정. 없다면 plan에서 설치 방법 제시.
 - UI 정책은 "shadcn/ui 강제 + 신규 UI는 Tailwind 작성"을 기본으로 가정.
 - Storybook은 Vite 또는 Webpack 같은 현대적 번들러를 사용한다고 가정.
@@ -295,3 +295,8 @@ export function FormInDialog() {
 ## 결정 사항 (2026-02-11)
 - RQ3 결정: UI 구현은 shadcn/ui를 강제 사용하고, 신규 UI 컴포넌트는 Tailwind CSS로 작성합니다.
 
+
+## 리뷰 반영 메모 (2026-02-11)
+- 문서 간 실행 순서를 통일했습니다: `US1 -> US2 -> US4 -> US3`.
+- 현재 저장소 상태(앱/패키지 미구성 가능성)를 반영해 초기 설정 선행 원칙을 명시했습니다.
+- 완료 표시는 코드/테스트 산출물 근거가 있을 때만 진행합니다.

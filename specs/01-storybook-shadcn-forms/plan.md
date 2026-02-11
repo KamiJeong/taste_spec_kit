@@ -2,14 +2,15 @@ Tech-Stack: specs/00-tech-stack.md
 
 # Implementation Plan: Storybook shadcn/ui + react-hook-form + Layout Stories
 
-**Branch**: `01-storybook-shadcn-forms` | **Date**: 2026-02-10 | **Spec**: [spec.md](./spec.md)
+**Branch**: `01-storybook-shadcn-forms` | **Date**: 2026-02-11 | **Spec**: [spec.md](./spec.md)
 **Input**: Feature specification from `/specs/01-storybook-shadcn-forms/spec.md`
+**Status**: Replanned after analysis (implementation not started)
 
 **Note**: This document follows `/speckit.plan` workflow and explicitly references `specs/00-tech-stack.md` as SSOT.
 
 ## Summary
 
-`spec.md` 요구사항(FR-001~FR-008)을 기준으로 Storybook 문서/스토리 체계를 설계한다.  
+`spec.md` 요구사항(FR-001~FR-009, FR-001a 포함)을 기준으로 Storybook 문서/스토리 체계를 설계한다.  
 핵심 범위는 다음 4가지다.
 
 1. shadcn/ui 컴포넌트 스토리(Button, Input, Select, Checkbox/Radio, Modal)
@@ -26,7 +27,7 @@ Tech-Stack: specs/00-tech-stack.md
 **Storage**: N/A (UI 스토리 문서화 기능)  
 **Testing**: Storybook a11y addon, Playwright ^1.49.0(가이드/통합), Vitest ^2.1.0(선택)  
 **Target Platform**: 로컬 개발 환경 + 최신 데스크톱/모바일 브라우저  
-**Project Type**: 문서/스펙 중심 monorepo (현재 코드 앱 디렉터리 미생성 상태)  
+**Project Type**: monorepo (문서 정의 완료, 구현 부트스트랩 필요 상태)  
 **Performance Goals**: Storybook 스토리 최초 로드 체감 3초 이내(개발 환경 기준)  
 **Constraints**: TypeScript 오류 0건, 주요 스토리 a11y 치명 위반 0건, 복붙 가능한 코드 예시 제공, UI는 shadcn/ui 강제 사용, 신규 UI는 Tailwind CSS 작성  
 **Scale/Scope**: 컴포넌트 스토리 세트 + 폼 스토리 세트 + 레이아웃 스토리 세트 + 가이드 문서
@@ -73,7 +74,7 @@ specs/
 └── 01-storybook-shadcn-forms/
 ```
 
-**Structure Decision**: 현재 저장소는 구현 코드보다 Spec Kit 산출물 관리가 중심이므로, 이번 단계는 `specs/01-storybook-shadcn-forms/` 문서 완결성 강화에 초점을 둔다. 실제 Storybook 코드 경로(`apps/*`, `packages/*`)는 저장소에 생성되는 시점에 `tasks.md`에서 확정한다.
+**Structure Decision**: 문서 정의는 완료되었고, 다음 단계는 `tasks.md` 기준으로 실제 구현 경로(`apps/storybook`, 필요 시 `packages/ui`)를 생성/확정하는 실행 단계로 전환한다.
 
 ## Phase Plan
 
@@ -113,15 +114,19 @@ specs/
 - **RQ2 (visual regression)**: OSS 스냅샷 테스트 채택, Chromatic은 선택적 보조안
 - **RQ3 (UI implementation policy)**: shadcn/ui 강제 사용, 신규 UI는 Tailwind CSS로 작성
 
-## Implementation Progress (2026-02-10)
+## Implementation Progress (2026-02-11)
 
-- Setup/Foundation completed (`T001`~`T010`)
-- US1 completed (`T011`~`T016`)
-- US2 completed (`T017`~`T022`)
-- US3/US4 implementation and tests added (`T023`~`T032`)
-- Quality gate completed (`T033`): `pnpm typecheck`, `pnpm test`, `pnpm build-storybook` passed
+- Document artifacts exist and are aligned with `spec.md` scope.
+- Runtime implementation for this feature has **not started** in this repository state.
+- Next execution baseline:
+  - Phase 1 setup tasks (`T001`~`T005`)
+  - Phase 2 foundation tasks (`T006`~`T010`)
+  - Then user-story phases in priority order (US1 -> US2 -> US4 -> US3)
 
 ## Complexity Tracking
 
 해당 없음 (헌법 위반 없음).
+
+
+
 
