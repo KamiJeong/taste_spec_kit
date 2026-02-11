@@ -1,6 +1,6 @@
 # Data Model: 이메일 기반 회원가입 및 회원관리
 
-**Feature**: 001-email-auth-user-management  
+**Feature**: 002-email-auth-user-management  
 **Date**: 2026-02-09  
 **Phase**: 1 - Design
 
@@ -521,4 +521,5 @@ export const db = drizzle(pool);
 - **Constitution 준수**: SSOT (User 테이블), Type-Safety (Drizzle), Boundaries (명확한 관계)
 
 **Next Steps**: Phase 1 계속 - API Contracts 정의 (`contracts/` 디렉토리)
+
 

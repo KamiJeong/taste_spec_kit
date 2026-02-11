@@ -1,7 +1,7 @@
 # UI Resolution Decision (RQ1)
 
 **Date**: 2026-02-10  
-**Feature**: `02-storybook-shadcn-forms`
+**Feature**: `01-storybook-shadcn-forms`
 
 ## Decision
 
@@ -27,3 +27,4 @@ RQ1는 다음과 같이 확정한다.
 
 - 현 단계에서 외부 UI 런타임 패키지 자동 설치는 수행하지 않는다.
 - 디자인 토큰 체계 전면 개편은 범위에 포함하지 않는다.
+

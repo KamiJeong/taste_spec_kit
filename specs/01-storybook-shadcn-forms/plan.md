@@ -2,8 +2,8 @@ Tech-Stack: specs/00-tech-stack.md
 
 # Implementation Plan: Storybook shadcn/ui + react-hook-form + Layout Stories
 
-**Branch**: `02-storybook-shadcn-forms` | **Date**: 2026-02-10 | **Spec**: [spec.md](./spec.md)
-**Input**: Feature specification from `/specs/02-storybook-shadcn-forms/spec.md`
+**Branch**: `01-storybook-shadcn-forms` | **Date**: 2026-02-10 | **Spec**: [spec.md](./spec.md)
+**Input**: Feature specification from `/specs/01-storybook-shadcn-forms/spec.md`
 
 **Note**: This document follows `/speckit.plan` workflow and explicitly references `specs/00-tech-stack.md` as SSOT.
 
@@ -17,6 +17,8 @@ Tech-Stack: specs/00-tech-stack.md
 3. 레이아웃 프리미티브(Container/Grid/Stack)와 반응형 스토리
 4. a11y 점검 및 테스트 가이드(시각 회귀/단위 테스트 예시)
 
+추가 정책으로, UI 계층은 shadcn/ui 사용을 강제하고 신규 UI 컴포넌트는 Tailwind CSS 기반으로 작성한다.
+
 ## Technical Context
 
 **Language/Version**: TypeScript ^5.7.0, Node.js 22.x LTS  
@@ -26,14 +28,14 @@ Tech-Stack: specs/00-tech-stack.md
 **Target Platform**: 로컬 개발 환경 + 최신 데스크톱/모바일 브라우저  
 **Project Type**: 문서/스펙 중심 monorepo (현재 코드 앱 디렉터리 미생성 상태)  
 **Performance Goals**: Storybook 스토리 최초 로드 체감 3초 이내(개발 환경 기준)  
-**Constraints**: TypeScript 오류 0건, 주요 스토리 a11y 치명 위반 0건, 복붙 가능한 코드 예시 제공  
+**Constraints**: TypeScript 오류 0건, 주요 스토리 a11y 치명 위반 0건, 복붙 가능한 코드 예시 제공, UI는 shadcn/ui 강제 사용, 신규 UI는 Tailwind CSS 작성  
 **Scale/Scope**: 컴포넌트 스토리 세트 + 폼 스토리 세트 + 레이아웃 스토리 세트 + 가이드 문서
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-- [x] **SSOT**: 기술 기준은 `specs/00-tech-stack.md`, 기능 기준은 `specs/02-storybook-shadcn-forms/spec.md`를 단일 출처로 사용
+- [x] **SSOT**: 기술 기준은 `specs/00-tech-stack.md`, 기능 기준은 `specs/01-storybook-shadcn-forms/spec.md`를 단일 출처로 사용
 - [x] **Overrides-Only**: Storybook 기본 설정을 유지하고, feature 요구사항에 필요한 스토리/애드온만 추가
 - [x] **Pinned-Stack**: 계획에서 사용하는 의존성은 `specs/00-tech-stack.md` 버전 범위를 따름
 - [x] **Local-First**: 네트워크 없이도 스토리 렌더/검증 가능한 구조를 우선(비동기 검증은 mock 기반)
@@ -41,6 +43,7 @@ Tech-Stack: specs/00-tech-stack.md
 - [x] **Boundaries**: 컴포넌트 스토리, 폼 스토리, 레이아웃 스토리, 문서 스토리를 분리
 - [x] **Type-Safety**: TS strict 전제, RHF/Zod 타입 기반 스토리 예시 적용
 - [x] **Spec-Before-Code**: 본 계획은 `spec.md` 기준으로 작성
+- [x] **UI-Policy**: shadcn/ui 강제 및 신규 UI Tailwind 작성 정책을 계획/태스크에 반영
 
 위반 사항 없음.
 
@@ -49,7 +52,7 @@ Tech-Stack: specs/00-tech-stack.md
 ### Documentation (this feature)
 
 ```text
-specs/02-storybook-shadcn-forms/
+specs/01-storybook-shadcn-forms/
 ├── spec.md
 ├── plan.md
 ├── tasks.md
@@ -66,11 +69,11 @@ specs/02-storybook-shadcn-forms/
 
 specs/
 ├── 00-tech-stack.md
-├── 01-email-auth-user-management/
-└── 02-storybook-shadcn-forms/
+├── 02-email-auth-user-management/
+└── 01-storybook-shadcn-forms/
 ```
 
-**Structure Decision**: 현재 저장소는 구현 코드보다 Spec Kit 산출물 관리가 중심이므로, 이번 단계는 `specs/02-storybook-shadcn-forms/` 문서 완결성 강화에 초점을 둔다. 실제 Storybook 코드 경로(`apps/*`, `packages/*`)는 저장소에 생성되는 시점에 `tasks.md`에서 확정한다.
+**Structure Decision**: 현재 저장소는 구현 코드보다 Spec Kit 산출물 관리가 중심이므로, 이번 단계는 `specs/01-storybook-shadcn-forms/` 문서 완결성 강화에 초점을 둔다. 실제 Storybook 코드 경로(`apps/*`, `packages/*`)는 저장소에 생성되는 시점에 `tasks.md`에서 확정한다.
 
 ## Phase Plan
 
@@ -108,6 +111,7 @@ specs/
 
 - **RQ1 (UI source)**: `packages/ui` 로컬 벤더링 채택
 - **RQ2 (visual regression)**: OSS 스냅샷 테스트 채택, Chromatic은 선택적 보조안
+- **RQ3 (UI implementation policy)**: shadcn/ui 강제 사용, 신규 UI는 Tailwind CSS로 작성
 
 ## Implementation Progress (2026-02-10)
 
@@ -120,3 +124,4 @@ specs/
 ## Complexity Tracking
 
 해당 없음 (헌법 위반 없음).
+

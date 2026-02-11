@@ -1,6 +1,6 @@
 Tech-Stack: specs/00-tech-stack.md
 
-# Setup Guide: 02-storybook-shadcn-forms
+# Setup Guide: 01-storybook-shadcn-forms
 
 ## Status (2026-02-10)
 
@@ -52,6 +52,13 @@ pnpm test
 
 - RQ1: Local vendored UI package (`packages/ui`) is used.
 - RQ2: Visual regression baseline is OSS snapshot approach (Chromatic optional).
+- RQ3: UI layer must use shadcn/ui, and any new custom UI component must be built with Tailwind CSS.
+
+## UI Policy Checklist
+
+- All Storybook UI examples import from local shadcn/ui package (`packages/ui`) first.
+- New custom UI is allowed only when shadcn/ui does not cover the use case.
+- New custom UI must be implemented with Tailwind CSS utilities and align with existing UI tokens.
 
 ## CI Run Guide (for T030)
 
@@ -80,3 +87,4 @@ Notes from build output:
 
 - US1/US2 story and test files were added.
 - US3/US4 story and test files were added.
+

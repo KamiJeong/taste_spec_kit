@@ -1,6 +1,6 @@
 # Feature Specification: 이메일 기반 회원가입 및 회원관리
 
-**Feature Branch**: `001-email-auth-user-management`  
+**Feature Branch**: `002-email-auth-user-management`  
 **Created**: 2026-02-09  
 **Status**: Draft  
 **Input**: User description: "이메일 기반 회원가입 및 회원관리 구현"
@@ -265,4 +265,5 @@
 - [기술 스택 명세서](../00-tech-stack.md)
 - [구현 계획](./plan.md) *(작성 예정)*
 - [작업 목록](./tasks.md) *(작성 예정)*
+
 

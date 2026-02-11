@@ -1,6 +1,6 @@
 # Quickstart Guide: 이메일 기반 회원가입 및 회원관리
 
-**Feature**: 001-email-auth-user-management  
+**Feature**: 002-email-auth-user-management  
 **Date**: 2026-02-09  
 **Audience**: Developers implementing this feature
 
@@ -632,3 +632,4 @@ git push origin feature/001-email-auth-additional-work
 **소요 시간**: ~30분 (문제 해결 제외)
 
 **다음**: `tasks.md` 생성하여 구현 작업 분해 시작
+

@@ -1,6 +1,6 @@
 # Research: 이메일 기반 회원가입 및 회원관리
 
-**Feature**: 001-email-auth-user-management  
+**Feature**: 002-email-auth-user-management  
 **Date**: 2026-02-09  
 **Phase**: 0 - Research & Decisions
 
@@ -457,4 +457,5 @@ const {
 **Dependencies Added**: 8개의 새 패키지 (기술 스택 문서 업데이트 필요)
 
 **Constitution Compliance**: 모든 결정이 8가지 핵심 원칙 준수
+
 

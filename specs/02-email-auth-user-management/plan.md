@@ -1,7 +1,7 @@
 # Implementation Plan: 이메일 기반 회원가입 및 회원관리
 
-**Branch**: `001-email-auth-user-management` | **Date**: 2026-02-09 | **Spec**: [spec.md](./spec.md)
-**Input**: Feature specification from `/specs/01-email-auth-user-management/spec.md`
+**Branch**: `002-email-auth-user-management` | **Date**: 2026-02-09 | **Spec**: [spec.md](./spec.md)
+**Input**: Feature specification from `/specs/02-email-auth-user-management/spec.md`
 
 **Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.
 
@@ -64,7 +64,7 @@
 - [x] **Cost-Aware (비용 인지)**: 이메일 발송은 Redis 큐로 재시도 로직 구현 (실패 최소화). 세션은 Redis 캐시로 DB 부하 감소. 비밀번호 해시 비용 인자는 보안과 성능 균형 고려 (bcrypt rounds: 10-12). 이메일 API 무료 티어 모니터링 필요
 - [x] **Boundaries (명확한 경계)**: 모듈 분리 명확 - Auth Module (회원가입/로그인/세션), User Module (프로필/계정관리), Email Module (이메일 발송), Auth UI (폼 컴포넌트). 순환 의존성 금지 (User → Auth 의존 금지)
 - [x] **Type-Safety (타입 안전성)**: TypeScript strict mode 활성화. Drizzle ORM으로 DB 스키마 타입 자동 생성. Zod로 API 요청/응답 검증. better-auth 타입 정의 활용. `any` 타입 사용 금지
-- [x] **Spec-Before-Code (명세 우선)**: `specs/01-email-auth-user-management/spec.md` 승인 완료. 이 계획 문서가 구현 전 작성됨
+- [x] **Spec-Before-Code (명세 우선)**: `specs/02-email-auth-user-management/spec.md` 승인 완료. 이 계획 문서가 구현 전 작성됨
 
 **위반 사항**: 없음 - 모든 헌법 원칙 준수
 
@@ -364,7 +364,7 @@ All 8 principles remain fully compliant after Phase 1 design:
 ### Files Generated
 
 ```
-specs/01-email-auth-user-management/
+specs/02-email-auth-user-management/
 ├── spec.md              ✅ (pre-existing)
 ├── plan.md              ✅ (this file)
 ├── research.md          ✅ (Phase 0)
@@ -377,9 +377,10 @@ specs/01-email-auth-user-management/
 └── tasks.md             ⏳ (Phase 2 - next step)
 ```
 
-**Branch**: `01-email-auth-user-management`  
+**Branch**: `02-email-auth-user-management`  
 **Ready for**: Task generation and implementation
 
 ---
 
 **End of Planning Phase**
+

@@ -1,12 +1,12 @@
 # 기능 명세: Storybook — shadcn/ui 컴포넌트 + react-hook-form + 레이아웃 스토리
 
-**브랜치**: `02-storybook-shadcn-forms`  
+**브랜치**: `01-storybook-shadcn-forms`  
 **작성일**: 2026-02-10  
 **상태**: 드래프트  
 **입력**: 사용자 설명: "Storybook: shadcn/ui components + react-hook-form + layout stories"
 
 ## 요약 (한 줄)
-shadcn/ui 컴포넌트를 보여주고, react-hook-form(RHF) 연동 예시(Controller와 register 사용), 레이아웃 프리미티브와 반응형 패턴을 문서화하는 Storybook 스토리를 제공합니다.
+UI 구현은 shadcn/ui 사용을 기본 규칙으로 강제하고, 신규 UI 컴포넌트가 필요할 경우 Tailwind CSS로 작성하며, react-hook-form(RHF) 연동 예시와 반응형 레이아웃 패턴을 Storybook으로 문서화합니다.
 
 ## 사용자 시나리오 및 테스트
 
@@ -54,6 +54,8 @@ QA는 스토리에 접근성 주석과 a11y 검사를 통합하여 자동화된 
 ### 기능 요구사항 (테스트 가능)
 FR-001: Button, Input/TextField, Select/Dropdown, Checkbox/Radio, Modal/Dialog, Layouts, Composed Form 등 각 컴포넌트에 대한 스토리를 제공해야 합니다.
 
+FR-001a: 본 기능 범위의 UI는 shadcn/ui 컴포넌트를 강제 사용해야 하며, 동일 목적의 임의 커스텀 UI 라이브러리 도입은 허용하지 않아야 합니다.
+
 FR-002: 최소 하나의 RHF 기반 폼 스토리를 제공해야 하며, Controller와 register 사용 예시, 동기/비동기 유효성, 제출/리셋 흐름을 포함해야 합니다.
 
 FR-003: Modal 내 폼 스토리를 제공하여 모달의 focus-trap 및 접근성 동작을 검증할 수 있어야 합니다.
@@ -68,6 +70,8 @@ FR-007: Storybook 빌드 시 TypeScript 오류가 없어야 합니다.
 
 FR-008: 시각 회귀 및 단위 테스트(예시)를 위한 테스트 가이드를 제공해야 합니다.
 
+FR-009: 신규 UI 컴포넌트를 추가해야 하는 경우 Tailwind CSS 유틸리티 클래스로 작성해야 하며, shadcn/ui의 토큰/스타일 체계와 일관성을 유지해야 합니다.
+
 ### 비기능 요구사항
 NFR-001: 로컬에서 스토리 로드 시간이 합리적이어야 합니다(대략 페이지 열림 <3초 기대).
 NFR-002: 문서는 중급 React+TypeScript 개발자가 이해할 수 있어야 합니다.
@@ -79,6 +83,7 @@ NFR-002: 문서는 중급 React+TypeScript 개발자가 이해할 수 있어야 
 - 레이아웃 스토리는 세 가지 뷰포트에서 문서화된 동작을 보여줌.
 - 주요 스토리에 치명적 a11y 위반 없음.
 - 최소 하나의 시각 회귀/단위 테스트 예시 포함 및 실행 가능.
+- 스토리/예시 코드에서 UI 계층은 shadcn/ui 우선 원칙을 따르고, 신규 UI는 Tailwind 기반으로 작성됨.
 
 ## 핵심 개념
 - Component Story: 컴포넌트 변형을 보여주는 Storybook 인스턴스
@@ -280,8 +285,13 @@ export function FormInDialog() {
 - 프로젝트는 React + TypeScript, pnpm 사용.
 - Storybook이 이미 구성되어 있다고 가정(없으면 plan.md의 설치/설정 절차 따름).
 - shadcn/ui 컴포넌트는 로컬 `ui` 패키지이거나 npm 의존성으로 제공된다고 가정. 없다면 plan에서 설치 방법 제시.
+- UI 정책은 "shadcn/ui 강제 + 신규 UI는 Tailwind 작성"을 기본으로 가정.
 - Storybook은 Vite 또는 Webpack 같은 현대적 번들러를 사용한다고 가정.
 
 ## 결정 사항 (2026-02-10)
 - RQ1 결정: `shadcn/ui`는 로컬 벤더링(`packages/ui`) 방식을 사용합니다.
 - RQ2 결정: 시각 회귀는 오픈소스 스냅샷 방식을 기본으로 사용하며 Chromatic은 선택 옵션으로 유지합니다.
+
+## 결정 사항 (2026-02-11)
+- RQ3 결정: UI 구현은 shadcn/ui를 강제 사용하고, 신규 UI 컴포넌트는 Tailwind CSS로 작성합니다.
+

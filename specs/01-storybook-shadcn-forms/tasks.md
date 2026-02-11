@@ -2,10 +2,10 @@ Tech-Stack: specs/00-tech-stack.md
 
 # Tasks: Storybook shadcn/ui + react-hook-form + Layout Stories
 
-**Input**: Design documents from `/specs/02-storybook-shadcn-forms/`  
+**Input**: Design documents from `/specs/01-storybook-shadcn-forms/`  
 **Prerequisites**: `plan.md` (required), `spec.md` (required)
 
-**Tests**: This feature explicitly requires test examples and a11y checks (FR-005, FR-008), so test tasks are included.
+**Tests**: This feature explicitly requires test examples and a11y checks (FR-005, FR-008), and UI policy compliance (FR-001a, FR-009), so test/check tasks are included.
 
 **Organization**: Tasks are grouped by user story so each story can be implemented and verified independently.
 
@@ -21,7 +21,7 @@ Tech-Stack: specs/00-tech-stack.md
 - Story files: `apps/storybook/src/stories/`
 - Docs story files: `apps/storybook/src/stories/docs/`
 - Test files: `apps/storybook/src/tests/`
-- Feature docs: `specs/02-storybook-shadcn-forms/`
+- Feature docs: `specs/01-storybook-shadcn-forms/`
 
 ## Phase 1: Setup (Shared Infrastructure)
 
@@ -31,7 +31,7 @@ Tech-Stack: specs/00-tech-stack.md
 - [x] T002 Configure Storybook addons (`essentials`, `a11y`) in `apps/storybook/.storybook/main.ts`
 - [x] T003 [P] Add TypeScript strict config and alias mapping in `apps/storybook/tsconfig.json`
 - [x] T004 [P] Add shared style/bootstrap entry in `apps/storybook/src/styles.css` and import from `apps/storybook/.storybook/preview.ts`
-- [x] T005 Document setup and run commands in `specs/02-storybook-shadcn-forms/README-setup.md`
+- [x] T005 Document setup and run commands in `specs/01-storybook-shadcn-forms/README-setup.md`
 
 ---
 
@@ -41,8 +41,8 @@ Tech-Stack: specs/00-tech-stack.md
 
 **CRITICAL**: No US tasks start before this phase is done.
 
-- [x] T006 Resolve RQ1 (`packages/ui` vs external dependency) and record decision in `specs/02-storybook-shadcn-forms/resolve-ui.md`
-- [x] T007 Resolve RQ2 (Chromatic vs OSS snapshot) and record decision in `specs/02-storybook-shadcn-forms/plan.md`
+- [x] T006 Resolve RQ1 (`packages/ui` vs external dependency) and record decision in `specs/01-storybook-shadcn-forms/resolve-ui.md`
+- [x] T007 Resolve RQ2 (Chromatic vs OSS snapshot) and record decision in `specs/01-storybook-shadcn-forms/plan.md`
 - [x] T008 Create shared story helper wrappers in `apps/storybook/src/stories/_shared/decorators.tsx`
 - [x] T009 [P] Create shared form fixtures and validators in `apps/storybook/src/stories/_shared/form-fixtures.ts`
 - [x] T010 [P] Create viewport/breakpoint constants in `apps/storybook/src/stories/_shared/breakpoints.ts`
@@ -129,8 +129,8 @@ Tech-Stack: specs/00-tech-stack.md
 ### Implementation for User Story 4
 
 - [x] T029 [US4] Add a11y parameters and keyboard notes to core stories in `apps/storybook/src/stories/components/*.stories.tsx` and `apps/storybook/src/stories/forms/*.stories.tsx`
-- [x] T030 [US4] Add CI test run guide in `specs/02-storybook-shadcn-forms/README-setup.md`
-- [x] T031 [US4] Record acceptance evidence checklist in `specs/02-storybook-shadcn-forms/tasks.md` (this file)
+- [x] T030 [US4] Add CI test run guide in `specs/01-storybook-shadcn-forms/README-setup.md`
+- [x] T031 [US4] Record acceptance evidence checklist in `specs/01-storybook-shadcn-forms/tasks.md` (this file)
 
 **Checkpoint**: US4 independently usable.
 
@@ -141,8 +141,11 @@ Tech-Stack: specs/00-tech-stack.md
 **Purpose**: Final consistency, docs, and release readiness.
 
 - [x] T032 [P] Normalize story naming/export style across `apps/storybook/src/stories/**/*.stories.tsx`
-- [x] T033 [P] Run full quality gate (`storybook build`, tests, type-check) and capture results in `specs/02-storybook-shadcn-forms/README-setup.md`
-- [x] T034 Update final delivery notes and open items in `specs/02-storybook-shadcn-forms/plan.md`
+- [x] T033 [P] Run full quality gate (`storybook build`, tests, type-check) and capture results in `specs/01-storybook-shadcn-forms/README-setup.md`
+- [x] T034 Update final delivery notes and open items in `specs/01-storybook-shadcn-forms/plan.md`
+- [x] T035 Add UI policy checklist (shadcn/ui mandatory, Tailwind for new UI) in `specs/01-storybook-shadcn-forms/README-setup.md`
+- [x] T036 Add review rule to validate story imports use local shadcn/ui package in `specs/01-storybook-shadcn-forms/tasks.md`
+- [x] T037 Add sample guideline for new Tailwind-based custom UI story in `specs/01-storybook-shadcn-forms/spec.md`
 
 ---
 
@@ -207,3 +210,10 @@ Tech-Stack: specs/00-tech-stack.md
 - [x] US3 layout primitives/scenarios and layout guide added
 - [x] US4 a11y baseline test and visual snapshot tests added
 - [x] Full quality gate executed and logged (`T033`)
+
+## UI Policy Review Rule (T036)
+
+- Review all story/component imports and ensure UI primitives come from local shadcn/ui package first.
+- Reject PRs that introduce alternative UI libraries for overlapping components without explicit decision record.
+- For new custom UI stories, verify Tailwind CSS utilities are used and token consistency is documented.
+

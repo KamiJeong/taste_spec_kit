@@ -1,7 +1,7 @@
 # Tasks: 이메일 기반 회원가입 및 회원관리
 
-**Feature**: 001-email-auth-user-management  
-**Input**: Design documents from `/specs/01-email-auth-user-management/`  
+**Feature**: 002-email-auth-user-management  
+**Input**: Design documents from `/specs/02-email-auth-user-management/`  
 **Prerequisites**: plan.md, spec.md, research.md, data-model.md, contracts/, turborepo-config.md
 
 **Tests**: Tests are NOT explicitly requested in the feature specification, therefore test tasks are EXCLUDED from this plan. Focus on implementation only.
@@ -516,4 +516,5 @@ taste_spec_kit/
 - Spec-Before-Code: Tasks derived from spec.md user stories
 
 **Implementation Ready**: Each task has specific file paths and clear acceptance criteria
+
 

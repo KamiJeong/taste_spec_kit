@@ -26,4 +26,5 @@ This checklist summarizes the remaining implementation work for the feature `이
 
 - Several foundational items (database schemas, validators, email queue & processor) are already implemented in the repository.
 - The checklist above is intentionally conservative: it lists only high-priority unfinished tasks required to enable signup + verify email flow (US1).
-- For phase 2+ tasks, refer to `specs/01-email-auth-user-management/tasks.md` for the full list.
+- For phase 2+ tasks, refer to `specs/02-email-auth-user-management/tasks.md` for the full list.
+

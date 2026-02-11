@@ -1,6 +1,6 @@
 # Turborepo Configuration Examples
 
-**Feature**: 001-email-auth-user-management  
+**Feature**: 002-email-auth-user-management  
 **Purpose**: Turborepo 설정 파일 예시 및 설명
 
 ---
@@ -571,3 +571,4 @@ pnpm dlx turbo link
 | 아무것도 변경 안 함 | 60초 | 1초 |
 
 **Turborepo의 증분 빌드와 캐싱으로 개발 속도가 크게 향상됩니다.**
+
