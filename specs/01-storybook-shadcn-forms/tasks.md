@@ -1,229 +1,80 @@
 Tech-Stack: specs/00-tech-stack.md
 
-# Tasks: Storybook shadcn/ui + react-hook-form + Layout Stories
+# Tasks: Storybook + shadcn/ui Component Ownership
 
 **Input**: Design documents from `/specs/01-storybook-shadcn-forms/`  
-**Prerequisites**: `plan.md` (required), `spec.md` (required)
+**Prerequisites**: `spec.md`, `plan.md`
 
-**Tests**: This feature explicitly requires test examples and a11y checks (FR-005, FR-008), and UI policy compliance (FR-001a, FR-009), so test/check tasks are included.
+## Review (Tasks Step)
 
-**Organization**: Tasks are grouped by user story so each story can be implemented and verified independently.
+### 검토 결과
+
+1. 설치 방식이 태스크로 분리되지 않아 실제 실행 시 누락되기 쉬웠다.
+2. CLI 실행 증거와 실패 처리(EACCES) 규칙이 태스크에 없었다.
+
+### Refine 결정
+
+1. 설치 표준화 단계(Init/Add/Evidence)를 Phase 2로 고정한다.
+2. ownership과 story 구현은 설치 완료 후 진행한다.
 
 ## Format: `[ID] [P?] [Story] Description`
 
-- `[P]`: Can run in parallel (different files, no direct dependency)
-- `[Story]`: User story mapping (`US1`, `US2`, `US3`, `US4`)
-- All tasks include concrete paths
+- `[P]`: 병렬 가능
+- `[Story]`: US 매핑
 
-## Analysis Sync (2026-02-11)
+## Phase 1: Bootstrap (Shared)
 
-- This task list was reset to pending after analysis confirmed implementation artifacts are not yet present in this repository state.
-- Completion must be marked only after corresponding file/test evidence exists.
-- Execution priority is aligned as `US1 -> US2 -> US4 -> US3`.
-
-## Path Conventions
-
-- Storybook app root: `apps/storybook/`
-- Story files: `apps/storybook/src/stories/`
-- Docs story files: `apps/storybook/src/stories/docs/`
-- Test files: `apps/storybook/src/tests/`
-- Feature docs: `specs/01-storybook-shadcn-forms/`
-
-## Phase 1: Setup (Shared Infrastructure)
-
-**Purpose**: Storybook runtime and baseline tooling setup.
-
-- [ ] T001 Create Storybook workspace skeleton in `apps/storybook/package.json`, `apps/storybook/tsconfig.json`, `apps/storybook/.storybook/main.ts`, `apps/storybook/.storybook/preview.ts`
-- [ ] T002 Configure Storybook addons (`essentials`, `a11y`) in `apps/storybook/.storybook/main.ts`
-- [ ] T003 [P] Add TypeScript strict config and alias mapping in `apps/storybook/tsconfig.json`
-- [ ] T004 [P] Add shared style/bootstrap entry in `apps/storybook/src/styles.css` and import from `apps/storybook/.storybook/preview.ts`
-- [ ] T005 Document setup and run commands in `specs/01-storybook-shadcn-forms/README-setup.md`
+- [x] T001 Create root workspace files: `package.json`, `pnpm-workspace.yaml`, `turbo.json`, `tsconfig.base.json`
+- [x] T002 Create `apps/storybook` skeleton: `.storybook`, `src/stories`, `src/tests`, `src/_shared`
+- [x] T003 Create `packages/ui` skeleton: `src/components/ui`, `src/lib`, `components.json`
 
 ---
 
-## Phase 2: Foundational (Blocking Prerequisites)
+## Phase 2: shadcn/ui Install Standardization (P1)
 
-**Purpose**: Decisions and foundations required before user-story implementation.
-
-**CRITICAL**: No US tasks start before this phase is done.
-
-- [ ] T006 Resolve RQ1 (`packages/ui` vs external dependency) and record decision in `specs/01-storybook-shadcn-forms/resolve-ui.md`
-- [ ] T007 Resolve RQ2 (Chromatic vs OSS snapshot) and record decision in `specs/01-storybook-shadcn-forms/plan.md`
-- [ ] T008 Create shared story helper wrappers in `apps/storybook/src/stories/_shared/decorators.tsx`
-- [ ] T009 [P] Create shared form fixtures and validators in `apps/storybook/src/stories/_shared/form-fixtures.ts`
-- [ ] T010 [P] Create viewport/breakpoint constants in `apps/storybook/src/stories/_shared/breakpoints.ts`
-
-**Checkpoint**: Foundation ready; US1/US2/US3/US4 can proceed.
+- [x] T004 [US1] Run `pnpm dlx shadcn@latest init --cwd packages/ui` (already initialized: `components.json` exists)
+- [x] T005 [US1] Run `pnpm dlx shadcn@latest add button input select checkbox radio-group dialog form label --cwd packages/ui`
+- [x] T006 [US1] Verify generated files under `packages/ui/src/components/ui/*`
+- [x] T007 [US1] Update `packages/ui/src/index.ts` exports for newly added components
+- [x] T008 [US1] Record install logs/failures(EACCES 포함) in `specs/01-storybook-shadcn-forms/README-setup.md`
 
 ---
 
-## Phase 3: User Story 1 - 컴포넌트 탐색 및 학습 (Priority: P1) 🎯 MVP
+## Phase 3: User Story 1 - UI Source Ownership (P1)
 
-**Goal**: 주요 UI 컴포넌트 변형/상태/코드 예시를 Storybook에서 즉시 확인 가능하게 한다.
-
-**Independent Test**: Button/Input/Select/Choice 스토리에서 variant/state/controls/code panel 확인.
-
-### Tests for User Story 1
-
-- [ ] T011 [P] [US1] Add smoke interaction tests for component stories in `apps/storybook/src/tests/us1-component-stories.test.tsx`
-
-### Implementation for User Story 1
-
-- [ ] T012 [P] [US1] Implement button stories in `apps/storybook/src/stories/components/Button.stories.tsx`
-- [ ] T013 [P] [US1] Implement input stories (register + controller samples) in `apps/storybook/src/stories/components/Input.stories.tsx`
-- [ ] T014 [P] [US1] Implement select stories (single/multi/options) in `apps/storybook/src/stories/components/Select.stories.tsx`
-- [ ] T015 [P] [US1] Implement checkbox/radio stories in `apps/storybook/src/stories/components/Choice.stories.tsx`
-- [ ] T016 [US1] Add code-panel snippets and args docs for US1 stories in `apps/storybook/src/stories/components/*.stories.tsx`
-
-**Checkpoint**: US1 independently usable.
+- [x] T009 [US1] Enforce UI source-only path: `packages/ui/src/components/ui/`
+- [x] T010 [US1] Ensure no reusable UI implementation files exist under `apps/storybook/src`
+- [x] T011 [US1] Add ownership guard test: `apps/storybook/src/tests/ui-ownership-guard.test.ts`
 
 ---
 
-## Phase 4: User Story 2 - RHF 폼 시나리오 (Priority: P1)
+## Phase 4: User Story 2 - Storybook Consumer Layer (P1)
 
-**Goal**: RHF Controller/register, 동기/비동기 검증, submit/reset 흐름을 명확히 제공한다.
-
-**Independent Test**: 폼 스토리에서 required/pattern/async 검증, submit/reset 동작 확인.
-
-### Tests for User Story 2
-
-- [ ] T017 [P] [US2] Add RHF validation tests in `apps/storybook/src/tests/us2-rhf-validation.test.tsx`
-- [ ] T018 [P] [US2] Add async validation mock tests in `apps/storybook/src/tests/us2-rhf-async.test.tsx`
-
-### Implementation for User Story 2
-
-- [ ] T019 [P] [US2] Implement composed RHF form stories in `apps/storybook/src/stories/forms/ComposedForm.stories.tsx`
-- [ ] T020 [P] [US2] Implement dialog-embedded form story in `apps/storybook/src/stories/forms/FormInDialog.stories.tsx`
-- [ ] T021 [US2] Implement async validation mock handlers in `apps/storybook/src/stories/forms/mocks/handlers.ts`
-- [ ] T022 [US2] Document controller vs register usage in `apps/storybook/src/stories/docs/RHF-Guide.mdx`
-
-**Checkpoint**: US2 independently usable.
+- [x] T012 [P] [US2] Add component stories in `apps/storybook/src/stories/components/*.stories.tsx`
+- [x] T013 [P] [US2] Add form stories/docs in `apps/storybook/src/stories/forms/*` and `apps/storybook/src/stories/docs/*`
+- [x] T014 [US2] Enforce `@repo/ui` imports for interactive UI in story files
 
 ---
 
-## Phase 5: User Story 3 - 반응형 레이아웃 검증 (Priority: P2)
+## Phase 5: User Story 3 - Ownership Governance (P2)
 
-**Goal**: Container/Grid/Stack 및 뷰포트별 반응형 패턴을 검증 가능하게 한다.
-
-**Independent Test**: mobile/tablet/desktop 전환 시 컬럼/스택 동작이 문서와 일치.
-
-### Tests for User Story 3
-
-- [ ] T023 [P] [US3] Add viewport regression checklist tests in `apps/storybook/src/tests/us3-layout-viewport.test.tsx`
-
-### Implementation for User Story 3
-
-- [ ] T024 [P] [US3] Implement container/grid/stack stories in `apps/storybook/src/stories/layouts/LayoutPrimitives.stories.tsx`
-- [ ] T025 [P] [US3] Implement auth-form and dashboard-grid layout scenarios in `apps/storybook/src/stories/layouts/LayoutScenarios.stories.tsx`
-- [ ] T026 [US3] Add breakpoint behavior documentation in `apps/storybook/src/stories/docs/Layout-Guide.mdx`
-
-**Checkpoint**: US3 independently usable.
+- [x] T015 [US3] Create catalog doc: `specs/01-storybook-shadcn-forms/shadcn-component-catalog.md`
+- [x] T016 [US3] Add component-to-story mapping in catalog doc
+- [x] T017 [US3] Update workflow doc in `specs/01-storybook-shadcn-forms/README-setup.md` (`shadcn add -> export -> story`)
 
 ---
 
-## Phase 6: User Story 4 - a11y 및 테스트 검증 (Priority: P1)
+## Phase 6: Verification
 
-**Goal**: 주요 스토리에 대해 치명적 a11y 위반 0 기준을 검증 가능한 상태로 만든다.
-
-**Independent Test**: a11y addon + 자동 테스트로 Button/Input/Form/Modal 주요 케이스 검증.
-
-### Tests for User Story 4
-
-- [ ] T027 [P] [US4] Add a11y assertions for critical stories in `apps/storybook/src/tests/us4-a11y-critical.test.tsx`
-- [ ] T028 [P] [US4] Add visual regression example test in `apps/storybook/src/tests/us4-visual-regression.test.ts`
-
-### Implementation for User Story 4
-
-- [ ] T029 [US4] Add a11y parameters and keyboard notes to core stories in `apps/storybook/src/stories/components/*.stories.tsx` and `apps/storybook/src/stories/forms/*.stories.tsx`
-- [ ] T030 [US4] Add CI test run guide in `specs/01-storybook-shadcn-forms/README-setup.md`
-- [ ] T031 [US4] Record acceptance evidence checklist in `specs/01-storybook-shadcn-forms/tasks.md` (this file)
-
-**Checkpoint**: US4 independently usable.
-
----
-
-## Phase 7: Polish & Cross-Cutting
-
-**Purpose**: Final consistency, docs, and release readiness.
-
-- [ ] T032 [P] Normalize story naming/export style across `apps/storybook/src/stories/**/*.stories.tsx`
-- [ ] T033 [P] Run full quality gate (`storybook build`, tests, type-check) and capture results in `specs/01-storybook-shadcn-forms/README-setup.md`
-- [ ] T034 Update final delivery notes and open items in `specs/01-storybook-shadcn-forms/plan.md`
-- [ ] T035 Add UI policy checklist (shadcn/ui mandatory, Tailwind for new UI) in `specs/01-storybook-shadcn-forms/README-setup.md`
-- [ ] T036 Add review rule to validate story imports use local shadcn/ui package in `specs/01-storybook-shadcn-forms/tasks.md`
-- [ ] T037 Add sample guideline for new Tailwind-based custom UI story in `specs/01-storybook-shadcn-forms/spec.md`
+- [x] T018 Run `pnpm install`
+- [x] T019 Run `pnpm typecheck`
+- [x] T020 Run `pnpm test`
+- [x] T021 Run `pnpm build-storybook`
+- [x] T022 Record gate outputs in `specs/01-storybook-shadcn-forms/README-setup.md`
 
 ---
 
 ## Dependencies & Execution Order
 
-### Phase Dependencies
-
-- Phase 1: no dependencies
-- Phase 2: depends on Phase 1 and blocks all US phases
-- Phase 3/4/5/6: depend on Phase 2 completion
-- Phase 7: depends on all targeted US phases completion
-
-### User Story Dependencies
-
-- US1: starts right after Phase 2
-- US2: starts right after Phase 2 (independent from US1)
-- US4: starts right after Phase 2 but should consume artifacts from US1/US2 stories
-- US3: starts after US4 baseline verification (layout-focused, independent from auth/form logic)
-
-### Within Each User Story
-
-- Tests first and failing before implementation
-- Shared fixtures/utilities before story-specific wiring
-- Story implementation before docs polish
-
-## Parallel Opportunities
-
-- `T003`, `T004`, `T005` can run together
-- `T009`, `T010` can run together
-- In US1: `T012`~`T015` parallel
-- In US2: `T017`, `T018`, `T019`, `T020` parallel (after fixtures ready)
-- In US3: `T024`, `T025` parallel
-- In US4: `T027`, `T028` parallel
-
-## Implementation Strategy
-
-### MVP First
-
-1. Complete Phase 1 and Phase 2
-2. Complete US1 (Phase 3) as MVP
-3. Validate US1 independently
-
-### Incremental Delivery
-
-1. Add US2 for RHF depth
-2. Add US4 for a11y and test gates
-3. Add US3 for responsive layout validation
-4. Finish with Phase 7 polish
-
-### Parallel Team Strategy
-
-1. One engineer: Phase 1/2 ownership
-2. After foundation:
-3. Engineer A -> US1
-4. Engineer B -> US2
-5. Engineer C -> US4/US3
-
-## Acceptance Evidence Checklist (T031)
-
-- [ ] US1 component stories added with docs/code snippets
-- [ ] US2 RHF composed form + dialog form stories added
-- [ ] US3 layout primitives/scenarios and layout guide added
-- [ ] US4 a11y baseline test and visual snapshot tests added
-- [ ] Full quality gate executed and logged (`T033`)
-
-## UI Policy Review Rule (T036)
-
-- Review all story/component imports and ensure UI primitives come from local shadcn/ui package first.
-- Reject PRs that introduce alternative UI libraries for overlapping components without explicit decision record.
-- For new custom UI stories, verify Tailwind CSS utilities are used and token consistency is documented.
-
-
-
-
-
+- Phase 1 -> Phase 2 -> Phase 3 -> Phase 4 -> Phase 5 -> Phase 6
+- Priority: US1 -> US2 -> US3

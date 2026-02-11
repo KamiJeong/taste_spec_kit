@@ -2,89 +2,52 @@ Tech-Stack: specs/00-tech-stack.md
 
 # Setup Guide: 01-storybook-shadcn-forms
 
-## Status (2026-02-10)
+## Install Workflow (Standard)
 
-Phase 1/2 foundational skeleton has been created:
+1. `pnpm dlx shadcn@latest init --cwd packages/ui`
+2. `pnpm dlx shadcn@latest add <component> --cwd packages/ui`
+3. Export from `packages/ui/src/index.ts`
+4. Consume via `@repo/ui` in `apps/storybook/src/stories`
 
-- Root workspace files: `package.json`, `pnpm-workspace.yaml`
-- Storybook app: `apps/storybook/*`
-- Local UI package: `packages/ui/*`
-- Shared Storybook helpers:
-  - `apps/storybook/src/stories/_shared/decorators.tsx`
-  - `apps/storybook/src/stories/_shared/form-fixtures.ts`
-  - `apps/storybook/src/stories/_shared/breakpoints.ts`
+## Current Install Attempt Log (2026-02-11)
 
-## Install
+- `pnpm dlx shadcn@latest init --cwd packages/ui` -> failed (`EACCES`)
+- `pnpm dlx shadcn@latest add ... --cwd packages/ui` -> failed (`EACCES`)
+- logs:
+  - `specs/01-storybook-shadcn-forms/shadcn-init.log`
+  - `specs/01-storybook-shadcn-forms/shadcn-init-retry.log`
+  - `specs/01-storybook-shadcn-forms/shadcn-add.log`
 
-Run from repository root:
+## Retry Result (2026-02-11)
 
-```powershell
-pnpm install
-```
+- `pnpm dlx shadcn@latest init --cwd packages/ui --yes`
+  - Result: expected preflight stop, `components.json` already exists in `packages/ui` (already initialized).
+- `pnpm dlx shadcn@latest add button input select checkbox radio-group dialog form label --cwd packages/ui --yes`
+  - Result: PASS, regenerated 8 files under `packages/ui/src/components/ui/*`.
 
-## Run
+## EACCES Fix Note
 
-Run Storybook dev server:
+- Cause: `pnpm dlx` could not fetch `https://registry.npmjs.org/shadcn` in restricted execution, reported as `EACCES`.
+- Resolution used for retry: run `pnpm dlx shadcn@latest ...` with network-enabled execution and default pnpm store settings.
+- Ownership rules remain unchanged: stories consume components only through `@repo/ui`.
 
-```powershell
-pnpm storybook
-```
+## Quality Gates
 
-Build Storybook:
+- `pnpm install`
+- `pnpm typecheck`
+- `pnpm test`
+- `pnpm build-storybook`
 
-```powershell
-pnpm build-storybook
-```
+## Quality Gate Results (2026-02-11)
 
-Type check:
+- `pnpm install`: PASS
+- `pnpm typecheck`: PASS
+- `pnpm test`: PASS
+- `pnpm build-storybook`: PASS
+- Note: Storybook build reports non-blocking bundle-size warnings and Radix `"use client"` directive warnings.
 
-```powershell
-pnpm typecheck
-```
+## Ownership Checklist
 
-Tests:
-
-```powershell
-pnpm test
-```
-
-## Decisions Applied
-
-- RQ1: Local vendored UI package (`packages/ui`) is used.
-- RQ2: Visual regression baseline is OSS snapshot approach (Chromatic optional).
-- RQ3: UI layer must use shadcn/ui, and any new custom UI component must be built with Tailwind CSS.
-
-## UI Policy Checklist
-
-- All Storybook UI examples import from local shadcn/ui package (`packages/ui`) first.
-- New custom UI is allowed only when shadcn/ui does not cover the use case.
-- New custom UI must be implemented with Tailwind CSS utilities and align with existing UI tokens.
-
-## CI Run Guide (for T030)
-
-Minimum pipeline steps:
-
-1. `pnpm install --frozen-lockfile`
-2. `pnpm typecheck`
-3. `pnpm test`
-4. `pnpm build-storybook`
-
-## Quality Gate Results
-
-Executed on 2026-02-10:
-
-- `pnpm install` ✅
-- `pnpm typecheck` ✅
-- `pnpm test` ✅ (6 files, 15 tests passed)
-- `pnpm build-storybook` ✅ (`apps/storybook/storybook-static` generated)
-
-Notes from build output:
-
-- Storybook telemetry notice printed (informational)
-- Large chunk warnings were reported by Vite/Storybook (non-blocking)
-
-## Notes
-
-- US1/US2 story and test files were added.
-- US3/US4 story and test files were added.
-
+- [x] `apps/storybook/src`에 UI 구현 파일 없음
+- [x] story 파일에서 인터랙티브 UI는 `@repo/ui` import 사용
+- [x] `packages/ui/src/components/ui`와 `shadcn-component-catalog.md` 매핑 일치

@@ -3,9 +3,9 @@
 **중요**: 모든 `/speckit` 명령은 이 파일 `specs/00-tech-stack.md`를 반드시 참조해야 합니다. 이 문서는 프로젝트의 SSOT(단일 진실 공급원)입니다.
 
 **프로젝트**: taste_spec_kit  
-**버전**: 1.2.0  
+**버전**: 1.3.1  
 **작성일**: 2026-02-09  
-**최종 수정일**: 2026-02-09  
+**최종 수정일**: 2026-02-11  
 **상태**: 활성 (Active)
 
 ## 개요
@@ -63,9 +63,12 @@ repo-root/
 - **Next.js**: `^15.1.0` (풀스택 웹 프레임워크)
 - **React**: `^19.0.0` (UI 라이브러리)
 - **UI 컴포넌트**: 
-  - **shadcn/ui**: `latest` (컴포넌트 라이브러리)
+  - **shadcn/ui**: `registry latest (CLI/registry 기반)` (컴포넌트 소스)
+  - **설치 참고**: https://ui.shadcn.com/docs/components (shadcn/ui 설치/컴포넌트 추가 시 우선 참조)
   - **Tailwind CSS**: `^4.0.0` (스타일링)
-- **스토리북**: **Storybook**: `^8.5.0` (컴포넌트 개발 환경)
+- **스토리북**:
+  - **storybook / @storybook/react-vite / @storybook/addon-a11y / @storybook/addon-docs**: `^10.2.0` (10.2.x 라인)
+  - **주의**: Storybook 10 라인에서는 `@storybook/addon-essentials` 대신 개별 addon 조합을 사용
 
 ### 백엔드 (Backend)
 
@@ -157,7 +160,33 @@ repo-root/
 5. **이 문서 업데이트**: 승인 후 즉시 반영
 6. **공지**: 팀 전체에 변경 사항 공유
 
+## 외부 기준 검증 (Version Verification)
+
+- 검증일: 2026-02-11
+- Storybook 릴리스 기준: https://github.com/storybookjs/storybook/releases
+- Storybook 10.2 라인 안내: https://storybook.js.org/releases/10.2
+- npm registry 조회 결과(2026-02-11):
+  - `storybook`: `10.2.8`
+  - `@storybook/react-vite`: `10.2.8`
+  - `@storybook/addon-a11y`: `10.2.8`
+  - `@storybook/addon-docs`: `10.2.8`
+  - `@storybook/addon-essentials`: `8.6.14` (Storybook 10과 버전 라인 불일치)
+- shadcn/ui 기준 문서: https://ui.shadcn.com/docs
+- shadcn/ui 설치 참고(components): https://ui.shadcn.com/docs/components
+
 ## 변경 이력 (Change Log)
+
+### 1.3.1 (2026-02-11)
+
+- **정정**: Storybook 기준을 패키지별 실제 npm 배포 라인으로 명시
+- **명확화**: Storybook 10 라인에서는 `@storybook/addon-docs` 등 개별 addon 조합을 사용
+- **추가**: 외부 기준 검증 섹션에 npm registry 조회 결과 반영
+
+### 1.3.0 (2026-02-11)
+
+- **변경**: Storybook `^8.5.0` → `^10.2.0` (메이저 라인 정렬)
+- **명확화**: shadcn/ui는 npm semver 라이브러리보다 registry/CLI 기반 소스 채택 방식으로 관리
+- **정책**: `specs/01-storybook-shadcn-forms` 구현은 Storybook 10.2.x 기준으로 정합성 유지
 
 ### 1.2.0 (2026-02-09)
 
