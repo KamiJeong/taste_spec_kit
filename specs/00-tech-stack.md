@@ -1,9 +1,11 @@
 # 기술 스택 명세서 (Tech Stack Specification)
 
+**중요**: 모든 `/speckit` 명령은 이 파일 `specs/00-tech-stack.md`를 반드시 참조해야 합니다. 이 문서는 프로젝트의 SSOT(단일 진실 공급원)입니다.
+
 **프로젝트**: taste_spec_kit  
-**버전**: 1.2.0  
+**버전**: 1.3.2  
 **작성일**: 2026-02-09  
-**최종 수정일**: 2026-02-09  
+**최종 수정일**: 2026-02-12  
 **상태**: 활성 (Active)
 
 ## 개요
@@ -28,6 +30,29 @@
 - **배포 방식**: Docker Image
 - **API 스타일**: REST (기본), GraphQL (선택적 고려)
 
+### Monorepo 구조 (Turborepo 권장)
+
+- 권장 가이드: https://turborepo.dev/docs/crafting-your-repository/structuring-a-repository
+- 설명: 위 Turborepo 문서를 참고하여 리포지토리를 구성합니다. Turborepo는 작업(작업공간) 단위를 명확히 분리하고, 파이프라인과 캐싱으로 빌드/테스트 효율을 높입니다.
+
+- 권장 폴더 구조 예시:
+
+```
+repo-root/
+├── apps/               # 배포 가능한 애플리케이션 (예: api, web)
+├── packages/           # 재사용 가능한 라이브러리(@repo/* - types, ui, validators, database 등)
+├── tooling/            # 빌드/스크립트/자동화 도구
+├── .github/            # CI/CD 워크플로우
+├── pnpm-workspace.yaml # pnpm 워크스페이스 설정
+├── turbo.json          # Turborepo 파이프라인 설정
+└── package.json        # 루트 워크스페이스 및 공통 스크립트
+```
+
+- 권장 관행:
+  - 각 `apps/*`와 `packages/*`는 자체 `package.json`과 명확한 `scripts`(build/dev/test/lint)를 가집니다.
+  - 루트에 `pnpm-workspace.yaml`과 `turbo.json`을 두어 워크스페이스와 파이프라인을 관리합니다.
+  - 내부 패키지는 `@repo/*` 네임스페이스를 사용하여 명확한 의존성을 유지합니다.
+
 ### 핵심 언어 (Core Languages)
 
 - **Node.js**: `22.x LTS` (런타임 환경)
@@ -38,9 +63,13 @@
 - **Next.js**: `^15.1.0` (풀스택 웹 프레임워크)
 - **React**: `^19.0.0` (UI 라이브러리)
 - **UI 컴포넌트**: 
-  - **shadcn/ui**: `latest` (컴포넌트 라이브러리)
+  - **shadcn/ui**: `registry latest (CLI/registry 기반)` (컴포넌트 소스)
+  - **설치 참고**: https://ui.shadcn.com/docs/components (shadcn/ui 설치/컴포넌트 추가 시 우선 참조)
+  - **MCP 설정 참고**: https://ui.shadcn.com/docs/mcp?utm_source=chatgpt.com (Codex/LLM 기반 컴포넌트 워크플로우 연동 시 우선 참조)
   - **Tailwind CSS**: `^4.0.0` (스타일링)
-- **스토리북**: **Storybook**: `^8.5.0` (컴포넌트 개발 환경)
+- **스토리북**:
+  - **storybook / @storybook/react-vite / @storybook/addon-a11y / @storybook/addon-docs**: `^10.2.0` (10.2.x 라인)
+  - **주의**: Storybook 10 라인에서는 `@storybook/addon-essentials` 대신 개별 addon 조합을 사용
 
 ### 백엔드 (Backend)
 
@@ -64,7 +93,8 @@
 
 ### 개발 도구 (Development Tools)
 
-- **bun**: `^1.1.40` (패키지 관리자 & 런타임 - Monorepo 지원, 빠른 성능)
+<!-- 가정: pnpm 버전 ^8.6.0은 2026년 기준으로 적절하다고 가정함 -->
+- **pnpm**: `^8.6.0` (패키지 관리자 & 워크스페이스 지원)
 - **ESLint**: `^9.0.0` (린팅)
 - **Prettier**: `^3.4.0` (포매팅)
 - **Docker**: `27.x` (컨테이너화)
@@ -118,7 +148,7 @@
 - ❌ 프로젝트별로 다른 Node.js 버전 사용
 - ❌ 타입 정의 없이 JavaScript 사용 (`.js` 대신 `.ts` 필수)
 - ❌ `any` 타입 무분별한 사용 (정당화 필요)
-- ❌ Monorepo 외부에서 패키지 직접 설치 (`bun` workspace 사용 필수)
+- ❌ Monorepo 외부에서 패키지 직접 설치 (`pnpm` workspace 사용 필수)
 
 ## 새 기술 도입 프로세스
 
@@ -131,7 +161,39 @@
 5. **이 문서 업데이트**: 승인 후 즉시 반영
 6. **공지**: 팀 전체에 변경 사항 공유
 
+## 외부 기준 검증 (Version Verification)
+
+- 검증일: 2026-02-11
+- Storybook 릴리스 기준: https://github.com/storybookjs/storybook/releases
+- Storybook 10.2 라인 안내: https://storybook.js.org/releases/10.2
+- npm registry 조회 결과(2026-02-11):
+  - `storybook`: `10.2.8`
+  - `@storybook/react-vite`: `10.2.8`
+  - `@storybook/addon-a11y`: `10.2.8`
+  - `@storybook/addon-docs`: `10.2.8`
+  - `@storybook/addon-essentials`: `8.6.14` (Storybook 10과 버전 라인 불일치)
+- shadcn/ui 기준 문서: https://ui.shadcn.com/docs
+- shadcn/ui 설치 참고(components): https://ui.shadcn.com/docs/components
+- shadcn/ui MCP 설정 참고: https://ui.shadcn.com/docs/mcp?utm_source=chatgpt.com
+
 ## 변경 이력 (Change Log)
+
+### 1.3.2 (2026-02-12)
+
+- **추가**: shadcn/ui MCP 설정 참조 문서 링크 명시
+- **명확화**: Codex/LLM 연동 시 shadcn/ui 공식 MCP 가이드를 우선 기준으로 사용
+
+### 1.3.1 (2026-02-11)
+
+- **정정**: Storybook 기준을 패키지별 실제 npm 배포 라인으로 명시
+- **명확화**: Storybook 10 라인에서는 `@storybook/addon-docs` 등 개별 addon 조합을 사용
+- **추가**: 외부 기준 검증 섹션에 npm registry 조회 결과 반영
+
+### 1.3.0 (2026-02-11)
+
+- **변경**: Storybook `^8.5.0` → `^10.2.0` (메이저 라인 정렬)
+- **명확화**: shadcn/ui는 npm semver 라이브러리보다 registry/CLI 기반 소스 채택 방식으로 관리
+- **정책**: `specs/01-design-system` 구현은 Storybook 10.2.x 기준으로 정합성 유지
 
 ### 1.2.0 (2026-02-09)
 
@@ -150,7 +212,7 @@
 - **변경**: ESLint `^8.0.0` → `^9.0.0` (최신 메이저 버전)
 - **변경**: Prettier `^3.0.0` → `^3.4.0` (최신 마이너 버전)
 - **변경**: Docker `24.x` → `27.x` (최신 버전)
-- **변경**: 패키지 매니저 `pnpm` → `bun` (성능 및 속도 개선)
+- **변경**: 패키지 매니저 `bun` → `pnpm` (정책 복구 — pnpm 사용)
 - **정책**: 모든 라이브러리를 최신 안정 버전으로 업데이트
 
 ### 1.1.0 (2026-02-09)
@@ -180,4 +242,3 @@
 - [프로젝트 헌법](../.specify/memory/constitution.md)
 - [명세 템플릿](../.specify/templates/spec-template.md)
 - [구현 계획 템플릿](../.specify/templates/plan-template.md)
-

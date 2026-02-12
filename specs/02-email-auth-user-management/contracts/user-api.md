@@ -1,6 +1,6 @@
 # API Contracts: User Profile Endpoints
 
-**Feature**: 001-email-auth-user-management  
+**Feature**: 002-email-auth-user-management  
 **API Style**: REST  
 **Base URL**: `/api/v1/users`
 
@@ -591,4 +591,5 @@ GET /api/v1/users/activity-log?page=1&limit=20
 - 계정 비활성화/삭제 시 **즉시 로그아웃**
 - 활동 로그는 **최근 1년간 데이터만** 조회 가능
 - 페이지네이션은 **Cursor-based** 대신 **Offset-based** 사용 (간단한 구현)
+
 

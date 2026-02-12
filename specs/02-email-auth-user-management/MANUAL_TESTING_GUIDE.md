@@ -113,7 +113,7 @@ docker exec -it taste_spec_kit_redis redis-cli -a ilovekami PING
 **Test in terminal**:
 ```bash
 cd C:\Users\USER\Documents\GitHub\taste_spec_kit
-bun turbo run type-check
+pnpm turbo run type-check
 ```
 **Expected**: ✅ All 10 tasks pass
 
@@ -154,7 +154,7 @@ console.log('Schema:', typeof signupSchema);
 Run:
 ```bash
 cd apps/api
-bun run test-imports.ts
+pnpm run test-imports.ts
 ```
 
 **Expected**: No errors, logs show object types
@@ -236,10 +236,10 @@ docker restart taste_spec_kit_postgres
 **Solution**:
 ```bash
 # Rebuild packages
-bun turbo run build --force
+pnpm turbo run build --force
 
 # Reinstall dependencies
-bun install
+pnpm install
 ```
 
 ### Issue: Blank Page
@@ -250,7 +250,7 @@ bun install
 1. Check browser console for errors
 2. Hard refresh: Ctrl + Shift + R
 3. Clear Next.js cache: `rm -rf apps/web/.next`
-4. Rebuild: `bun turbo run build --filter=web`
+4. Rebuild: `pnpm turbo run build --filter=web`
 
 ---
 
@@ -341,11 +341,11 @@ You have three options:
 
 ```bash
 # One terminal for logs
-bun turbo run dev
+pnpm turbo run dev
 
 # Separate terminal for commands
 cd packages/database
-bun drizzle-kit studio
+pnpm drizzle-kit studio
 
 # Another for testing
 curl http://localhost:3001/api/v1/health
@@ -389,4 +389,3 @@ If all tests pass, you have successfully set up a **production-ready monorepo** 
 **Manual Testing Guide**  
 **Created**: February 9, 2026  
 **Status**: Foundation Ready for Testing
-

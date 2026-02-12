@@ -1,6 +1,6 @@
 # API Contracts: Authentication Endpoints
 
-**Feature**: 001-email-auth-user-management  
+**Feature**: 002-email-auth-user-management  
 **API Style**: REST  
 **Base URL**: `/api/v1/auth`
 
@@ -723,4 +723,5 @@ Access-Control-Allow-Headers: Content-Type, Authorization
 - 비밀번호는 **절대 응답에 포함되지 않음**
 - Rate limiting은 **IP 주소 + 엔드포인트** 기준
 - 에러 메시지는 **한국어** (프론트엔드에서 표시)
+
 

@@ -1,6 +1,6 @@
 # Quickstart Guide: 이메일 기반 회원가입 및 회원관리
 
-**Feature**: 001-email-auth-user-management  
+**Feature**: 002-email-auth-user-management  
 **Date**: 2026-02-09  
 **Audience**: Developers implementing this feature
 
@@ -18,7 +18,7 @@
 
 ### 필수 도구
 - **Node.js**: 22.x LTS
-- **bun**: ^1.1.40 (패키지 매니저 & 런타임)
+- **pnpm**: ^8.6.0 (패키지 매니저 & 런타임)
 - **turbo**: ^2.x (Turborepo CLI - 자동 설치됨)
 - **Docker**: 27.x
 - **Docker Compose**: 2.x
@@ -28,7 +28,7 @@
 ```bash
 # 버전 확인
 node --version    # v22.x.x
-bun --version     # 1.1.40
+pnpm --version     # ^8.6.0
 docker --version  # Docker version 27.x.x
 ```
 
@@ -47,10 +47,10 @@ cd taste_spec_kit
 
 # Turborepo 워크스페이스 의존성 설치
 # Root + 모든 apps/packages의 의존성을 한 번에 설치
-bun install
+pnpm install
 
 # 설치 확인 (Turborepo CLI가 사용 가능해짐)
-bun turbo --version
+pnpm turbo --version
 ```
 
 **Turborepo 워크스페이스 구조**:
@@ -132,12 +132,12 @@ TS_NODE_PROJECT=tsconfig.json
 ```bash
 # @repo/database 패키지에서 마이그레이션 실행
 # Turborepo를 통해 실행 (의존성 자동 관리)
-bun turbo run db:migrate
+pnpm turbo run db:migrate
 
 # 또는 직접 실행
 cd packages/database
-bun drizzle-kit generate:pg
-bun drizzle-kit push:pg
+pnpm drizzle-kit generate:pg
+pnpm drizzle-kit push:pg
 
 # 성공 메시지 확인:
 # ✓ Migrations applied successfully
@@ -172,11 +172,11 @@ docker exec -it postgres psql -U user -d taste_spec_kit
 
 ```bash
 # 프로젝트 루트에서 Turborepo로 실행 (권장)
-bun turbo run dev --filter=api
+pnpm turbo run dev --filter=api
 
 # 또는 직접 실행
 cd apps/api
-bun run dev
+pnpm run dev
 
 # 예상 출력:
 # [Nest] 12345 - Starting Nest application...
@@ -209,11 +209,11 @@ curl http://localhost:3001/health
 
 ```bash
 # 프로젝트 루트에서 Turborepo로 실행 (권장)
-bun turbo run dev --filter=web
+pnpm turbo run dev --filter=web
 
 # 또는 직접 실행
 cd apps/web
-bun run dev
+pnpm run dev
 
 # 예상 출력:
 #   ▲ Next.js 15.1.0
@@ -227,10 +227,10 @@ bun run dev
 
 ```bash
 # 프로젝트 루트에서 모든 앱을 병렬로 실행
-bun turbo run dev
+pnpm turbo run dev
 
 # 또는 특정 앱만 병렬 실행
-bun turbo run dev --filter=api --filter=web
+pnpm turbo run dev --filter=api --filter=web
 
 # Turborepo가 자동으로:
 # - 의존성 패키지 빌드 (@repo/*)
@@ -405,20 +405,20 @@ curl http://localhost:3001/api/v1/users/profile \
 
 ```bash
 # 프로젝트 루트에서
-bun run test:e2e
+pnpm run test:e2e
 
 # 특정 테스트만 실행
-bun run test:e2e --grep "signup"
+pnpm run test:e2e -- --grep "signup"
 
 # 헤드리스 모드 해제 (브라우저 표시)
-bun run test:e2e --headed
+pnpm run test:e2e -- --headed
 ```
 
 ### 7.2 테스트 커버리지 확인
 
 ```bash
 # 커버리지 리포트 생성
-bun run test:coverage
+pnpm run test:coverage
 
 # 브라우저에서 리포트 열기
 open coverage/index.html  # macOS
@@ -486,10 +486,10 @@ echo $REDIS_PORT  # 6379
 ```bash
 # 타입 정의 재생성
 cd backend
-bun drizzle-kit generate:pg
+pnpm drizzle-kit generate:pg
 
 # TypeScript 체크
-bun run type-check
+pnpm run type-check
 ```
 
 ---
@@ -500,29 +500,29 @@ bun run type-check
 
 ```bash
 # 모든 앱/패키지 개발 서버 시작
-bun turbo run dev
+pnpm turbo run dev
 
 # 특정 앱만 실행
-bun turbo run dev --filter=api
-bun turbo run dev --filter=web
+pnpm turbo run dev --filter=api
+pnpm turbo run dev --filter=web
 
 # 모든 패키지 빌드
-bun turbo run build
+pnpm turbo run build
 
 # 모든 테스트 실행 (병렬)
-bun turbo run test
+pnpm turbo run test
 
 # 모든 패키지 린트
-bun turbo run lint
+pnpm turbo run lint
 
 # 타입 체크
-bun turbo run type-check
+pnpm turbo run type-check
 
 # 특정 패키지만 빌드 (의존성 자동 처리)
-bun turbo run build --filter=@repo/database
+pnpm turbo run build --filter=@repo/database
 
 # 캐시 초기화 (문제 발생 시)
-bun turbo run build --force
+pnpm turbo run build --force
 ```
 
 ### 코드 변경 후 자동 재시작
@@ -535,8 +535,8 @@ bun turbo run build --force
 ```bash
 # 스키마 변경 후 (@repo/database)
 cd packages/database
-bun drizzle-kit generate:pg
-bun drizzle-kit push:pg
+pnpm drizzle-kit generate:pg
+pnpm drizzle-kit push:pg
 
 # Turborepo로 실행 시 의존 앱 자동 재시작
 ```

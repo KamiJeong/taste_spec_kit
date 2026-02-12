@@ -33,7 +33,7 @@ docker exec -it taste_spec_kit_postgres psql -U kami -d toast -c "\dt"
 
 ### ✅ 3. Turborepo Configuration
 ```bash
-bun turbo --version
+pnpm turbo --version
 ```
 
 **Result**: ✅ **PASS**
@@ -43,7 +43,7 @@ bun turbo --version
 
 ### ✅ 4. TypeScript Build
 ```bash
-bun turbo run build
+pnpm turbo run build
 ```
 
 **Result**: ✅ **PASS**
@@ -58,7 +58,7 @@ bun turbo run build
 
 ### ✅ 5. TypeScript Type Checking
 ```bash
-bun turbo run type-check
+pnpm turbo run type-check
 ```
 
 **Result**: ✅ **PASS**
@@ -102,36 +102,36 @@ You can now run these commands successfully:
 ### Development Mode
 ```bash
 # Start all apps
-bun turbo run dev
+pnpm turbo run dev
 
 # Start specific app
-bun turbo run dev --filter=api
-bun turbo run dev --filter=web
+pnpm turbo run dev --filter=api
+pnpm turbo run dev --filter=web
 ```
 
 ### Build & Test
 ```bash
 # Build everything
-bun turbo run build
+pnpm turbo run build
 
 # Type check
-bun turbo run type-check
+pnpm turbo run type-check
 
 # Run tests (when implemented)
-bun turbo run test
+pnpm turbo run test
 ```
 
 ### Database
 ```bash
 # Generate migrations
 cd packages/database
-bun drizzle-kit generate
+pnpm drizzle-kit generate
 
 # Apply migrations
-bun drizzle-kit push
+pnpm drizzle-kit push
 
 # Open Drizzle Studio
-bun drizzle-kit studio
+pnpm drizzle-kit studio
 ```
 
 ---
@@ -160,10 +160,10 @@ Begin implementing user stories (Phase 3-4 for MVP):
 ```bash
 # Terminal 1: Start API
 cd C:\Users\USER\Documents\GitHub\taste_spec_kit
-bun turbo run dev --filter=api
+pnpm turbo run dev --filter=api
 
 # Terminal 2: Start Web
-bun turbo run dev --filter=web
+pnpm turbo run dev --filter=web
 
 # Browser: Visit http://localhost:3000
 ```
@@ -193,4 +193,3 @@ bun turbo run dev --filter=web
 **Testing Complete**: February 9, 2026  
 **Total Time**: ~10 minutes of testing and fixes  
 **Final Status**: ✅ **FULLY FUNCTIONAL**
-

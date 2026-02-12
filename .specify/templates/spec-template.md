@@ -100,22 +100,6 @@
 - **[Entity 1]**: [What it represents, key attributes without implementation]
 - **[Entity 2]**: [What it represents, relationships to other entities]
 
-### Constitution Alignment *(mandatory)*
-
-<!--
-  ACTION REQUIRED: Verify this feature aligns with the 8 core principles.
-  Mark any anticipated challenges or trade-offs.
--->
-
-- **SSOT**: [어떤 데이터/설정이 SSOT가 되어야 하는가? 중복 위험이 있는가?]
-- **Overrides-Only**: [기본값 상속 전략은? 무엇을 오버라이드해야 하는가?]
-- **Pinned-Stack**: [새로운 기술/라이브러리가 필요한가? `specs/00-tech-stack.md` 업데이트 필요?]
-- **Local-First**: [외부 서비스 의존성이 있는가? 로컬 개발 전략은?]
-- **Cost-Aware**: [API 호출, 저장소 사용량 추정은? 비용 최적화 전략은?]
-- **Boundaries**: [모듈 경계는 어떻게 정의되는가? 어떤 인터페이스가 필요한가?]
-- **Type-Safety**: [타입 정의가 필요한 주요 데이터 구조는?]
-- **Spec-Before-Code**: [✓ 이 문서 자체가 충족함]
-
 ## Success Criteria *(mandatory)*
 
 <!--
