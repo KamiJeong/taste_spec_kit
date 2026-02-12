@@ -2,8 +2,13 @@
 
 **Feature Branch**: `002-email-auth-user-management`  
 **Created**: 2026-02-09  
-**Status**: Draft  
+**Status**: Split-Archived  
 **Input**: User description: "이메일 기반 회원가입 및 회원관리 구현"
+
+> 2026-02-12 분리 기준:
+> - Backend 기준 스펙: `specs/02-email-auth-backend/spec.md`
+> - Frontend 기준 스펙: `specs/03-email-auth-frontend/spec.md`
+> 이 문서는 통합 히스토리 보관용으로 유지합니다.
 
 ## User Scenarios & Testing *(mandatory)*
 
