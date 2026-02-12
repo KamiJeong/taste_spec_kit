@@ -3,9 +3,9 @@
 **중요**: 모든 `/speckit` 명령은 이 파일 `specs/00-tech-stack.md`를 반드시 참조해야 합니다. 이 문서는 프로젝트의 SSOT(단일 진실 공급원)입니다.
 
 **프로젝트**: taste_spec_kit  
-**버전**: 1.3.1  
+**버전**: 1.3.2  
 **작성일**: 2026-02-09  
-**최종 수정일**: 2026-02-11  
+**최종 수정일**: 2026-02-12  
 **상태**: 활성 (Active)
 
 ## 개요
@@ -65,6 +65,7 @@ repo-root/
 - **UI 컴포넌트**: 
   - **shadcn/ui**: `registry latest (CLI/registry 기반)` (컴포넌트 소스)
   - **설치 참고**: https://ui.shadcn.com/docs/components (shadcn/ui 설치/컴포넌트 추가 시 우선 참조)
+  - **MCP 설정 참고**: https://ui.shadcn.com/docs/mcp?utm_source=chatgpt.com (Codex/LLM 기반 컴포넌트 워크플로우 연동 시 우선 참조)
   - **Tailwind CSS**: `^4.0.0` (스타일링)
 - **스토리북**:
   - **storybook / @storybook/react-vite / @storybook/addon-a11y / @storybook/addon-docs**: `^10.2.0` (10.2.x 라인)
@@ -173,8 +174,14 @@ repo-root/
   - `@storybook/addon-essentials`: `8.6.14` (Storybook 10과 버전 라인 불일치)
 - shadcn/ui 기준 문서: https://ui.shadcn.com/docs
 - shadcn/ui 설치 참고(components): https://ui.shadcn.com/docs/components
+- shadcn/ui MCP 설정 참고: https://ui.shadcn.com/docs/mcp?utm_source=chatgpt.com
 
 ## 변경 이력 (Change Log)
+
+### 1.3.2 (2026-02-12)
+
+- **추가**: shadcn/ui MCP 설정 참조 문서 링크 명시
+- **명확화**: Codex/LLM 연동 시 shadcn/ui 공식 MCP 가이드를 우선 기준으로 사용
 
 ### 1.3.1 (2026-02-11)
 
@@ -186,7 +193,7 @@ repo-root/
 
 - **변경**: Storybook `^8.5.0` → `^10.2.0` (메이저 라인 정렬)
 - **명확화**: shadcn/ui는 npm semver 라이브러리보다 registry/CLI 기반 소스 채택 방식으로 관리
-- **정책**: `specs/01-storybook-shadcn-forms` 구현은 Storybook 10.2.x 기준으로 정합성 유지
+- **정책**: `specs/01-design-system` 구현은 Storybook 10.2.x 기준으로 정합성 유지
 
 ### 1.2.0 (2026-02-09)
 

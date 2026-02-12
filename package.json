@@ -1,0 +1,16 @@
+{
+  "name": "taste_spec_kit",
+  "private": true,
+  "version": "0.0.0",
+  "packageManager": "pnpm@8.15.8",
+  "scripts": {
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "build-storybook": "turbo run build-storybook"
+  },
+  "devDependencies": {
+    "turbo": "^2.8.7",
+    "typescript": "^5.9.3"
+  }
+}
+
