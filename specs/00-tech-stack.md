@@ -3,9 +3,9 @@
 **중요**: 모든 `/speckit` 명령은 이 파일 `specs/00-tech-stack.md`를 반드시 참조해야 합니다. 이 문서는 프로젝트의 SSOT(단일 진실 공급원)입니다.
 
 **프로젝트**: taste_spec_kit  
-**버전**: 1.3.2  
+**버전**: 1.4.0  
 **작성일**: 2026-02-09  
-**최종 수정일**: 2026-02-12  
+**최종 수정일**: 2026-02-23  
 **상태**: 활성 (Active)
 
 ## 개요
@@ -52,11 +52,12 @@ repo-root/
   - 각 `apps/*`와 `packages/*`는 자체 `package.json`과 명확한 `scripts`(build/dev/test/lint)를 가집니다.
   - 루트에 `pnpm-workspace.yaml`과 `turbo.json`을 두어 워크스페이스와 파이프라인을 관리합니다.
   - 내부 패키지는 `@repo/*` 네임스페이스를 사용하여 명확한 의존성을 유지합니다.
+  - 공유 패키지(`packages/*`)는 TypeScript source(`src/*.ts`)를 기준으로 유지하고, 앱은 빌드 산출물(`dist/*`)과 선언 파일(`dist/*.d.ts`)을 소비합니다.
 
 ### 핵심 언어 (Core Languages)
 
 - **Node.js**: `22.x LTS` (런타임 환경)
-- **TypeScript**: `^5.7.0` (프론트엔드 & 백엔드)
+- **TypeScript**: `^5.9.0` (프론트엔드 & 백엔드)
 
 ### 프론트엔드 (Frontend)
 
@@ -73,13 +74,13 @@ repo-root/
 
 ### 백엔드 (Backend)
 
-- **NestJS**: `^11.0.0` (Node.js 프레임워크)
-- **TypeScript**: `^5.7.0` (타입 안전성)
+- **NestJS**: `^11.1.0` (Node.js 프레임워크)
+- **TypeScript**: `^5.9.0` (타입 안전성)
 
 ### 폼 & 검증 (Form & Validation)
 
 - **react-hook-form**: `^7.54.0` (폼 관리)
-- **Zod**: `^3.24.0` (스키마 검증)
+- **Zod**: `^4.3.0` (스키마 검증)
 
 ### 인증 (Authentication)
 
@@ -89,12 +90,11 @@ repo-root/
 
 - **PostgreSQL**: `16.x` (주 데이터베이스)
 - **Redis**: `7.x` (캐시 & 세션 스토어)
-- **Drizzle ORM**: `^0.36.0` (TypeScript ORM - 타입 안전 쿼리)
+- **Drizzle ORM**: `^0.45.0` (TypeScript ORM - 타입 안전 쿼리)
 
 ### 개발 도구 (Development Tools)
 
-<!-- 가정: pnpm 버전 ^8.6.0은 2026년 기준으로 적절하다고 가정함 -->
-- **pnpm**: `^8.6.0` (패키지 관리자 & 워크스페이스 지원)
+- **pnpm**: `^10.0.0` (패키지 관리자 & 워크스페이스 지원)
 - **ESLint**: `^9.0.0` (린팅)
 - **Prettier**: `^3.4.0` (포매팅)
 - **Docker**: `27.x` (컨테이너화)
@@ -161,6 +161,18 @@ repo-root/
 5. **이 문서 업데이트**: 승인 후 즉시 반영
 6. **공지**: 팀 전체에 변경 사항 공유
 
+## Spec/Plan/Tasks 연동 규칙 (Mandatory)
+
+- 모든 기능 문서(`spec.md`, `plan.md`, `tasks.md`)는 문서 상단에 `Tech-Stack: specs/00-tech-stack.md`를 명시해야 한다.
+- 버전/라이브러리 선택 충돌 시 기능 문서보다 본 문서를 우선한다.
+- 구현 도중 스택 변경이 발생하면 먼저 본 문서를 갱신한 뒤 기능 문서(spec/plan/tasks)를 동기화한다.
+
+## Developer Environment Rule (Mandatory)
+
+- 로컬 개발 환경은 `.env.template` 기반으로만 구성한다.
+- 로컬 인프라(PostgreSQL/Redis)는 `docker-compose.yml`을 기준으로 실행한다.
+- 저장소에는 prod/stage/dev 서버의 실제 계정/비밀번호/토큰/호스트 정보를 커밋하지 않는다.
+
 ## 외부 기준 검증 (Version Verification)
 
 - 검증일: 2026-02-11
@@ -175,8 +187,32 @@ repo-root/
 - shadcn/ui 기준 문서: https://ui.shadcn.com/docs
 - shadcn/ui 설치 참고(components): https://ui.shadcn.com/docs/components
 - shadcn/ui MCP 설정 참고: https://ui.shadcn.com/docs/mcp?utm_source=chatgpt.com
+- 워크스페이스 lock 기준(2026-02-23):
+  - `@nestjs/core`: `11.1.14`
+  - `typescript`: `5.9.3`
+  - `zod`: `4.3.6`
+  - `drizzle-orm`: `0.45.1`
+  - `pg`: `8.18.0`
+  - `redis`: `5.11.0`
+  - `bullmq`: `5.70.1`
+  - `better-auth`: `1.4.18`
 
 ## 변경 이력 (Change Log)
+
+### 1.4.0 (2026-02-23)
+
+- **변경**: TypeScript 기준을 `^5.9.0`으로 상향
+- **변경**: NestJS 기준을 `^11.1.0`으로 상향
+- **변경**: Zod 기준을 `^4.3.0`으로 상향
+- **변경**: Drizzle ORM 기준을 `^0.45.0`으로 상향
+- **변경**: pnpm 기준을 `^10.0.0`으로 상향
+- **추가**: `spec/plan/tasks` 문서의 Tech-Stack 참조 의무 규칙
+- **추가**: lockfile 기반 버전 스냅샷(2026-02-23)
+
+### 1.3.3 (2026-02-23)
+
+- **추가**: 공유 패키지(`packages/*`) TypeScript-first 규칙 명시
+- **정책**: 앱 런타임은 공유 패키지의 빌드 산출물(`dist/*`)과 타입 선언(`dist/*.d.ts`)을 소비
 
 ### 1.3.2 (2026-02-12)
 
