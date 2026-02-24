@@ -2,7 +2,7 @@ name: design-system-ci
 
 on:
   push:
-    branches: ["**"]
+    branches: [main, develop, stage]
     paths:
       - "apps/storybook/**"
       - "packages/ui/**"
@@ -22,6 +22,10 @@ on:
       - "pnpm-workspace.yaml"
       - "turbo.json"
       - "tsconfig.base.json"
+
+concurrency:
+  group: design-system-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   design-system-check:
