@@ -1,0 +1,72 @@
+name: backend-ci
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  api-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DATABASE_URL: postgresql://kami:ilovekami@localhost:5432/taste_spec_kit
+      REDIS_URL: redis://localhost:6379
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: kami
+          POSTGRES_PASSWORD: ilovekami
+          POSTGRES_DB: taste_spec_kit
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U kami -d taste_spec_kit"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm --filter @apps/api typecheck
+
+      - name: Policy guards
+        run: pnpm --filter @apps/api check:guards
+
+      - name: Lint
+        run: pnpm --filter @apps/api lint
+
+      - name: Unit tests
+        run: pnpm --filter @apps/api test:unit
+
+      - name: Integration tests
+        run: pnpm --filter @apps/api test:integration
+
+      - name: E2E tests
+        run: pnpm --filter @apps/api test:e2e
