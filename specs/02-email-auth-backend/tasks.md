@@ -19,7 +19,7 @@ Tech-Stack: specs/00-tech-stack.md
 - [x] BE-T001 백엔드 앱 골격 검증 (`apps/api/package.json`, `apps/api/src/main.ts`, `apps/api/src/app.module.ts`) - 기준: `gate0-recovery.md`
 - [x] BE-T002 테스트 스크립트 검증 (`apps/api/package.json`: `test`, `test:unit`, `test:integration`, `test:e2e`)
 - [x] BE-T003 테스트 환경 파일/가이드 검증 (`apps/api/.env.test`, `apps/api/test/README.md`)
-- [x] BE-T004 샘플 테스트 실행 확인 (`apps/api/test/unit/health.test.js`)
+- [x] BE-T004 샘플 테스트 실행 확인 (`apps/api/test/unit/health.test.ts`)
 - [x] BE-T047 환경 템플릿/보안 규칙 반영 (`.env.template`, `apps/api/.env.template`, `.gitignore`)
 - [x] BE-T048 로컬 인프라 compose 기준 확정 (`docker-compose.yml`: PostgreSQL/Redis)
 
@@ -59,39 +59,39 @@ Tech-Stack: specs/00-tech-stack.md
 
 ## Phase 5: P3 + Security/Ops (Gate 5)
 
-- [ ] BE-T023 계정 비활성화/삭제예약 구현 (`/api/v1/users/deactivate`, `/request-deletion`, `/cancel-deletion`)
-- [ ] BE-T024 로그인 실패 5회/15분 잠금 로직 적용 (FR-BE-004)
-- [ ] BE-T025 Redis 세션 전략/TTL 검증 (FR-BE-005)
-- [ ] BE-T026 인증 실패 사유 노출 제한 검증 (FR-BE-006)
-- [ ] BE-T027 AuthLog 이벤트 기록 100% 보장 (FR-BE-007)
-- [ ] BE-T028 DTO + Zod 검증 강제 (FR-BE-008)
-- [ ] BE-T029 보안 회귀 테스트 작성 (잠금 계정, 비활성화 계정, 세션 무효화)
-- [ ] BE-T039 Envelope/헤더 구현 반영 및 미들웨어 적용 (`X-Request-Id`, `meta.serverTime`) (FR-BE-015)
-- [ ] BE-T040 idempotent 쿨다운/중복 억제 로직 구현 (`resend-verification`, `forgot-password`) (FR-BE-016)
-- [ ] BE-T041 감사로그 최소 스키마 저장/조회 보장 (FR-BE-017)
+- [x] BE-T023 계정 비활성화/삭제예약 구현 (`/api/v1/users/deactivate`, `/request-deletion`, `/cancel-deletion`)
+- [x] BE-T024 로그인 실패 5회/15분 잠금 로직 적용 (FR-BE-004)
+- [x] BE-T025 Redis 세션 전략/TTL 검증 (FR-BE-005)
+- [x] BE-T026 인증 실패 사유 노출 제한 검증 (FR-BE-006)
+- [x] BE-T027 AuthLog 이벤트 기록 100% 보장 (FR-BE-007)
+- [x] BE-T028 DTO + Zod 검증 강제 (FR-BE-008)
+- [x] BE-T029 보안 회귀 테스트 작성 (잠금 계정, 비활성화 계정, 세션 무효화)
+- [x] BE-T039 Envelope/헤더 구현 반영 및 미들웨어 적용 (`X-Request-Id`, `meta.serverTime`) (FR-BE-015)
+- [x] BE-T040 idempotent 쿨다운/중복 억제 로직 구현 (`resend-verification`, `forgot-password`) (FR-BE-016)
+- [x] BE-T041 감사로그 최소 스키마 저장/조회 보장 (FR-BE-017)
 - [x] BE-T049 통합/E2E/프로덕션 환경에서 in-memory fallback 제거 (FR-BE-019)
 - [x] BE-T050 Drizzle migration 워크플로우 도입 (`generate`, `migrate`, 스키마 버전관리) (FR-BE-019)
 - [x] BE-T051 로컬 `.env.template` + `docker-compose.yml` 기반 실행 절차를 런타임/문서/스크립트에 고정 (FR-BE-020)
 
 ## Phase 6: Test Automation and CI (Gate 6)
 
-- [ ] BE-T030 Unit 테스트 스위트 확장 (`apps/api/test/unit/*`)
-- [ ] BE-T031 Integration 테스트 스위트 확장 (`apps/api/test/integration/*`)
-- [ ] BE-T032 E2E 테스트 스위트 작성 (`apps/api/test/e2e/*`)
-- [ ] BE-T033 CI 파이프라인 구성 (`.github/workflows/backend-ci.yml`)
-- [ ] BE-T034 테스트 데이터 초기화/정리 스크립트 작성 (`apps/api/test/scripts/*`)
-- [ ] BE-T035 테스트 트러블슈팅 문서화 (`specs/02-email-auth-backend/testing-guide.md`)
-- [ ] BE-T042 응답 Envelope/헤더 검증 테스트 추가 (`X-Request-Id`, `meta.serverTime`) (TR-BE-009)
-- [ ] BE-T043 idempotent 처리 검증 테스트 추가 (재전송/재요청 쿨다운) (TR-BE-010)
-- [ ] BE-T044 감사로그 최소 스키마 필드 검증 테스트 추가 (TR-BE-011)
-- [ ] BE-T046 backend 테스트 전 공용 계약 빌드 선행 보장 (`pretest`, `pretest:integration`, `pretest:e2e`) (TR-BE-012)
+- [x] BE-T030 Unit 테스트 스위트 확장 (`apps/api/test/unit/*`)
+- [x] BE-T031 Integration 테스트 스위트 확장 (`apps/api/test/integration/*`)
+- [x] BE-T032 E2E 테스트 스위트 작성 (`apps/api/test/e2e/*`)
+- [x] BE-T033 CI 파이프라인 구성 (`.github/workflows/backend-ci.yml`)
+- [x] BE-T034 테스트 데이터 초기화/정리 스크립트 작성 (`apps/api/test/scripts/*`)
+- [x] BE-T035 테스트 트러블슈팅 문서화 (`specs/02-email-auth-backend/testing-guide.md`)
+- [x] BE-T042 응답 Envelope/헤더 검증 테스트 추가 (`X-Request-Id`, `meta.serverTime`) (TR-BE-009)
+- [x] BE-T043 idempotent 처리 검증 테스트 추가 (재전송/재요청 쿨다운) (TR-BE-010)
+- [x] BE-T044 감사로그 최소 스키마 필드 검증 테스트 추가 (TR-BE-011)
+- [x] BE-T046 backend 테스트 전 공용 계약 빌드 선행 보장 (`pretest`, `pretest:integration`, `pretest:e2e`) (TR-BE-012)
 - [x] BE-T052 Drizzle migration 실행 검증 태스크 추가 (TR-BE-013)
 - [x] BE-T053 `DATABASE_URL`/`REDIS_URL` 누락·미연결 fail-fast 테스트 추가 (TR-BE-014)
 
 ## Done Checklist
 
-- [ ] FR-BE-001~020 모두 테스트 케이스로 커버
-- [ ] TR-BE-001~014 충족
-- [ ] `spec.md` API Surface와 실제 구현 경로 일치
-- [ ] 로컬/CI에서 동일 명령으로 테스트 재현 가능
+- [x] FR-BE-001~020 모두 테스트 케이스로 커버
+- [x] TR-BE-001~014 충족
+- [x] `spec.md` API Surface와 실제 구현 경로 일치
+- [x] 로컬/CI에서 동일 명령으로 테스트 재현 가능
 

@@ -1,5 +1,7 @@
 # Backend Testing Guide
 
+- FR 매핑 문서: [`fr-test-mapping.md`](./fr-test-mapping.md)
+
 ## Prerequisites
 
 - Node.js 22+
@@ -15,16 +17,20 @@
    - 템플릿 변경 동기화가 필요하면 `pnpm run local:env:force`
    - `pnpm run local:up`
    - 주의: prod/stage/dev 실서버 정보는 `.env`에 넣지 않는다.
+   - 메일 기본 모드: `MAIL_TRANSPORT=log` (SMTP 실전송 테스트 시 `smtp`로 전환)
+   - 테스트 토큰 노출: `NODE_ENV=test` 또는 `MAIL_EXPOSE_TOKENS=true`
 
 1. `pnpm --filter @packages/contracts-auth build`
 2. `pnpm --filter @apps/api db:generate` (스키마 변경 시)
 3. `pnpm --filter @apps/api db:migrate`
 4. `pnpm --filter @apps/api lint`
 5. `pnpm --filter @apps/api typecheck`
-6. `pnpm --filter @apps/api test:unit`
-7. `pnpm --filter @apps/api test:integration`
-8. `pnpm --filter @apps/api test:e2e`
-9. `pnpm --filter @apps/api test`
+6. `pnpm --filter @apps/api check:guards`
+7. `pnpm --filter @apps/api test:unit`
+8. `pnpm --filter @apps/api test:integration`
+9. `pnpm --filter @apps/api test:e2e`
+10. `pnpm --filter @apps/api test`
+11. 테스트 상태 수동 초기화: `pnpm --filter @apps/api test:reset-state`
 
 ## Test Scope
 
@@ -42,6 +48,7 @@
 - E2E
   - auth smoke
   - signup->verify->login->me happy path
+  - security baseline (CSRF, rate limit)
   - error response + `X-Request-Id` 헤더 검증
 
 ## Mandatory Assertions (TR-BE-009~011)
@@ -57,6 +64,7 @@
 
 - backend 테스트 실행 전 `@packages/contracts-auth` 빌드가 선행되어야 한다.
 - `apps/api`의 `pretest*` 스크립트는 공용 계약 패키지 빌드를 자동으로 수행해야 한다.
+- CI(`.github/workflows/backend-ci.yml`)는 `typecheck + check:guards + lint + unit + integration + e2e`를 순서대로 실행해야 한다.
 
 ## Recommended Test Matrix
 
@@ -78,7 +86,11 @@
   - 레이트리밋 스토어(예: Redis) 연결 상태, 키 스코프(IP+계정) 확인
 - `AUTH_CSRF_INVALID`:
   - CSRF 토큰 전달 경로(헤더/쿠키), SameSite 정책, 테스트 클라이언트 쿠키 전달 여부 확인
+- 메일 전송 실패:
+  - `MAIL_TRANSPORT=smtp`일 때 `SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASS/MAIL_FROM` 설정 확인
+  - 로컬에서는 `MAIL_TRANSPORT=log`로 전환해 링크 로그 출력 여부 확인
 - 테스트 포트 충돌:
   - 테스트는 동적 포트(`bootstrap(0)`)를 사용하므로 고정 포트 점유 여부 확인
 - 상태 초기화가 필요한 경우:
-  - `node apps/api/test/scripts/reset-state.js`
+  - `pnpm --filter @apps/api test:reset-state`
+  - 동작: PostgreSQL 핵심 테이블 truncate + Redis `FLUSHDB`

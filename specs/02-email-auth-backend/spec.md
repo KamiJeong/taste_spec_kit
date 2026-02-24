@@ -4,7 +4,7 @@ Tech-Stack: specs/00-tech-stack.md
 
 **Feature Branch**: `spec/02-email-auth-backend`  
 **Created**: 2026-02-12  
-**Updated**: 2026-02-23  
+**Updated**: 2026-02-24  
 **Status**: Refined (Gate 5+ In Progress)  
 **Input**: 기존 `02-email-auth-user-management`에서 Backend 범위만 분리
 
@@ -17,6 +17,11 @@ Tech-Stack: specs/00-tech-stack.md
 
 - 폴더: [`history/`](./history/)
 - 오늘 이력: [`history/2026-02-23.md`](./history/2026-02-23.md)
+
+## Data Model References
+
+- 모델 가이드: [`data-model.md`](./data-model.md)
+- ERD(Mermaid): [`erd.mmd`](./erd.mmd)
 
 ## Implementation Status Note (2026-02-23)
 
@@ -41,6 +46,16 @@ Tech-Stack: specs/00-tech-stack.md
   - PostgreSQL: `kami` / `ilovekami`
   - Redis password: `ilovekami`
 - prod/stage/dev 서버의 실제 민감 정보는 저장소에 기록하지 않는다.
+
+## Email Delivery Strategy (Mandatory)
+
+- 메일 전송은 `MailModule` 추상화(`MAIL_SERVICE`)를 통해 수행한다.
+- 전송 모드는 `MAIL_TRANSPORT`로 선택한다.
+  - `log`: 로컬 개발 기본값, 실제 전송 대신 링크를 서버 로그에 기록
+  - `smtp`: SMTP 서버를 통한 실제 메일 전송 (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` 사용)
+- 링크 생성 기준 URL은 `APP_BASE_URL`을 사용한다.
+- 인증/재설정 토큰은 기본적으로 API 응답에 포함하지 않는다.
+- 단, 테스트/디버깅 목적(`NODE_ENV=test` 또는 `MAIL_EXPOSE_TOKENS=true`)에서는 응답 본문 토큰 노출을 허용한다.
 
 ## Domain State Model (Mandatory)
 
@@ -181,7 +196,7 @@ Tech-Stack: specs/00-tech-stack.md
 - FR-BE-008: 모든 엔드포인트는 Zod + DTO 기반 검증
 - FR-BE-009: NestJS 모듈은 본 문서의 Module Decomposition/Boundary Rules를 준수해야 한다.
 - FR-BE-010: REST를 v1 공식 계약으로 유지하고 GraphQL은 adapter 계층으로만 추가 가능해야 한다.
-- FR-BE-011: `contracts/*.md` 변경 시 `specs/03-email-auth-frontend/spec.md`의 API 매핑 섹션과 동기화되어야 한다.
+- FR-BE-011: `contracts/*.md` 변경 시 이후 생성될 frontend auth spec의 API 매핑 섹션과 동기화되어야 한다.
 - FR-BE-012: 계정 상태 전이 규칙은 `Domain State Model`을 준수해야 한다.
 - FR-BE-013: Security Baseline의 쿠키/CSRF/레이트리밋/토큰 저장 규칙을 준수해야 한다.
 - FR-BE-014: API 요청/응답/에러 코드는 `packages/contracts-auth` 공용 계약과 일치해야 한다.
@@ -194,7 +209,7 @@ Tech-Stack: specs/00-tech-stack.md
 
 ## Backend Acceptance Scenarios
 
-1. 회원가입 성공 시 사용자 레코드 생성, 이메일 인증 토큰 생성, 인증 메일 큐 적재가 모두 성공해야 한다.
+1. 회원가입 성공 시 사용자 레코드 생성, 이메일 인증 토큰 생성, 인증 메일 발송 요청이 모두 성공해야 한다.
 2. 인증 토큰 만료 또는 재사용 시 명시적 에러 코드로 거부되어야 한다.
 3. 미인증 계정 로그인 요청은 세션 미생성 상태로 거부되어야 한다.
 4. 로그인 5회 실패 시 15분 잠금이 적용되고 잠금 기간 중 로그인은 거부되어야 한다.
@@ -249,5 +264,5 @@ Tech-Stack: specs/00-tech-stack.md
 
 ## Dependencies
 
-- 참고 스펙: `specs/03-email-auth-frontend/spec.md`
+- 참고 스펙: frontend auth spec은 backend 완료 후 별도 생성한다.
 - 기존 통합본: `specs/02-email-auth-user-management/spec.md`

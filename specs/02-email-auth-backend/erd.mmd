@@ -1,0 +1,43 @@
+erDiagram
+  USERS {
+    text id PK
+    text email UK
+    text password_hash
+    text name
+    boolean email_verified
+    boolean is_active
+    int failed_login_attempts
+    bigint locked_until
+    text deletion_scheduled_at
+    text created_at
+  }
+
+  VERIFICATION_TOKENS {
+    text token_hash PK
+    text user_id
+    bigint expires_at
+    bigint used_at
+  }
+
+  PASSWORD_RESET_TOKENS {
+    text token_hash PK
+    text user_id
+    bigint expires_at
+    bigint used_at
+  }
+
+  AUDIT_LOGS {
+    text event_id PK
+    text event_type
+    text user_id
+    text email
+    text ip
+    text user_agent
+    text result
+    text reason_code
+    text occurred_at
+  }
+
+  USERS ||--o{ VERIFICATION_TOKENS : "logical user_id"
+  USERS ||--o{ PASSWORD_RESET_TOKENS : "logical user_id"
+  USERS ||--o{ AUDIT_LOGS : "logical user_id"
