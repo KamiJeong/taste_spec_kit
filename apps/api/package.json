@@ -1,0 +1,53 @@
+{
+  "name": "@apps/api",
+  "private": true,
+  "version": "0.0.0",
+  "type": "commonjs",
+  "scripts": {
+    "start": "ts-node src/main.ts",
+    "env:setup": "node ../../tooling/setup-local-env.mjs",
+    "db:generate": "drizzle-kit generate --config drizzle.config.ts",
+    "db:migrate": "ts-node src/modules/persistence/migrate.ts",
+    "db:migrate:cli": "drizzle-kit migrate --config drizzle.config.ts",
+    "test:reset-state": "ts-node test/scripts/reset-state.ts",
+    "check:architecture": "node test/scripts/check-architecture.cjs",
+    "check:spec-sync": "node test/scripts/check-spec-sync.cjs",
+    "check:guards": "pnpm run check:architecture && pnpm run check:spec-sync",
+    "prelint": "pnpm --filter @packages/contracts-auth build",
+    "pretypecheck": "pnpm --filter @packages/contracts-auth build",
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "pretest": "pnpm --filter @packages/contracts-auth build",
+    "pretest:integration": "pnpm --filter @packages/contracts-auth build",
+    "pretest:e2e": "pnpm --filter @packages/contracts-auth build",
+    "test": "pnpm run test:unit && pnpm run test:integration && pnpm run test:e2e",
+    "test:unit": "ts-node test/unit/health.test.ts && ts-node test/unit/http-contract.test.ts && ts-node test/unit/token.service.test.ts && ts-node test/unit/zod-validation.test.ts",
+    "test:integration": "pnpm run env:setup && set NODE_ENV=test&& ts-node test/integration/env.test.ts && ts-node test/integration/fail-fast.test.ts && pnpm run db:migrate && ts-node test/integration/migration.test.ts && pnpm run test:reset-state && ts-node test/integration/auth-p1.test.ts && ts-node test/integration/auth-p2.test.ts && ts-node test/integration/auth-p3.test.ts && ts-node test/integration/auth-lockout.test.ts && ts-node test/integration/auth-session-redis.test.ts && ts-node test/integration/auth-session-invalidation.test.ts && ts-node test/integration/auth-audit-log.test.ts && ts-node test/integration/auth-validation.test.ts && ts-node test/integration/auth-idempotent.test.ts && ts-node test/integration/auth-envelope.test.ts && ts-node test/integration/auth-security-baseline.test.ts",
+    "test:e2e": "ts-node test/e2e/smoke.test.ts && ts-node test/e2e/auth-happy-path.test.ts && ts-node test/e2e/auth-security.test.ts"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11",
+    "@nestjs/core": "^11",
+    "@nestjs/platform-express": "^11",
+    "@packages/contracts-auth": "workspace:*",
+    "argon2": "^0.44.0",
+    "better-auth": "^1.4.18",
+    "bullmq": "^5.70.1",
+    "drizzle-orm": "^0.45.1",
+    "nodemailer": "^6.10.1",
+    "pg": "^8.18.0",
+    "redis": "^5.11.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/nodemailer": "^6.4.17",
+    "@types/node": "^22",
+    "@types/pg": "^8.16.0",
+    "drizzle-kit": "^0.31.9",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.0"
+  }
+}

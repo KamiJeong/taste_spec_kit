@@ -4,4 +4,11 @@ node_modules
 dist
 storybook-static
 *.tsbuildinfo
+.env
+.env.*
+!.env.template
+!.env.*.template
+!apps/api/.env.template
+.idea/
+.npm-cache/
 

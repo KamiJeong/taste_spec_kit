@@ -1,0 +1,39 @@
+name: taste-spec-kit
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: taste-spec-kit-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-kami}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ilovekami}
+      POSTGRES_DB: ${POSTGRES_DB:-taste_spec_kit}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-kami} -d ${POSTGRES_DB:-taste_spec_kit}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7
+    container_name: taste-spec-kit-redis
+    restart: unless-stopped
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:-ilovekami}"]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a ${REDIS_PASSWORD:-ilovekami} ping | grep PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  postgres_data:
+  redis_data:
