@@ -4,13 +4,20 @@
   "version": "0.0.0",
   "packageManager": "pnpm@10.0.0",
   "scripts": {
+    "typecheck": "turbo run typecheck",
+    "build-storybook": "turbo run build-storybook",
     "local:env": "node tooling/setup-local-env.mjs",
     "local:env:force": "node tooling/setup-local-env.mjs --force",
     "local:up": "pnpm run local:env && docker compose up -d",
     "local:down": "docker compose down",
-    "test": "pnpm --filter @apps/api test",
+    "test": "turbo run test",
+    "test:api": "pnpm --filter @apps/api test",
     "test:unit": "pnpm --filter @apps/api test:unit",
     "test:integration": "pnpm --filter @apps/api test:integration",
     "test:e2e": "pnpm --filter @apps/api test:e2e"
+  },
+  "devDependencies": {
+    "turbo": "^2.8.7",
+    "typescript": "^5.9.3"
   }
 }
