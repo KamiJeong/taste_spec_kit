@@ -13,6 +13,8 @@
     "check:architecture": "node test/scripts/check-architecture.cjs",
     "check:spec-sync": "node test/scripts/check-spec-sync.cjs",
     "check:guards": "pnpm run check:architecture && pnpm run check:spec-sync",
+    "prelint": "pnpm --filter @packages/contracts-auth build",
+    "pretypecheck": "pnpm --filter @packages/contracts-auth build",
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "pretest": "pnpm --filter @packages/contracts-auth build",
