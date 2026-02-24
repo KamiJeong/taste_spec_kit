@@ -9,4 +9,6 @@ storybook-static
 !.env.template
 !.env.*.template
 !apps/api/.env.template
+.idea/
+.npm-cache/
 
