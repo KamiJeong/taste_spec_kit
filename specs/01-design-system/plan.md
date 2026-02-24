@@ -2,7 +2,7 @@ Tech-Stack: specs/00-tech-stack.md
 
 # Implementation Plan: Design System Foundation + shadcn/ui Ownership
 
-**Branch**: `01-design-system` | **Date**: 2026-02-12 | **Spec**: [spec.md](./spec.md)
+**Branch**: `feature/01-design-system` | **Date**: 2026-02-24 | **Spec**: [spec.md](./spec.md)
 **Input**: Feature specification from `/specs/01-design-system/spec.md`
 
 ## Review (Plan Step)
@@ -33,6 +33,19 @@ Tech-Stack: specs/00-tech-stack.md
 ## Summary
 
 `FR-001~FR-016` 기준으로 구현을 완료했고, 현재 계획은 `(1) 실행 이력 고정 -> (2) 재생성 런북 확정 -> (3) Review/Refine(테마 준비) -> (4) 회귀 검증 반복`이다.
+
+## Traceability Strategy
+
+1. FR coverage
+- FR-001~FR-004: 소유 경계 + Storybook 소비 경계는 Phase 2~4에서 유지/검증한다.
+- FR-005~FR-007: 카탈로그/guard/workflow 문서는 Phase 3~5에서 고정한다.
+- FR-008~FR-012: CLI/MCP 설치 규칙은 Phase 2/2.5와 setup 문서로 추적한다.
+- FR-013~FR-016: UI 품질/상태 표기는 Phase 4/7/8에서 회귀 점검한다.
+
+2. SC coverage
+- SC-001: 문서 동기화 검토를 각 Refine Step에서 강제한다.
+- SC-002~SC-004: 산출물(카탈로그, guard, setup) 존재와 내용을 확인한다.
+- SC-005~SC-007: 실행 로그, 스타일 회귀, 상태 배지 검증을 Phase 5~8 게이트로 반복한다.
 
 ## Technical Context
 
