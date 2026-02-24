@@ -29,6 +29,8 @@ Base Path: `/api/v1/auth`
 - 서버 시간 기준 비교가 필요한 응답은 `meta.serverTime`(ISO-8601 UTC)을 포함할 수 있다.
 - `POST /resend-verification`, `POST /forgot-password`는 idempotent 정책(쿨다운/중복 억제)을 적용한다.
 - 세션이 필요한 상태 변경 요청(`POST /logout`)은 CSRF 검증 헤더(`x-csrf-token`)를 요구한다.
+- 이메일 인증/재설정 토큰은 메일 전송을 기본으로 하며, API 응답 본문에 토큰을 포함하지 않는다.
+- 단, `NODE_ENV=test` 또는 `MAIL_EXPOSE_TOKENS=true` 환경에서는 테스트/로컬 디버깅을 위해 토큰을 응답에 포함할 수 있다.
 
 ## Request/Response (Summary)
 

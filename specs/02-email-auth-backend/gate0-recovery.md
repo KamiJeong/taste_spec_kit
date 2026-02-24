@@ -20,9 +20,9 @@ Gate 0 통과 조건(`apps/api` 부팅 + 테스트 명령 4종 실행 가능)을
 - `apps/api/src/app.module.ts`
 - `apps/api/.env.test`
 - `apps/api/test/README.md`
-- `apps/api/test/unit/health.test.js`
-- `apps/api/test/integration/env.test.js`
-- `apps/api/test/e2e/smoke.test.js`
+- `apps/api/test/unit/health.test.ts`
+- `apps/api/test/integration/env.test.ts`
+- `apps/api/test/e2e/smoke.test.ts`
 
 ## Required `apps/api` Scripts
 
