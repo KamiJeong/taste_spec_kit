@@ -29,7 +29,7 @@ function isCsrfValid(req: Request): boolean {
 }
 
 const signupSchema = z.object({
-  email: z.string().trim().email(),
+  email: z.string().trim().pipe(z.email()),
   password: z.string().min(8),
   name: z.string().trim().min(1).max(100).nullable().optional()
 });
@@ -39,7 +39,7 @@ const verifyEmailQuerySchema = z.object({
 });
 
 const emailBodySchema = z.object({
-  email: z.string().trim().email()
+  email: z.string().trim().pipe(z.email())
 });
 
 const resetPasswordSchema = z.object({
@@ -48,7 +48,7 @@ const resetPasswordSchema = z.object({
 });
 
 const loginSchema = z.object({
-  email: z.string().trim().email(),
+  email: z.string().trim().pipe(z.email()),
   password: z.string().min(1)
 });
 
