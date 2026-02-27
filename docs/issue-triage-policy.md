@@ -54,6 +54,12 @@ pwsh ./tooling/seed-github-labels.ps1 -Repo "<owner>/<repo>"
 - `codex:blocked`
 - `codex:done`
 
+### Progress notifications
+
+- `spec-done`
+- `plan-done`
+- `tasks-done`
+
 ### Human dependency
 
 - `needs:maintainer`
