@@ -4,7 +4,7 @@ Tech-Stack: specs/00-tech-stack.md
 
 **Feature Branch**: `feature/email-auth-frontend`  
 **Created**: 2026-02-26  
-**Status**: In Progress (Implementation started 2026-02-26)  
+**Status**: Completed (Validated on 2026-02-27)  
 **Input**: "backend email-auth를 기준으로 frontend를 design system + next.js로 구현"
 
 ## Review & Refine (2026-02-26)
@@ -36,6 +36,18 @@ Tech-Stack: specs/00-tech-stack.md
 2. 로컬 전용 `Dev Auth Tools` 플로팅 패널을 도입해 토큰 기반 검증/재설정 액션을 빠르게 수행한다.
 3. 스타일 정합성은 `@repo/ui/styles.css` + 올바른 `@source` 경로 + token explicit class로 고정한다.
 4. adapter 타입/쿼리 타입을 실제 backend 응답 shape와 일치시킨다.
+
+## Review & Refine (2026-02-27, Cycle 3)
+
+### 확인된 이슈
+
+1. 문서 간 진행 상태 표현(`spec`/`plan`/`tasks`)이 완전히 동기화되지 않았다.
+2. 구현 완료 후 운영 전 검증 게이트(회귀 테스트/배포 전 체크) 기준이 명시적으로 부족했다.
+
+### Refine 결정
+
+1. 본 스펙 상태를 `Ready for Validation`으로 고정하고, 구현 완료와 검증 단계를 구분한다.
+2. 최종 종료 기준은 P1 사용자 스토리 재현 + 타입체크/테스트 통과 + 문서 정합성으로 정의한다.
 
 ## Tech Stack Reference Rule
 

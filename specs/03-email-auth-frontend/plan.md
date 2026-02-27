@@ -33,12 +33,20 @@ Tech-Stack: specs/00-tech-stack.md
 
 - **Language/Version**: TypeScript `^5.9.0`, Node.js `22.x`
 - **Primary Dependencies**: Next.js `^15.1.0`, React `^19.0.0`, Tailwind CSS `^4.0.0`, react-hook-form `^7.54.0`, zod `^4.3.0`
-- **Primary Dependencies**: Next.js `^15.1.0`, React `^19.0.0`, Tailwind CSS `^4.0.0`, react-hook-form `^7.54.0`, zod `^4.3.0`, TanStack Query
+- **State Management for Auth Flow**: TanStack Query (auth query/mutation 및 session invalidation 표준화 용도)
 - **Shared UI**: `packages/ui` (shadcn/ui ownership 규칙 준수)
 - **Contracts**: `packages/contracts-auth`, `specs/02-email-auth-backend/contracts/*`
 - **Auth Strategy**: Adapter pattern (`RestAuthAdapter` -> `BetterAuthAdapter` migration-ready)
 - **Testing**: Playwright (E2E 우선), Vitest (컴포넌트/유닛)
 - **Project Type**: Turborepo monorepo (`apps/web`)
+
+## Current Status (2026-02-27)
+
+- Milestone 1~10 구현 항목은 완료되었고, 최종 검증 게이트도 통과했다.
+- 검증 완료 항목:
+  - P1 사용자 스토리 회귀 확인 (통합 UI 테스트 기준)
+  - 타입체크/테스트 재검증 통과
+  - spec/plan/tasks 문서 정합성 최종 확인
 
 ## Constitution Check
 

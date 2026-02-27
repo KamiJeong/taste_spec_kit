@@ -14,7 +14,9 @@
     "test:api": "pnpm --filter @apps/api test",
     "test:unit": "pnpm --filter @apps/api test:unit",
     "test:integration": "pnpm --filter @apps/api test:integration",
-    "test:e2e": "pnpm --filter @apps/api test:e2e"
+    "test:e2e": "pnpm --filter @apps/api test:e2e",
+    "test:e2e:web": "pnpm --filter @apps/web test:e2e",
+    "test:e2e:web:real": "pnpm --filter @apps/web test:e2e:real"
   },
   "devDependencies": {
     "turbo": "^2.8.7",

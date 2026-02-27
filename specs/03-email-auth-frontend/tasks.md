@@ -83,6 +83,16 @@ Tech-Stack: specs/00-tech-stack.md
 
 ## Done Checklist
 
-- [ ] FR-FE-001~021 커버
+- [x] FR-FE-001~021 커버
 - [x] P1 사용자 스토리 단독 동작 확인
 - [x] backend 계약 문서와 요청/응답 shape 일치 확인
+- [x] spec/plan/tasks 상태 표현 동기화 (2026-02-27)
+- [x] 최종 회귀 실행 기록 업데이트 (typecheck/test 실행 로그 반영)
+
+## Validation Log (2026-02-27)
+
+- `pnpm --filter @apps/web test`: PASS (4 files, 8 tests)
+- `pnpm --filter @apps/web typecheck`: PASS
+- `pnpm --filter @apps/web test:e2e`: PASS (Playwright chromium, 5 tests)
+- `pnpm --filter @apps/web test:e2e:real`: SKIP without `PLAYWRIGHT_REAL_API_BASE_URL`, PASS 대상은 로컬 백엔드 연결 시 (forgot-password + invalid login smoke)
+- 참고: Playwright는 US1/US2 중심 플로우(signup/verify, forgot/reset, login error, login validation)와 login/logout 후 `/auth/me` session invalidation을 검증하고, Vitest 통합 테스트와 병행한다.

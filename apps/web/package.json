@@ -9,7 +9,9 @@
     "start": "next start -p 3001",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:e2e": "playwright test --grep-invert @real-api",
+    "test:e2e:real": "playwright test --grep @real-api"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -30,6 +32,7 @@
     "@types/node": "^22.10.2",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
+    "@playwright/test": "^1.49.0",
     "jsdom": "^28.1.0",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.9.3",
