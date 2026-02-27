@@ -24,15 +24,6 @@ Tech-Stack: specs/00-tech-stack.md
 - `[P]`: 병렬 가능
 - `[Story]`: US 매핑
 
-## Traceability Rules
-
-- T004~T008, T023~T026 -> FR-002, FR-007~FR-012
-- T009~T011, T015~T017 -> FR-001, FR-003, FR-005, FR-006
-- T012~T014 -> FR-004
-- T027~T029 -> FR-013, FR-014, FR-016
-- T030~T038 -> FR-015 및 SC-005~SC-007 안정화
-- 문서 정합성(SC-001)은 본 파일/`spec.md`/`plan.md` 동시 수정으로 유지
-
 ## Phase 1: Bootstrap (Shared)
 
 - [x] T001 Create root workspace files: `package.json`, `pnpm-workspace.yaml`, `turbo.json`, `tsconfig.base.json`

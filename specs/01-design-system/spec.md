@@ -2,9 +2,9 @@ Tech-Stack: specs/00-tech-stack.md
 
 # 기능 명세: Design System Foundation + shadcn/ui Ownership
 
-**Feature Branch**: `feature/01-design-system`  
+**Feature Branch**: `01-design-system`  
 **Created**: 2026-02-11  
-**Status**: Implemented (Reviewed/Refined, 2026-02-24)  
+**Status**: Implemented (Reviewed/Refined, 2026-02-12)  
 **Input**: User description: "spec > plan > tasks를 재시작하고, shadcn/ui 컴포넌트는 packages/ui에만 두고 story는 apps/storybook에만 둔다"
 
 ## Review (Install Method Step)
@@ -75,19 +75,6 @@ Tech-Stack: specs/00-tech-stack.md
 1. 차기 테마 변경은 "토큰 레이어 우선, 컴포넌트 클래스 최소 변경" 원칙으로 진행한다.
 2. Storybook에 구현 상태 배지(완료/진행중)를 유지해 회귀 확인 지점을 시각적으로 고정한다.
 3. 테마 변경 완료 시 `typecheck/test/build-storybook`을 필수 회귀 게이트로 반복 실행한다.
-
-## Review (Spec -> Plan -> Tasks Sync Step)
-
-### 확인된 이슈 (2026-02-24)
-
-1. 요구사항(FR)과 성공 기준(SC)이 충분히 정의되어 있으나 plan/tasks에서 직접 추적하는 문장이 약했다.
-2. 브랜치 네이밍 정책 도입 이후 기존 feature 식별자(`01-design-system`)와 실제 브랜치명 간 차이가 생겼다.
-
-### Refine 결정 (Traceability)
-
-1. 본 spec의 기준 브랜치를 `feature/01-design-system`으로 고정한다.
-2. plan에는 FR/SC 커버리지 기준을 명시하고, tasks에는 FR/SC 매핑 규칙을 추가한다.
-3. 다음 사이클에서도 `spec -> plan -> tasks` 변경은 같은 날짜 스탬프로 동기화한다.
 
 ## User Scenarios & Testing
 

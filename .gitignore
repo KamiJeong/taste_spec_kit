@@ -11,7 +11,4 @@ storybook-static
 !apps/api/.env.template
 .idea/
 .npm-cache/
-.next/
-playwright-report/
-test-results/
 

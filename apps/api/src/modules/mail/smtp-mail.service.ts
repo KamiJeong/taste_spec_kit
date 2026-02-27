@@ -5,7 +5,7 @@ import type { MailService, PasswordResetMailInput, VerificationMailInput } from 
 @Injectable()
 export class SmtpMailService implements MailService {
   private readonly from = process.env.MAIL_FROM ?? "no-reply@localhost";
-  private readonly appBaseUrl = process.env.APP_BASE_URL ?? "http://localhost:3001";
+  private readonly appBaseUrl = process.env.APP_BASE_URL ?? "http://localhost:3000";
   private readonly transport = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT ?? 587),

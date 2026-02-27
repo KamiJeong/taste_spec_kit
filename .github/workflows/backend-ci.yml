@@ -2,30 +2,8 @@ name: backend-ci
 
 on:
   push:
-    branches: [main, develop, stage]
-    paths:
-      - "apps/api/**"
-      - "packages/contracts-auth/**"
-      - ".github/workflows/backend-ci.yml"
-      - "package.json"
-      - "pnpm-lock.yaml"
-      - "pnpm-workspace.yaml"
-      - "turbo.json"
-      - "docker-compose.yml"
+    branches: ["**"]
   pull_request:
-    paths:
-      - "apps/api/**"
-      - "packages/contracts-auth/**"
-      - ".github/workflows/backend-ci.yml"
-      - "package.json"
-      - "pnpm-lock.yaml"
-      - "pnpm-workspace.yaml"
-      - "turbo.json"
-      - "docker-compose.yml"
-
-concurrency:
-  group: backend-ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
   api-check:

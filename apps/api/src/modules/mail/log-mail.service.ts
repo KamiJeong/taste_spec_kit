@@ -4,7 +4,7 @@ import type { MailService, PasswordResetMailInput, VerificationMailInput } from 
 @Injectable()
 export class LogMailService implements MailService {
   private readonly logger = new Logger(LogMailService.name);
-  private readonly appBaseUrl = process.env.APP_BASE_URL ?? "http://localhost:3001";
+  private readonly appBaseUrl = process.env.APP_BASE_URL ?? "http://localhost:3000";
 
   async sendVerificationMail(input: VerificationMailInput): Promise<void> {
     const verifyUrl = `${this.appBaseUrl}/verify-email?token=${encodeURIComponent(input.token)}`;

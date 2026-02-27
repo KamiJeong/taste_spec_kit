@@ -3,7 +3,7 @@ import { z } from "zod";
 import { validateWithZod } from "../../src/modules/shared/zod-validation";
 
 const schema = z.object({
-  email: z.email(),
+  email: z.string().email(),
   age: z.number().int().positive()
 });
 
