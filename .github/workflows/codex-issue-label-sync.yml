@@ -1,0 +1,82 @@
+name: codex-issue-label-sync
+
+on:
+  issues:
+    types: [opened, edited, reopened]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  sync-labels:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Sync kind/prio/area labels from issue form
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue
+            if (!issue || issue.pull_request) {
+              return
+            }
+
+            const body = issue.body || ""
+            const parseSingleValue = (sectionTitle) => {
+              const re = new RegExp(`###\\s+${sectionTitle}\\s*\\n+([^\\n\\r]+)`, "i")
+              const m = body.match(re)
+              return m ? m[1].trim().toLowerCase() : ""
+            }
+
+            const requestKind = parseSingleValue("Request Kind")
+            const priority = parseSingleValue("Priority")
+            const area = parseSingleValue("Area")
+
+            if (!requestKind && !priority && !area) {
+              core.info("Issue does not look like Codex Work Request form. Skip.")
+              return
+            }
+
+            const desired = []
+            const kindSet = new Set(["feature", "bug", "chore", "docs"])
+            const prioSet = new Set(["p0", "p1", "p2"])
+            const areaSet = new Set(["web", "api", "infra", "spec", "ci"])
+
+            if (kindSet.has(requestKind)) desired.push(`kind:${requestKind}`)
+            if (prioSet.has(priority)) desired.push(`prio:${priority}`)
+            if (areaSet.has(area)) desired.push(`area:${area}`)
+
+            const { data: repoLabels } = await github.rest.issues.listLabelsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 100,
+            })
+            const repoLabelNames = new Set(repoLabels.map((l) => l.name))
+            const existing = issue.labels.map((l) => l.name)
+
+            const groupedPrefixes = ["kind:", "prio:", "area:"]
+            const removable = existing.filter((name) =>
+              groupedPrefixes.some((p) => name.startsWith(p)),
+            )
+
+            for (const label of removable) {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                name: label,
+              }).catch(() => {})
+            }
+
+            const addable = desired.filter((name) => repoLabelNames.has(name))
+            if (addable.length > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels: addable,
+              })
+            }
+
+            core.info(`Synced labels: ${addable.join(", ") || "(none)"}`)
