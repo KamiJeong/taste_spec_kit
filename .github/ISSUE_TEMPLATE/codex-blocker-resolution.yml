@@ -1,0 +1,42 @@
+name: Codex Blocker Resolution
+description: Record maintainer actions that unblock a previously blocked Codex issue.
+title: "[codex-unblock] "
+labels:
+  - codex:blocked
+  - needs:maintainer
+body:
+  - type: input
+    id: blocked_issue
+    attributes:
+      label: Blocked Issue Number or Link
+      placeholder: "#123 or https://github.com/org/repo/issues/123"
+    validations:
+      required: true
+
+  - type: textarea
+    id: completed_actions
+    attributes:
+      label: Completed Human Actions
+      description: What was completed to unblock Codex?
+      placeholder: |
+        - Access granted to ...
+        - Decision approved for ...
+        - External dependency prepared ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence / Links
+      description: PR links, screenshots, logs, policy references.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: ready
+    attributes:
+      label: Ready for Resume
+      options:
+        - label: I confirm Codex can continue from this point.
+          required: true
