@@ -1,0 +1,29 @@
+name: branch-name-policy
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  validate-branch-name:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate source branch name
+        shell: bash
+        run: |
+          BRANCH="${{ github.head_ref }}"
+          echo "Checking branch: $BRANCH"
+
+          if [[ "$BRANCH" =~ ^feature\/[a-z0-9._-]+$ ]] || \
+             [[ "$BRANCH" =~ ^hotfix\/[a-z0-9._-]+$ ]] || \
+             [[ "$BRANCH" =~ ^release\/[a-z0-9._-]+$ ]]; then
+            echo "Branch name is valid"
+            exit 0
+          fi
+
+          echo "Invalid branch name: $BRANCH"
+          echo "Allowed patterns:"
+          echo "  - feature/<name>"
+          echo "  - hotfix/<name>"
+          echo "  - release/<name>"
+          exit 1

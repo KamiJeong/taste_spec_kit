@@ -1,6 +1,7 @@
 # Backend Testing Guide
 
 - FR 매핑 문서: [`fr-test-mapping.md`](./fr-test-mapping.md)
+- 메일/인증 운영 런북: [`email-verification-runbook.md`](./email-verification-runbook.md)
 
 ## Prerequisites
 

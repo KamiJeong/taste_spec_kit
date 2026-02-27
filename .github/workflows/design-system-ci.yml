@@ -1,0 +1,60 @@
+name: design-system-ci
+
+on:
+  push:
+    branches: [main, develop, stage]
+    paths:
+      - "apps/storybook/**"
+      - "packages/ui/**"
+      - ".github/workflows/design-system-ci.yml"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "turbo.json"
+      - "tsconfig.base.json"
+  pull_request:
+    paths:
+      - "apps/storybook/**"
+      - "packages/ui/**"
+      - ".github/workflows/design-system-ci.yml"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "turbo.json"
+      - "tsconfig.base.json"
+
+concurrency:
+  group: design-system-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  design-system-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: UI typecheck
+        run: pnpm --filter @repo/ui typecheck
+
+      - name: Storybook typecheck
+        run: pnpm --filter @repo/storybook typecheck
+
+      - name: Storybook tests
+        run: pnpm --filter @repo/storybook test
+
+      - name: Storybook build
+        run: pnpm --filter @repo/storybook build-storybook
