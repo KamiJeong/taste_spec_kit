@@ -24,6 +24,10 @@ $labels = @(
   @{ Name = "codex:blocked"; Color = "D93F0B"; Description = "Blocked and needs human action" },
   @{ Name = "codex:done"; Color = "5319E7"; Description = "Codex work completed" },
 
+  @{ Name = "spec-done"; Color = "0E8A16"; Description = "Spec phase completed" },
+  @{ Name = "plan-done"; Color = "1D76DB"; Description = "Plan phase completed" },
+  @{ Name = "tasks-done"; Color = "5319E7"; Description = "Tasks phase completed" },
+
   @{ Name = "needs:maintainer"; Color = "F9D0C4"; Description = "Needs maintainer action" },
   @{ Name = "needs:product"; Color = "F9D0C4"; Description = "Needs product decision" },
   @{ Name = "needs:access"; Color = "F9D0C4"; Description = "Needs access/credential setup" },
