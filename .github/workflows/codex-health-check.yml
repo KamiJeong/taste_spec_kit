@@ -104,7 +104,10 @@ jobs:
           policy="docs/issue-triage-policy.md"
 
           grep -q "codex:triage" "$policy"
+          grep -q "codex:ready" "$policy"
+          grep -q "codex:running" "$policy"
           grep -q "codex:blocked" "$policy"
+          grep -q "codex:done" "$policy"
           grep -q "spec-done" "$policy"
           grep -q "plan-done" "$policy"
           grep -q "tasks-done" "$policy"
