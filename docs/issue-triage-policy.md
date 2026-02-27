@@ -14,6 +14,8 @@ This document defines how issues are prepared and triaged for Codex-driven execu
 Initial automation in repository:
 
 - `.github/workflows/codex-issue-label-sync.yml` syncs `kind:*`, `prio:*`, `area:*` from issue form fields.
+- `.github/workflows/codex-issue-progress-notify.yml` posts phase updates to Telegram and issue comments.
+- `.github/workflows/codex-health-check.yml` validates Codex pipeline config daily and on-demand.
 
 ## Label Bootstrap
 
