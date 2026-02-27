@@ -1,0 +1,110 @@
+name: codex-health-check
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  validate-codex-pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required Codex files
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          required_files=(
+            ".github/ISSUE_TEMPLATE/codex-work-request.yml"
+            ".github/ISSUE_TEMPLATE/codex-blocker-resolution.yml"
+            ".github/workflows/codex-issue-label-sync.yml"
+            ".github/workflows/codex-issue-progress-notify.yml"
+            "tooling/seed-github-labels.ps1"
+            "docs/issue-triage-policy.md"
+          )
+
+          for file in "${required_files[@]}"; do
+            if [[ ! -f "$file" ]]; then
+              echo "Missing required file: $file"
+              exit 1
+            fi
+          done
+
+      - name: Validate issue form fields for label sync
+        shell: bash
+        run: |
+          set -euo pipefail
+          form=".github/ISSUE_TEMPLATE/codex-work-request.yml"
+
+          grep -q "label: Request Kind" "$form"
+          grep -q "label: Priority" "$form"
+          grep -q "label: Area" "$form"
+
+      - name: Validate label sync workflow rules
+        shell: bash
+        run: |
+          set -euo pipefail
+          wf=".github/workflows/codex-issue-label-sync.yml"
+
+          grep -q "types: \[opened, edited, reopened\]" "$wf"
+          grep -q "Request Kind" "$wf"
+          grep -q "Priority" "$wf"
+          grep -q "Area" "$wf"
+          grep -q "kind:" "$wf"
+          grep -q "prio:" "$wf"
+          grep -q "area:" "$wf"
+
+      - name: Validate progress notify workflow rules
+        shell: bash
+        run: |
+          set -euo pipefail
+          wf=".github/workflows/codex-issue-progress-notify.yml"
+
+          grep -q "types: \[labeled\]" "$wf"
+          grep -q "spec-done" "$wf"
+          grep -q "plan-done" "$wf"
+          grep -q "tasks-done" "$wf"
+          grep -q "TELEGRAM_BOT_TOKEN" "$wf"
+          grep -q "TELEGRAM_CHAT_ID" "$wf"
+          grep -q "createComment" "$wf"
+
+      - name: Validate label seed baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          seed="tooling/seed-github-labels.ps1"
+
+          required_labels=(
+            "codex:triage"
+            "codex:ready"
+            "codex:running"
+            "codex:blocked"
+            "codex:done"
+            "spec-done"
+            "plan-done"
+            "tasks-done"
+            "needs:maintainer"
+          )
+
+          for label in "${required_labels[@]}"; do
+            grep -q "$label" "$seed"
+          done
+
+      - name: Validate policy doc references
+        shell: bash
+        run: |
+          set -euo pipefail
+          policy="docs/issue-triage-policy.md"
+
+          grep -q "codex:triage" "$policy"
+          grep -q "codex:blocked" "$policy"
+          grep -q "spec-done" "$policy"
+          grep -q "plan-done" "$policy"
+          grep -q "tasks-done" "$policy"
