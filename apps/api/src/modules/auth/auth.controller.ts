@@ -1,19 +1,24 @@
-import { Body, Controller, Get, Post, Query, Req, Res } from "@nestjs/common";
+import { Body, Controller, Get, Post, Query, Req, Res, UseGuards } from "@nestjs/common";
 import type { Request, Response } from "express";
-import { z } from "zod";
-import { ERROR_CODES } from "@packages/contracts-auth";
+import { ApiBody, ApiQuery, ApiTags } from "@nestjs/swagger";
 import { validateWithZod } from "../shared/zod-validation";
-import { failure } from "../shared/http-contract";
+import { cookieOf } from "../shared/request-cookie";
+import { CsrfGuard } from "../shared/guards/csrf.guard";
+import { ApiCreatedValidation, ApiOkCsrf, ApiOkUnauthorized, ApiOkValidation } from "../shared/swagger-responses";
+import { ApiEndpoint, ApiSessionCookieAuth, ApiSessionMutationAuth } from "../shared/swagger-route";
 import { AuthService } from "./auth.service";
-
-function cookieOf(req: Request, key: string): string | undefined {
-  const raw = req.headers.cookie || "";
-  for (const part of raw.split(";")) {
-    const [k, v] = part.trim().split("=");
-    if (k === key) return decodeURIComponent(v || "");
-  }
-  return undefined;
-}
+import {
+  emailBodySchema,
+  loginSchema,
+  resetPasswordSchema,
+  signupSchema,
+  type EmailBody,
+  type LoginBody,
+  type ResetPasswordBody,
+  type SignupBody,
+  verifyEmailQuerySchema
+} from "./auth.schemas";
+import { EmailDto, LoginDto, ResetPasswordDto, SignupDto } from "./dto/auth.dto";
 
 function auditContextFromReq(req: Request): { ip: string; userAgent: string } {
   return {
@@ -22,43 +27,18 @@ function auditContextFromReq(req: Request): { ip: string; userAgent: string } {
   };
 }
 
-function isCsrfValid(req: Request): boolean {
-  const csrfCookie = cookieOf(req, "csrfToken");
-  const csrfHeader = req.headers["x-csrf-token"];
-  return typeof csrfCookie === "string" && typeof csrfHeader === "string" && csrfCookie.length > 0 && csrfHeader === csrfCookie;
-}
-
-const signupSchema = z.object({
-  email: z.string().trim().pipe(z.email()),
-  password: z.string().min(8),
-  name: z.string().trim().min(1).max(100).nullable().optional()
-});
-
-const verifyEmailQuerySchema = z.object({
-  token: z.string().min(1)
-});
-
-const emailBodySchema = z.object({
-  email: z.string().trim().pipe(z.email())
-});
-
-const resetPasswordSchema = z.object({
-  token: z.string().min(1),
-  newPassword: z.string().min(8)
-});
-
-const loginSchema = z.object({
-  email: z.string().trim().pipe(z.email()),
-  password: z.string().min(1)
-});
-
+@ApiTags("auth")
 @Controller("/api/v1/auth")
 export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
+  @ApiEndpoint("Sign up with email/password")
+  @ApiBody({ type: SignupDto })
+  @ApiCreatedValidation("Signup accepted")
   @Post("/signup")
-  async signup(@Req() req: Request, @Body() body: { email: string; password: string; name?: string | null }, @Res() res: Response) {
-    const validated = validateWithZod(signupSchema, body);
+  async signup(@Req() req: Request, @Body() body: SignupDto, @Res() res: Response) {
+    const payload: SignupBody = body;
+    const validated = validateWithZod(signupSchema, payload);
     if (!validated.ok) {
       res.status(validated.response.status).json(validated.response.body);
       return;
@@ -67,6 +47,9 @@ export class AuthController {
     res.status(result.status).json(result.body);
   }
 
+  @ApiEndpoint("Verify email token")
+  @ApiQuery({ name: "token", required: true })
+  @ApiOkValidation("Email verified", "Invalid token")
   @Get("/verify-email")
   async verifyEmail(@Req() req: Request, @Query("token") token: string, @Res() res: Response) {
     const validated = validateWithZod(verifyEmailQuerySchema, { token });
@@ -78,9 +61,13 @@ export class AuthController {
     res.status(result.status).json(result.body);
   }
 
+  @ApiEndpoint("Resend verification email")
+  @ApiBody({ type: EmailDto })
+  @ApiOkValidation("Verification mail requested")
   @Post("/resend-verification")
-  async resendVerification(@Req() req: Request, @Body() body: { email: string }, @Res() res: Response) {
-    const validated = validateWithZod(emailBodySchema, body);
+  async resendVerification(@Req() req: Request, @Body() body: EmailDto, @Res() res: Response) {
+    const payload: EmailBody = body;
+    const validated = validateWithZod(emailBodySchema, payload);
     if (!validated.ok) {
       res.status(validated.response.status).json(validated.response.body);
       return;
@@ -89,9 +76,13 @@ export class AuthController {
     res.status(result.status).json(result.body);
   }
 
+  @ApiEndpoint("Request password reset email")
+  @ApiBody({ type: EmailDto })
+  @ApiOkValidation("Reset mail requested")
   @Post("/forgot-password")
-  async forgotPassword(@Req() req: Request, @Body() body: { email: string }, @Res() res: Response) {
-    const validated = validateWithZod(emailBodySchema, body);
+  async forgotPassword(@Req() req: Request, @Body() body: EmailDto, @Res() res: Response) {
+    const payload: EmailBody = body;
+    const validated = validateWithZod(emailBodySchema, payload);
     if (!validated.ok) {
       res.status(validated.response.status).json(validated.response.body);
       return;
@@ -100,9 +91,13 @@ export class AuthController {
     res.status(result.status).json(result.body);
   }
 
+  @ApiEndpoint("Reset password with token")
+  @ApiBody({ type: ResetPasswordDto })
+  @ApiOkValidation("Password reset")
   @Post("/reset-password")
-  async resetPassword(@Req() req: Request, @Body() body: { token: string; newPassword: string }, @Res() res: Response) {
-    const validated = validateWithZod(resetPasswordSchema, body);
+  async resetPassword(@Req() req: Request, @Body() body: ResetPasswordDto, @Res() res: Response) {
+    const payload: ResetPasswordBody = body;
+    const validated = validateWithZod(resetPasswordSchema, payload);
     if (!validated.ok) {
       res.status(validated.response.status).json(validated.response.body);
       return;
@@ -111,9 +106,13 @@ export class AuthController {
     res.status(result.status).json(result.body);
   }
 
+  @ApiEndpoint("Login and issue session cookie")
+  @ApiBody({ type: LoginDto })
+  @ApiOkUnauthorized("Login success", "Login rejected")
   @Post("/login")
-  async login(@Req() req: Request, @Body() body: { email: string; password: string }, @Res() res: Response) {
-    const validated = validateWithZod(loginSchema, body);
+  async login(@Req() req: Request, @Body() body: LoginDto, @Res() res: Response) {
+    const payload: LoginBody = body;
+    const validated = validateWithZod(loginSchema, payload);
     if (!validated.ok) {
       res.status(validated.response.status).json(validated.response.body);
       return;
@@ -129,19 +128,20 @@ export class AuthController {
     res.status(result.status).json(result.body);
   }
 
+  @ApiEndpoint("Logout and clear session cookie")
+  @ApiSessionMutationAuth()
+  @ApiOkCsrf("Logout success")
+  @UseGuards(CsrfGuard)
   @Post("/logout")
   async logout(@Req() req: Request, @Res() res: Response) {
-    if (cookieOf(req, "sid") && !isCsrfValid(req)) {
-      res
-        .status(403)
-        .json(failure(ERROR_CODES.AUTH_CSRF_INVALID, "CSRF 검증에 실패했습니다"));
-      return;
-    }
     const result = await this.auth.logout({ sid: cookieOf(req, "sid") }, auditContextFromReq(req));
     res.setHeader("set-cookie", ["sid=; HttpOnly; Path=/; Max-Age=0", "csrfToken=; Path=/; Max-Age=0"]);
     res.status(result.status).json(result.body);
   }
 
+  @ApiEndpoint("Get current session user")
+  @ApiSessionCookieAuth()
+  @ApiOkUnauthorized("Current user")
   @Get("/me")
   async me(@Req() req: Request, @Res() res: Response) {
     const result = await this.auth.me({ sid: cookieOf(req, "sid") });

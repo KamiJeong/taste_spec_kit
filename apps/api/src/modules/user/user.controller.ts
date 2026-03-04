@@ -1,19 +1,21 @@
-import { Body, Controller, Get, Patch, Post, Req, Res } from "@nestjs/common";
+import { Body, Controller, Get, Patch, Post, Req, Res, UseGuards } from "@nestjs/common";
 import type { Request, Response } from "express";
-import { z } from "zod";
-import { ERROR_CODES } from "@packages/contracts-auth";
+import { ApiBody, ApiTags } from "@nestjs/swagger";
 import { validateWithZod } from "../shared/zod-validation";
-import { failure } from "../shared/http-contract";
+import { cookieOf } from "../shared/request-cookie";
+import { CsrfGuard } from "../shared/guards/csrf.guard";
+import { ApiOkCsrf, ApiOkUnauthorized, ApiOkValidationCsrf } from "../shared/swagger-responses";
+import { ApiCsrfHeader, ApiEndpoint, ApiSessionCookieAuth } from "../shared/swagger-route";
 import { UserService } from "./user.service";
-
-function cookieOf(req: Request, key: string): string | undefined {
-  const raw = req.headers.cookie || "";
-  for (const part of raw.split(";")) {
-    const [k, v] = part.trim().split("=");
-    if (k === key) return decodeURIComponent(v || "");
-  }
-  return undefined;
-}
+import {
+  changePasswordSchema,
+  passwordBodySchema,
+  patchProfileSchema,
+  type ChangePasswordBody,
+  type PasswordBody,
+  type PatchProfileBody
+} from "./user.schemas";
+import { ChangePasswordDto, PasswordDto, PatchProfileDto } from "./dto/user.dto";
 
 function auditContextFromReq(req: Request): { ip: string; userAgent: string } {
   return {
@@ -22,51 +24,29 @@ function auditContextFromReq(req: Request): { ip: string; userAgent: string } {
   };
 }
 
-function isCsrfValid(req: Request): boolean {
-  const csrfCookie = cookieOf(req, "csrfToken");
-  const csrfHeader = req.headers["x-csrf-token"];
-  return typeof csrfCookie === "string" && typeof csrfHeader === "string" && csrfCookie.length > 0 && csrfHeader === csrfCookie;
-}
-
-function csrfGuard(req: Request, res: Response): boolean {
-  if (!cookieOf(req, "sid")) return true;
-  if (isCsrfValid(req)) return true;
-  res.status(403).json(failure(ERROR_CODES.AUTH_CSRF_INVALID, "CSRF 검증에 실패했습니다"));
-  return false;
-}
-
-const patchProfileSchema = z
-  .object({
-    name: z.string().trim().min(1).max(100).optional(),
-    email: z.string().trim().pipe(z.email()).optional()
-  })
-  .refine((value) => typeof value.name !== "undefined" || typeof value.email !== "undefined", {
-    message: "at least one field must be provided"
-  });
-
-const changePasswordSchema = z.object({
-  currentPassword: z.string().min(1),
-  newPassword: z.string().min(8)
-});
-
-const passwordBodySchema = z.object({
-  password: z.string().min(1)
-});
-
+@ApiTags("users")
+@ApiSessionCookieAuth()
 @Controller("/api/v1/users")
 export class UserController {
   constructor(private readonly user: UserService) {}
 
+  @ApiEndpoint("Get user profile")
+  @ApiOkUnauthorized("Profile response")
   @Get("/profile")
   async getProfile(@Req() req: Request, @Res() res: Response) {
     const result = await this.user.getProfile({ sid: cookieOf(req, "sid") });
     res.status(result.status).json(result.body);
   }
 
+  @ApiEndpoint("Update user profile")
+  @ApiCsrfHeader()
+  @ApiBody({ type: PatchProfileDto })
+  @ApiOkValidationCsrf("Profile updated")
+  @UseGuards(CsrfGuard)
   @Patch("/profile")
-  async patchProfile(@Req() req: Request, @Body() body: { name?: string; email?: string }, @Res() res: Response) {
-    if (!csrfGuard(req, res)) return;
-    const validated = validateWithZod(patchProfileSchema, body);
+  async patchProfile(@Req() req: Request, @Body() body: PatchProfileDto, @Res() res: Response) {
+    const payload: PatchProfileBody = body;
+    const validated = validateWithZod(patchProfileSchema, payload);
     if (!validated.ok) {
       res.status(validated.response.status).json(validated.response.body);
       return;
@@ -75,14 +55,19 @@ export class UserController {
     res.status(result.status).json(result.body);
   }
 
+  @ApiEndpoint("Change account password")
+  @ApiCsrfHeader()
+  @ApiBody({ type: ChangePasswordDto })
+  @ApiOkValidationCsrf("Password changed")
+  @UseGuards(CsrfGuard)
   @Post("/change-password")
   async changePassword(
     @Req() req: Request,
-    @Body() body: { currentPassword: string; newPassword: string },
+    @Body() body: ChangePasswordDto,
     @Res() res: Response
   ) {
-    if (!csrfGuard(req, res)) return;
-    const validated = validateWithZod(changePasswordSchema, body);
+    const payload: ChangePasswordBody = body;
+    const validated = validateWithZod(changePasswordSchema, payload);
     if (!validated.ok) {
       res.status(validated.response.status).json(validated.response.body);
       return;
@@ -95,10 +80,15 @@ export class UserController {
     res.status(result.status).json(result.body);
   }
 
+  @ApiEndpoint("Deactivate account")
+  @ApiCsrfHeader()
+  @ApiBody({ type: PasswordDto })
+  @ApiOkValidationCsrf("Account deactivated")
+  @UseGuards(CsrfGuard)
   @Post("/deactivate")
-  async deactivate(@Req() req: Request, @Body() body: { password: string }, @Res() res: Response) {
-    if (!csrfGuard(req, res)) return;
-    const validated = validateWithZod(passwordBodySchema, body);
+  async deactivate(@Req() req: Request, @Body() body: PasswordDto, @Res() res: Response) {
+    const payload: PasswordBody = body;
+    const validated = validateWithZod(passwordBodySchema, payload);
     if (!validated.ok) {
       res.status(validated.response.status).json(validated.response.body);
       return;
@@ -113,10 +103,15 @@ export class UserController {
     res.status(result.status).json(result.body);
   }
 
+  @ApiEndpoint("Request account deletion")
+  @ApiCsrfHeader()
+  @ApiBody({ type: PasswordDto })
+  @ApiOkValidationCsrf("Deletion requested")
+  @UseGuards(CsrfGuard)
   @Post("/request-deletion")
-  async requestDeletion(@Req() req: Request, @Body() body: { password: string }, @Res() res: Response) {
-    if (!csrfGuard(req, res)) return;
-    const validated = validateWithZod(passwordBodySchema, body);
+  async requestDeletion(@Req() req: Request, @Body() body: PasswordDto, @Res() res: Response) {
+    const payload: PasswordBody = body;
+    const validated = validateWithZod(passwordBodySchema, payload);
     if (!validated.ok) {
       res.status(validated.response.status).json(validated.response.body);
       return;
@@ -125,9 +120,12 @@ export class UserController {
     res.status(result.status).json(result.body);
   }
 
+  @ApiEndpoint("Cancel scheduled account deletion")
+  @ApiCsrfHeader()
+  @ApiOkCsrf("Deletion canceled")
+  @UseGuards(CsrfGuard)
   @Post("/cancel-deletion")
   async cancelDeletion(@Req() req: Request, @Res() res: Response) {
-    if (!csrfGuard(req, res)) return;
     const result = await this.user.cancelDeletion({ sid: cookieOf(req, "sid") });
     res.status(result.status).json(result.body);
   }
