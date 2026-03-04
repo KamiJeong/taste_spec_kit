@@ -4,12 +4,20 @@ import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import {
   auditLogsTable,
+  channelJoinRequestsTable,
+  channelMembersTable,
+  channelsTable,
   passwordResetTokensTable,
+  userChannelOrdersTable,
   usersTable,
   verificationTokensTable,
   type AuditLogRow,
+  type ChannelJoinRequestRow,
+  type ChannelMemberRow,
+  type ChannelRow,
   type PasswordResetTokenRow,
   type UserRow,
+  type UserChannelOrderRow,
   type VerificationTokenRow
 } from "./schema";
 
@@ -18,6 +26,10 @@ type PersistenceSchema = {
   verificationTokensTable: typeof verificationTokensTable;
   passwordResetTokensTable: typeof passwordResetTokensTable;
   auditLogsTable: typeof auditLogsTable;
+  channelsTable: typeof channelsTable;
+  channelMembersTable: typeof channelMembersTable;
+  channelJoinRequestsTable: typeof channelJoinRequestsTable;
+  userChannelOrdersTable: typeof userChannelOrdersTable;
 };
 
 @Injectable()
@@ -29,6 +41,10 @@ export class PersistenceService implements OnModuleInit, OnModuleDestroy {
   private readonly verificationTokens = new Map<string, VerificationTokenRow>();
   private readonly passwordResetTokens = new Map<string, PasswordResetTokenRow>();
   private readonly auditLogs: AuditLogRow[] = [];
+  private readonly channelsById = new Map<string, ChannelRow>();
+  private readonly channelMembers = new Map<string, ChannelMemberRow>();
+  private readonly channelJoinRequestsById = new Map<string, ChannelJoinRequestRow>();
+  private readonly userChannelOrders = new Map<string, UserChannelOrderRow>();
 
   private readonly databaseUrl = process.env.DATABASE_URL;
   private pool: Pool | null = null;
@@ -49,7 +65,11 @@ export class PersistenceService implements OnModuleInit, OnModuleDestroy {
           usersTable,
           verificationTokensTable,
           passwordResetTokensTable,
-          auditLogsTable
+          auditLogsTable,
+          channelsTable,
+          channelMembersTable,
+          channelJoinRequestsTable,
+          userChannelOrdersTable
         }
       });
     } catch (error) {
@@ -102,6 +122,10 @@ export class PersistenceService implements OnModuleInit, OnModuleDestroy {
 
   async updateUser(input: UserRow): Promise<void> {
     if (!this.db) {
+      const previous = this.usersById.get(input.id);
+      if (previous && previous.email !== input.email) {
+        this.usersByEmail.delete(previous.email);
+      }
       this.usersById.set(input.id, input);
       this.usersByEmail.set(input.email, input);
       return;
@@ -214,5 +238,235 @@ export class PersistenceService implements OnModuleInit, OnModuleDestroy {
       return;
     }
     await this.db.insert(auditLogsTable).values(input);
+  }
+
+  private channelMemberKey(channelId: string, userId: string): string {
+    return `${channelId}:${userId}`;
+  }
+
+  private userChannelOrderKey(userId: string, channelId: string): string {
+    return `${userId}:${channelId}`;
+  }
+
+  async countOwnedChannels(userId: string): Promise<number> {
+    if (!this.db) {
+      let count = 0;
+      for (const channel of this.channelsById.values()) {
+        if (channel.ownerUserId === userId) count += 1;
+      }
+      return count;
+    }
+    const rows = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(channelsTable)
+      .where(eq(channelsTable.ownerUserId, userId));
+    return rows[0]?.count ?? 0;
+  }
+
+  async countMemberships(userId: string): Promise<number> {
+    if (!this.db) {
+      let count = 0;
+      for (const member of this.channelMembers.values()) {
+        if (member.userId === userId) count += 1;
+      }
+      return count;
+    }
+    const rows = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(channelMembersTable)
+      .where(eq(channelMembersTable.userId, userId));
+    return rows[0]?.count ?? 0;
+  }
+
+  async createChannel(input: ChannelRow): Promise<void> {
+    if (!this.db) {
+      this.channelsById.set(input.id, input);
+      return;
+    }
+    await this.db.insert(channelsTable).values(input);
+  }
+
+  async updateChannelOwner(channelId: string, ownerUserId: string, updatedAt: string): Promise<void> {
+    if (!this.db) {
+      const row = this.channelsById.get(channelId);
+      if (!row) return;
+      this.channelsById.set(channelId, { ...row, ownerUserId, updatedAt });
+      return;
+    }
+    await this.db.update(channelsTable).set({ ownerUserId, updatedAt }).where(eq(channelsTable.id, channelId));
+  }
+
+  async findChannelById(channelId: string): Promise<ChannelRow | null> {
+    if (!this.db) return this.channelsById.get(channelId) ?? null;
+    const row = await this.db.query.channelsTable.findFirst({ where: eq(channelsTable.id, channelId) });
+    return row ?? null;
+  }
+
+  async upsertChannelMember(input: ChannelMemberRow): Promise<void> {
+    if (!this.db) {
+      this.channelMembers.set(this.channelMemberKey(input.channelId, input.userId), input);
+      return;
+    }
+    await this.db
+      .insert(channelMembersTable)
+      .values(input)
+      .onConflictDoUpdate({
+        target: [channelMembersTable.channelId, channelMembersTable.userId],
+        set: { role: input.role, updatedAt: input.updatedAt }
+      });
+  }
+
+  async findChannelMember(channelId: string, userId: string): Promise<ChannelMemberRow | null> {
+    if (!this.db) return this.channelMembers.get(this.channelMemberKey(channelId, userId)) ?? null;
+    const row = await this.db.query.channelMembersTable.findFirst({
+      where: and(eq(channelMembersTable.channelId, channelId), eq(channelMembersTable.userId, userId))
+    });
+    return row ?? null;
+  }
+
+  async deleteChannelMember(channelId: string, userId: string): Promise<void> {
+    if (!this.db) {
+      this.channelMembers.delete(this.channelMemberKey(channelId, userId));
+      return;
+    }
+    await this.db
+      .delete(channelMembersTable)
+      .where(and(eq(channelMembersTable.channelId, channelId), eq(channelMembersTable.userId, userId)));
+  }
+
+  async listUserChannels(userId: string): Promise<Array<{ channel: ChannelRow; role: ChannelMemberRow["role"]; sortIndex: number | null }>> {
+    if (!this.db) {
+      const rows: Array<{ channel: ChannelRow; role: ChannelMemberRow["role"]; sortIndex: number | null }> = [];
+      for (const member of this.channelMembers.values()) {
+        if (member.userId !== userId) continue;
+        const channel = this.channelsById.get(member.channelId);
+        if (!channel) continue;
+        const order = this.userChannelOrders.get(this.userChannelOrderKey(userId, member.channelId));
+        rows.push({ channel, role: member.role, sortIndex: order?.sortIndex ?? null });
+      }
+      rows.sort((a, b) => {
+        if (a.sortIndex === null && b.sortIndex === null) return a.channel.createdAt.localeCompare(b.channel.createdAt);
+        if (a.sortIndex === null) return 1;
+        if (b.sortIndex === null) return -1;
+        return a.sortIndex - b.sortIndex;
+      });
+      return rows;
+    }
+
+    const rows = await this.db
+      .select({
+        channel: channelsTable,
+        role: channelMembersTable.role,
+        sortIndex: userChannelOrdersTable.sortIndex
+      })
+      .from(channelMembersTable)
+      .innerJoin(channelsTable, eq(channelMembersTable.channelId, channelsTable.id))
+      .leftJoin(
+        userChannelOrdersTable,
+        and(
+          eq(userChannelOrdersTable.channelId, channelsTable.id),
+          eq(userChannelOrdersTable.userId, channelMembersTable.userId)
+        )
+      )
+      .where(eq(channelMembersTable.userId, userId))
+      .orderBy(userChannelOrdersTable.sortIndex, channelsTable.createdAt);
+
+    return rows.map((row) => ({ channel: row.channel, role: row.role, sortIndex: row.sortIndex ?? null }));
+  }
+
+  async createJoinRequest(input: ChannelJoinRequestRow): Promise<void> {
+    if (!this.db) {
+      this.channelJoinRequestsById.set(input.id, input);
+      return;
+    }
+    await this.db.insert(channelJoinRequestsTable).values(input);
+  }
+
+  async findPendingJoinRequest(channelId: string, requesterUserId: string): Promise<ChannelJoinRequestRow | null> {
+    if (!this.db) {
+      for (const row of this.channelJoinRequestsById.values()) {
+        if (row.channelId === channelId && row.requesterUserId === requesterUserId && row.status === "pending") return row;
+      }
+      return null;
+    }
+    const row = await this.db.query.channelJoinRequestsTable.findFirst({
+      where: and(
+        eq(channelJoinRequestsTable.channelId, channelId),
+        eq(channelJoinRequestsTable.requesterUserId, requesterUserId),
+        eq(channelJoinRequestsTable.status, "pending")
+      )
+    });
+    return row ?? null;
+  }
+
+  async findJoinRequestById(id: string): Promise<ChannelJoinRequestRow | null> {
+    if (!this.db) return this.channelJoinRequestsById.get(id) ?? null;
+    const row = await this.db.query.channelJoinRequestsTable.findFirst({ where: eq(channelJoinRequestsTable.id, id) });
+    return row ?? null;
+  }
+
+  async listPendingJoinRequests(channelId: string): Promise<ChannelJoinRequestRow[]> {
+    if (!this.db) {
+      return [...this.channelJoinRequestsById.values()]
+        .filter((row) => row.channelId === channelId && row.status === "pending")
+        .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+    }
+    return this.db.query.channelJoinRequestsTable.findMany({
+      where: and(eq(channelJoinRequestsTable.channelId, channelId), eq(channelJoinRequestsTable.status, "pending")),
+      orderBy: channelJoinRequestsTable.createdAt
+    });
+  }
+
+  async reviewJoinRequest(id: string, reviewedByUserId: string, decision: "approved" | "rejected", reviewedAt: string): Promise<boolean> {
+    if (!this.db) {
+      const row = this.channelJoinRequestsById.get(id);
+      if (!row || row.status !== "pending") return false;
+      this.channelJoinRequestsById.set(id, {
+        ...row,
+        status: decision,
+        reviewedByUserId,
+        reviewedAt,
+        updatedAt: reviewedAt
+      });
+      return true;
+    }
+
+    const result = await this.db
+      .update(channelJoinRequestsTable)
+      .set({
+        status: decision,
+        reviewedByUserId,
+        reviewedAt,
+        updatedAt: reviewedAt
+      })
+      .where(and(eq(channelJoinRequestsTable.id, id), eq(channelJoinRequestsTable.status, "pending")));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async saveUserChannelOrder(userId: string, orderedChannelIds: string[], updatedAt: string): Promise<void> {
+    if (!this.db) {
+      orderedChannelIds.forEach((channelId, idx) => {
+        this.userChannelOrders.set(this.userChannelOrderKey(userId, channelId), {
+          userId,
+          channelId,
+          sortIndex: idx,
+          updatedAt
+        });
+      });
+      return;
+    }
+
+    await this.db.transaction(async (tx) => {
+      for (let idx = 0; idx < orderedChannelIds.length; idx += 1) {
+        const channelId = orderedChannelIds[idx]!;
+        await tx
+          .insert(userChannelOrdersTable)
+          .values({ userId, channelId, sortIndex: idx, updatedAt })
+          .onConflictDoUpdate({
+            target: [userChannelOrdersTable.userId, userChannelOrdersTable.channelId],
+            set: { sortIndex: idx, updatedAt }
+          });
+      }
+    });
   }
 }

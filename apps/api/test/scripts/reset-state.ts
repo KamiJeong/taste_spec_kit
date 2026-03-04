@@ -8,7 +8,9 @@ async function resetDatabase() {
   const client = new PgClient({ connectionString: process.env.DATABASE_URL });
   await client.connect();
   try {
-    await client.query("TRUNCATE TABLE audit_logs, password_reset_tokens, verification_tokens, users RESTART IDENTITY CASCADE");
+    await client.query(
+      "TRUNCATE TABLE user_channel_orders, channel_join_requests, channel_members, channels, audit_logs, password_reset_tokens, verification_tokens, users RESTART IDENTITY CASCADE"
+    );
   } finally {
     await client.end();
   }
