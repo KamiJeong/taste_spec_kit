@@ -13,24 +13,42 @@ on:
       - "turbo.json"
       - "docker-compose.yml"
   pull_request:
-    paths:
-      - "apps/api/**"
-      - "packages/contracts-auth/**"
-      - ".github/workflows/backend-ci.yml"
-      - "package.json"
-      - "pnpm-lock.yaml"
-      - "pnpm-workspace.yaml"
-      - "turbo.json"
-      - "docker-compose.yml"
+    types: [opened, synchronize, reopened, ready_for_review]
 
 concurrency:
   group: backend-ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      backend: ${{ steps.changes.outputs.backend }}
+    steps:
+      - name: Detect relevant changes
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend:
+              - "apps/api/**"
+              - "packages/contracts-auth/**"
+              - ".github/workflows/backend-ci.yml"
+              - "package.json"
+              - "pnpm-lock.yaml"
+              - "pnpm-workspace.yaml"
+              - "turbo.json"
+              - "docker-compose.yml"
+
   api-check:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: read
     env:
       DATABASE_URL: postgresql://kami:ilovekami@localhost:5432/taste_spec_kit
       REDIS_URL: redis://localhost:6379

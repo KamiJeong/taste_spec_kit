@@ -13,15 +13,7 @@ on:
       - "turbo.json"
       - "tsconfig.base.json"
   pull_request:
-    paths:
-      - "apps/storybook/**"
-      - "packages/ui/**"
-      - ".github/workflows/design-system-ci.yml"
-      - "package.json"
-      - "pnpm-lock.yaml"
-      - "pnpm-workspace.yaml"
-      - "turbo.json"
-      - "tsconfig.base.json"
+    types: [opened, synchronize, reopened, ready_for_review]
 
 concurrency:
   group: design-system-ci-${{ github.workflow }}-${{ github.ref }}
@@ -31,30 +23,59 @@ jobs:
   design-system-check:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: read
     steps:
+      - name: Detect relevant changes
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            design_system:
+              - "apps/storybook/**"
+              - "packages/ui/**"
+              - ".github/workflows/design-system-ci.yml"
+              - "package.json"
+              - "pnpm-lock.yaml"
+              - "pnpm-workspace.yaml"
+              - "turbo.json"
+              - "tsconfig.base.json"
+
       - name: Checkout
+        if: steps.changes.outputs.design_system == 'true'
         uses: actions/checkout@v4
 
       - name: Setup pnpm
+        if: steps.changes.outputs.design_system == 'true'
         uses: pnpm/action-setup@v4
 
       - name: Setup Node
+        if: steps.changes.outputs.design_system == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
 
       - name: Install dependencies
+        if: steps.changes.outputs.design_system == 'true'
         run: pnpm install --frozen-lockfile
 
       - name: UI typecheck
+        if: steps.changes.outputs.design_system == 'true'
         run: pnpm --filter @repo/ui typecheck
 
       - name: Storybook typecheck
+        if: steps.changes.outputs.design_system == 'true'
         run: pnpm --filter @repo/storybook typecheck
 
       - name: Storybook tests
+        if: steps.changes.outputs.design_system == 'true'
         run: pnpm --filter @repo/storybook test
 
       - name: Storybook build
+        if: steps.changes.outputs.design_system == 'true'
         run: pnpm --filter @repo/storybook build-storybook
+
+      - name: Skip (no design-system changes)
+        if: steps.changes.outputs.design_system != 'true'
+        run: echo "No design-system changes detected; skipping heavy checks."
