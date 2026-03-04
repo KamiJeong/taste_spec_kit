@@ -12,7 +12,7 @@ Tech-Stack: specs/00-tech-stack.md
 ## Phase 2: Core Domain Logic (P1)
 
 - [x] CH-T005 채널 생성 서비스 구현(유저당 10개 제한)
-- [ ] CH-T006 역할 판별(owner/manager/member) 유틸 구현
+- [x] CH-T006 역할 판별(owner/manager/member) 유틸 구현
 - [x] CH-T007 가입 요청 생성 서비스 구현(자동가입 금지, 중복요청 차단)
 - [x] CH-T008 가입 승인/거절 서비스 구현(owner/manager 권한 강제)
 - [x] CH-T009 매니저 추가/제거 서비스 구현(owner 전용)
@@ -42,17 +42,17 @@ Tech-Stack: specs/00-tech-stack.md
 
 ## Phase 6: Verification (P2)
 
-- [ ] CH-T024 단위 테스트(권한/제한/경계조건)
+- [x] CH-T024 단위 테스트(권한/제한/경계조건)
 - [x] CH-T025 통합 테스트(가입요청~승인, 강퇴, 탈퇴, 소유권이전, reorder)
-- [ ] CH-T026 회귀 테스트(기존 auth/user 기능 영향 없음 확인)
+- [x] CH-T026 회귀 테스트(기존 auth/user 기능 영향 없음 확인)
 - [x] CH-T027 spec/plan/tasks 동기화 및 체크리스트 검토
 
 ## Requirement Mapping
 
-- [ ] CH-T028 FR-CH-001~004 매핑 점검(생성/소유/매니저 관리)
-- [ ] CH-T029 FR-CH-005~010 매핑 점검(가입승인/강퇴/탈퇴)
-- [ ] CH-T030 FR-CH-011~012 매핑 점검(두 종류 reorder)
-- [ ] CH-T031 FR-CH-013~016 + NFR 항목 점검(제한/감사/권한경계/일관성)
+- [x] CH-T028 FR-CH-001~004 매핑 점검(생성/소유/매니저 관리)
+- [x] CH-T029 FR-CH-005~010 매핑 점검(가입승인/강퇴/탈퇴)
+- [x] CH-T030 FR-CH-011~012 매핑 점검(두 종류 reorder)
+- [x] CH-T031 FR-CH-013~016 + NFR 항목 점검(제한/감사/권한경계/일관성)
 
 ## Done Checklist
 
@@ -61,4 +61,4 @@ Tech-Stack: specs/00-tech-stack.md
 - [x] owner/manager/member 권한 경계 검증 완료
 - [x] 소유권 이전/owner 탈퇴 규칙 검증 완료
 - [x] DnD 정렬 영속화 검증 완료
-- [ ] 감사 로그 및 핵심 테스트 통과
+- [x] 감사 로그 및 핵심 테스트 통과
