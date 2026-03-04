@@ -122,6 +122,10 @@ export class PersistenceService implements OnModuleInit, OnModuleDestroy {
 
   async updateUser(input: UserRow): Promise<void> {
     if (!this.db) {
+      const previous = this.usersById.get(input.id);
+      if (previous && previous.email !== input.email) {
+        this.usersByEmail.delete(previous.email);
+      }
       this.usersById.set(input.id, input);
       this.usersByEmail.set(input.email, input);
       return;
@@ -452,15 +456,17 @@ export class PersistenceService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
-    for (let idx = 0; idx < orderedChannelIds.length; idx += 1) {
-      const channelId = orderedChannelIds[idx]!;
-      await this.db
-        .insert(userChannelOrdersTable)
-        .values({ userId, channelId, sortIndex: idx, updatedAt })
-        .onConflictDoUpdate({
-          target: [userChannelOrdersTable.userId, userChannelOrdersTable.channelId],
-          set: { sortIndex: idx, updatedAt }
-        });
-    }
+    await this.db.transaction(async (tx) => {
+      for (let idx = 0; idx < orderedChannelIds.length; idx += 1) {
+        const channelId = orderedChannelIds[idx]!;
+        await tx
+          .insert(userChannelOrdersTable)
+          .values({ userId, channelId, sortIndex: idx, updatedAt })
+          .onConflictDoUpdate({
+            target: [userChannelOrdersTable.userId, userChannelOrdersTable.channelId],
+            set: { sortIndex: idx, updatedAt }
+          });
+      }
+    });
   }
 }
