@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 import { AuthModule } from "./auth/auth.module";
 import { UserModule } from "./user/user.module";
 import { ChannelModule } from "./channel/channel.module";
+import { ChannelPostModule } from "./channel-post/channel-post.module";
 import { SessionModule } from "./session/session.module";
 import { TokenModule } from "./token/token.module";
 import { MailModule } from "./mail/mail.module";
@@ -21,7 +22,8 @@ import { SharedModule } from "./shared/shared.module";
     AuditLogModule,
     AuthModule,
     UserModule,
-    ChannelModule
+    ChannelModule,
+    ChannelPostModule
   ]
 })
 export class ModulesRoot {}
