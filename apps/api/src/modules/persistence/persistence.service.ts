@@ -1,11 +1,12 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
-import { and, eq, sql } from "drizzle-orm";
+import { and, desc, eq, isNull, lt, or, sql } from "drizzle-orm";
 import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import {
   auditLogsTable,
   channelJoinRequestsTable,
   channelMembersTable,
+  channelPostsTable,
   channelsTable,
   passwordResetTokensTable,
   userChannelOrdersTable,
@@ -14,6 +15,7 @@ import {
   type AuditLogRow,
   type ChannelJoinRequestRow,
   type ChannelMemberRow,
+  type ChannelPostRow,
   type ChannelRow,
   type PasswordResetTokenRow,
   type UserRow,
@@ -30,6 +32,7 @@ type PersistenceSchema = {
   channelMembersTable: typeof channelMembersTable;
   channelJoinRequestsTable: typeof channelJoinRequestsTable;
   userChannelOrdersTable: typeof userChannelOrdersTable;
+  channelPostsTable: typeof channelPostsTable;
 };
 
 @Injectable()
@@ -45,6 +48,7 @@ export class PersistenceService implements OnModuleInit, OnModuleDestroy {
   private readonly channelMembers = new Map<string, ChannelMemberRow>();
   private readonly channelJoinRequestsById = new Map<string, ChannelJoinRequestRow>();
   private readonly userChannelOrders = new Map<string, UserChannelOrderRow>();
+  private readonly channelPostsById = new Map<string, ChannelPostRow>();
 
   private readonly databaseUrl = process.env.DATABASE_URL;
   private pool: Pool | null = null;
@@ -69,7 +73,8 @@ export class PersistenceService implements OnModuleInit, OnModuleDestroy {
           channelsTable,
           channelMembersTable,
           channelJoinRequestsTable,
-          userChannelOrdersTable
+          userChannelOrdersTable,
+          channelPostsTable
         }
       });
     } catch (error) {
@@ -440,6 +445,136 @@ export class PersistenceService implements OnModuleInit, OnModuleDestroy {
         updatedAt: reviewedAt
       })
       .where(and(eq(channelJoinRequestsTable.id, id), eq(channelJoinRequestsTable.status, "pending")));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async createChannelPost(input: ChannelPostRow): Promise<void> {
+    if (!this.db) {
+      this.channelPostsById.set(input.id, input);
+      return;
+    }
+    await this.db.insert(channelPostsTable).values(input);
+  }
+
+  async findChannelPostById(channelId: string, postId: string): Promise<ChannelPostRow | null> {
+    if (!this.db) {
+      const row = this.channelPostsById.get(postId);
+      if (!row || row.channelId !== channelId || row.deletedAt) return null;
+      return row;
+    }
+    const row = await this.db.query.channelPostsTable.findFirst({
+      where: and(
+        eq(channelPostsTable.id, postId),
+        eq(channelPostsTable.channelId, channelId),
+        isNull(channelPostsTable.deletedAt)
+      )
+    });
+    return row ?? null;
+  }
+
+  async listChannelPosts(input: {
+    channelId: string;
+    limit: number;
+    cursor?: { createdAt: string; id: string };
+  }): Promise<ChannelPostRow[]> {
+    if (!this.db) {
+      const rows = [...this.channelPostsById.values()]
+        .filter((row) => row.channelId === input.channelId && row.deletedAt === null)
+        .sort((a, b) => {
+          if (a.createdAt === b.createdAt) return b.id.localeCompare(a.id);
+          return b.createdAt.localeCompare(a.createdAt);
+        });
+      if (!input.cursor) return rows.slice(0, input.limit + 1);
+      const filtered = rows.filter((row) => {
+        if (row.createdAt < input.cursor!.createdAt) return true;
+        if (row.createdAt === input.cursor!.createdAt && row.id < input.cursor!.id) return true;
+        return false;
+      });
+      return filtered.slice(0, input.limit + 1);
+    }
+
+    const where = input.cursor
+      ? and(
+          eq(channelPostsTable.channelId, input.channelId),
+          isNull(channelPostsTable.deletedAt),
+          or(
+            lt(channelPostsTable.createdAt, input.cursor.createdAt),
+            and(eq(channelPostsTable.createdAt, input.cursor.createdAt), lt(channelPostsTable.id, input.cursor.id))
+          )
+        )
+      : and(eq(channelPostsTable.channelId, input.channelId), isNull(channelPostsTable.deletedAt));
+
+    return this.db.query.channelPostsTable.findMany({
+      where,
+      orderBy: [desc(channelPostsTable.createdAt), desc(channelPostsTable.id)],
+      limit: input.limit + 1
+    });
+  }
+
+  async updateChannelPost(input: {
+    channelId: string;
+    postId: string;
+    title?: string;
+    content?: string;
+    ifUpdatedAt: string;
+    updatedAt: string;
+  }): Promise<{ state: "updated"; post: ChannelPostRow } | { state: "not_found" } | { state: "conflict" }> {
+    if (!this.db) {
+      const row = this.channelPostsById.get(input.postId);
+      if (!row || row.channelId !== input.channelId || row.deletedAt !== null) return { state: "not_found" };
+      if (row.updatedAt !== input.ifUpdatedAt) return { state: "conflict" };
+      const next: ChannelPostRow = {
+        ...row,
+        title: input.title ?? row.title,
+        content: input.content ?? row.content,
+        updatedAt: input.updatedAt
+      };
+      this.channelPostsById.set(input.postId, next);
+      return { state: "updated", post: next };
+    }
+
+    const current = await this.db.query.channelPostsTable.findFirst({
+      where: and(
+        eq(channelPostsTable.id, input.postId),
+        eq(channelPostsTable.channelId, input.channelId),
+        isNull(channelPostsTable.deletedAt)
+      )
+    });
+    if (!current) return { state: "not_found" };
+    if (current.updatedAt !== input.ifUpdatedAt) return { state: "conflict" };
+
+    const result = await this.db
+      .update(channelPostsTable)
+      .set({
+        title: input.title ?? current.title,
+        content: input.content ?? current.content,
+        updatedAt: input.updatedAt
+      })
+      .where(
+        and(
+          eq(channelPostsTable.id, input.postId),
+          eq(channelPostsTable.channelId, input.channelId),
+          eq(channelPostsTable.updatedAt, input.ifUpdatedAt),
+          isNull(channelPostsTable.deletedAt)
+        )
+      )
+      .returning();
+    if (!result[0]) return { state: "conflict" };
+    return { state: "updated", post: result[0] };
+  }
+
+  async softDeleteChannelPost(channelId: string, postId: string, updatedAt: string): Promise<boolean> {
+    if (!this.db) {
+      const row = this.channelPostsById.get(postId);
+      if (!row || row.channelId !== channelId || row.deletedAt !== null) return false;
+      this.channelPostsById.set(postId, { ...row, deletedAt: updatedAt, updatedAt });
+      return true;
+    }
+
+    const result = await this.db
+      .update(channelPostsTable)
+      .set({ deletedAt: updatedAt, updatedAt })
+      .where(and(eq(channelPostsTable.id, postId), eq(channelPostsTable.channelId, channelId), isNull(channelPostsTable.deletedAt)));
     return (result.rowCount ?? 0) > 0;
   }
 

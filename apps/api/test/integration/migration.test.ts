@@ -12,7 +12,12 @@ async function run() {
       { schema: "public", table: "users" },
       { schema: "public", table: "verification_tokens" },
       { schema: "public", table: "password_reset_tokens" },
-      { schema: "public", table: "audit_logs" }
+      { schema: "public", table: "audit_logs" },
+      { schema: "public", table: "channels" },
+      { schema: "public", table: "channel_members" },
+      { schema: "public", table: "channel_join_requests" },
+      { schema: "public", table: "user_channel_orders" },
+      { schema: "public", table: "channel_posts" }
     ];
 
     for (const item of tables) {

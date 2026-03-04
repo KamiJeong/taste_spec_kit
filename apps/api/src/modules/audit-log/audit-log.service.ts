@@ -21,7 +21,10 @@ export type AuditEventType =
   | "CHANNEL_MANAGER_REMOVE"
   | "CHANNEL_KICK"
   | "CHANNEL_QUIT"
-  | "CHANNEL_TRANSFER_OWNERSHIP";
+  | "CHANNEL_TRANSFER_OWNERSHIP"
+  | "CHANNEL_POST_CREATE"
+  | "CHANNEL_POST_UPDATE"
+  | "CHANNEL_POST_DELETE";
 
 @Injectable()
 export class AuditLogService {

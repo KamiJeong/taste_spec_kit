@@ -36,6 +36,13 @@
       "when": 1772616000000,
       "tag": "0004_channel_governance",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1772619600000,
+      "tag": "0005_channel_posts",
+      "breakpoints": true
     }
   ]
 }

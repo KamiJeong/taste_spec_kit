@@ -9,7 +9,7 @@ async function resetDatabase() {
   await client.connect();
   try {
     await client.query(
-      "TRUNCATE TABLE user_channel_orders, channel_join_requests, channel_members, channels, audit_logs, password_reset_tokens, verification_tokens, users RESTART IDENTITY CASCADE"
+      "TRUNCATE TABLE channel_posts, user_channel_orders, channel_join_requests, channel_members, channels, audit_logs, password_reset_tokens, verification_tokens, users RESTART IDENTITY CASCADE"
     );
   } finally {
     await client.end();

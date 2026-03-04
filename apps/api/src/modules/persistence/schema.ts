@@ -108,6 +108,27 @@ export const userChannelOrdersTable = pgTable(
   ]
 );
 
+export const channelPostsTable = pgTable(
+  "channel_posts",
+  {
+    id: text("id").primaryKey(),
+    channelId: text("channel_id")
+      .notNull()
+      .references(() => channelsTable.id, { onDelete: "cascade" }),
+    authorUserId: text("author_user_id").notNull(),
+    title: text("title").notNull(),
+    content: text("content").notNull(),
+    createdAt: text("created_at").notNull(),
+    updatedAt: text("updated_at").notNull(),
+    deletedAt: text("deleted_at")
+  },
+  (table) => [
+    index("idx_channel_posts_channel_created_id").on(table.channelId, table.createdAt, table.id),
+    index("idx_channel_posts_author_created").on(table.authorUserId, table.createdAt),
+    index("idx_channel_posts_channel_deleted").on(table.channelId, table.deletedAt)
+  ]
+);
+
 export type UserRow = typeof usersTable.$inferSelect;
 export type VerificationTokenRow = typeof verificationTokensTable.$inferSelect;
 export type PasswordResetTokenRow = typeof passwordResetTokensTable.$inferSelect;
@@ -116,3 +137,4 @@ export type ChannelRow = typeof channelsTable.$inferSelect;
 export type ChannelMemberRow = typeof channelMembersTable.$inferSelect;
 export type ChannelJoinRequestRow = typeof channelJoinRequestsTable.$inferSelect;
 export type UserChannelOrderRow = typeof userChannelOrdersTable.$inferSelect;
+export type ChannelPostRow = typeof channelPostsTable.$inferSelect;
