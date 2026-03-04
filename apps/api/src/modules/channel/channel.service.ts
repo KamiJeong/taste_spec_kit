@@ -7,16 +7,45 @@ import { SessionService } from "../session/session.service";
 import { failure, success } from "../shared/http-contract";
 
 const MAX_OWNED_CHANNELS = 10;
-const MAX_JOINED_CHANNELS = 200;
+const DEFAULT_MAX_JOINED_CHANNELS = 200;
+const DEFAULT_RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const DEFAULT_JOIN_REQUEST_RATE_LIMIT_MAX = 10;
+const DEFAULT_JOIN_REVIEW_RATE_LIMIT_MAX = 30;
 
 @Injectable()
 export class ChannelService {
+  private readonly rateLimitBuckets = new Map<string, { count: number; resetAt: number }>();
+
   constructor(
     private readonly persistence: PersistenceService,
     private readonly sessions: SessionService,
     private readonly auditLogs: AuditLogService,
     @Inject("CONTRACT_RUNTIME") private readonly _contracts: unknown
   ) {}
+
+  private envInt(name: string, fallback: number): number {
+    const raw = process.env[name];
+    if (!raw) return fallback;
+    const parsed = Number.parseInt(raw, 10);
+    if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
+    return parsed;
+  }
+
+  private maxJoinedChannels(): number {
+    return this.envInt("CHANNEL_MAX_JOINED", DEFAULT_MAX_JOINED_CHANNELS);
+  }
+
+  private isRateLimited(key: string, max: number, windowMs = DEFAULT_RATE_LIMIT_WINDOW_MS): boolean {
+    const now = Date.now();
+    const current = this.rateLimitBuckets.get(key);
+    if (!current || current.resetAt <= now) {
+      this.rateLimitBuckets.set(key, { count: 1, resetAt: now + windowMs });
+      return false;
+    }
+    current.count += 1;
+    this.rateLimitBuckets.set(key, current);
+    return current.count > max;
+  }
 
   private async resolveUserBySid(sid?: string) {
     const userId = await this.sessions.getUserId(sid);
@@ -108,6 +137,16 @@ export class ChannelService {
       return { status: 401, body: failure(ERROR_CODES.AUTH_SESSION_REQUIRED, "인증이 필요합니다") };
     }
 
+    const joinRequestRateLimitMax = this.envInt("CHANNEL_JOIN_REQUEST_RATE_LIMIT_MAX", DEFAULT_JOIN_REQUEST_RATE_LIMIT_MAX);
+    const rateLimitWindowMs = this.envInt("CHANNEL_RATE_LIMIT_WINDOW_MS", DEFAULT_RATE_LIMIT_WINDOW_MS);
+    const joinRequestRateKey = `channel:join-request:${context.ip}:${user.id}:${input.channelId}`;
+    if (this.isRateLimited(joinRequestRateKey, joinRequestRateLimitMax, rateLimitWindowMs)) {
+      return {
+        status: 429,
+        body: failure(ERROR_CODES.RATE_LIMIT_EXCEEDED, "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요")
+      };
+    }
+
     const channel = await this.persistence.findChannelById(input.channelId);
     if (!channel) {
       return { status: 404, body: failure(ERROR_CODES.CHANNEL_NOT_FOUND, "채널을 찾을 수 없습니다") };
@@ -119,7 +158,7 @@ export class ChannelService {
     }
 
     const joinedCount = await this.persistence.countMemberships(user.id);
-    if (joinedCount >= MAX_JOINED_CHANNELS) {
+    if (joinedCount >= this.maxJoinedChannels()) {
       return { status: 409, body: failure(ERROR_CODES.CHANNEL_JOIN_LIMIT_REACHED, "가입 가능한 채널 수를 초과했습니다") };
     }
 
@@ -181,6 +220,16 @@ export class ChannelService {
     if (!actor) {
       return { status: 401, body: failure(ERROR_CODES.AUTH_SESSION_REQUIRED, "인증이 필요합니다") };
     }
+    const joinReviewRateLimitMax = this.envInt("CHANNEL_JOIN_REVIEW_RATE_LIMIT_MAX", DEFAULT_JOIN_REVIEW_RATE_LIMIT_MAX);
+    const rateLimitWindowMs = this.envInt("CHANNEL_RATE_LIMIT_WINDOW_MS", DEFAULT_RATE_LIMIT_WINDOW_MS);
+    const joinReviewRateKey = `channel:join-review:${context.ip}:${actor.id}:${input.channelId}`;
+    if (this.isRateLimited(joinReviewRateKey, joinReviewRateLimitMax, rateLimitWindowMs)) {
+      return {
+        status: 429,
+        body: failure(ERROR_CODES.RATE_LIMIT_EXCEEDED, "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요")
+      };
+    }
+
     const actorMember = await this.persistence.findChannelMember(input.channelId, actor.id);
     if (!actorMember || (actorMember.role !== "owner" && actorMember.role !== "manager")) {
       return { status: 403, body: failure(ERROR_CODES.CHANNEL_PERMISSION_DENIED, "권한이 없습니다") };
@@ -193,7 +242,7 @@ export class ChannelService {
 
     if (input.decision === "approved") {
       const joinedCount = await this.persistence.countMemberships(request.requesterUserId);
-      if (joinedCount >= MAX_JOINED_CHANNELS) {
+      if (joinedCount >= this.maxJoinedChannels()) {
         return { status: 409, body: failure(ERROR_CODES.CHANNEL_JOIN_LIMIT_REACHED, "대상 사용자의 채널 가입 한도를 초과했습니다") };
       }
     }
