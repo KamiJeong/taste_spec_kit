@@ -5,6 +5,13 @@ import { AuditLogService, type AuditContext } from "../audit-log/audit-log.servi
 import { PersistenceService } from "../persistence/persistence.service";
 import { SessionService } from "../session/session.service";
 import { failure, success } from "../shared/http-contract";
+import {
+  canKickTarget,
+  canManageManager,
+  canQuit,
+  canReviewJoinRequests,
+  canTransferOwnership
+} from "./channel-role.util";
 
 const MAX_OWNED_CHANNELS = 10;
 const DEFAULT_MAX_JOINED_CHANNELS = 200;
@@ -194,7 +201,7 @@ export class ChannelService {
       return { status: 401, body: failure(ERROR_CODES.AUTH_SESSION_REQUIRED, "인증이 필요합니다") };
     }
     const member = await this.persistence.findChannelMember(input.channelId, user.id);
-    if (!member || (member.role !== "owner" && member.role !== "manager")) {
+    if (!member || !canReviewJoinRequests(member.role)) {
       return { status: 403, body: failure(ERROR_CODES.CHANNEL_PERMISSION_DENIED, "권한이 없습니다") };
     }
 
@@ -231,7 +238,7 @@ export class ChannelService {
     }
 
     const actorMember = await this.persistence.findChannelMember(input.channelId, actor.id);
-    if (!actorMember || (actorMember.role !== "owner" && actorMember.role !== "manager")) {
+    if (!actorMember || !canReviewJoinRequests(actorMember.role)) {
       return { status: 403, body: failure(ERROR_CODES.CHANNEL_PERMISSION_DENIED, "권한이 없습니다") };
     }
 
@@ -291,7 +298,7 @@ export class ChannelService {
     if (!targetMember) {
       return { status: 404, body: failure(ERROR_CODES.CHANNEL_NOT_FOUND, "대상 멤버를 찾을 수 없습니다") };
     }
-    if (targetMember.role === "owner") {
+    if (!canManageManager(actorMember.role, targetMember.role)) {
       return { status: 403, body: failure(ERROR_CODES.CHANNEL_PERMISSION_DENIED, "owner 권한은 변경할 수 없습니다") };
     }
 
@@ -338,7 +345,7 @@ export class ChannelService {
       return { status: 401, body: failure(ERROR_CODES.AUTH_SESSION_REQUIRED, "인증이 필요합니다") };
     }
     const actorMember = await this.persistence.findChannelMember(input.channelId, actor.id);
-    if (!actorMember || (actorMember.role !== "owner" && actorMember.role !== "manager")) {
+    if (!actorMember || !canReviewJoinRequests(actorMember.role)) {
       return { status: 403, body: failure(ERROR_CODES.CHANNEL_PERMISSION_DENIED, "권한이 없습니다") };
     }
 
@@ -346,11 +353,10 @@ export class ChannelService {
     if (!targetMember) {
       return { status: 404, body: failure(ERROR_CODES.CHANNEL_NOT_FOUND, "대상 멤버를 찾을 수 없습니다") };
     }
-    if (targetMember.role === "owner") {
-      return { status: 403, body: failure(ERROR_CODES.CHANNEL_PERMISSION_DENIED, "owner는 강퇴할 수 없습니다") };
-    }
-    if (actorMember.role === "manager" && targetMember.role === "manager") {
-      return { status: 403, body: failure(ERROR_CODES.CHANNEL_PERMISSION_DENIED, "manager는 manager를 강퇴할 수 없습니다") };
+    if (!canKickTarget(actorMember.role, targetMember.role)) {
+      const message =
+        targetMember.role === "owner" ? "owner는 강퇴할 수 없습니다" : "manager는 manager를 강퇴할 수 없습니다";
+      return { status: 403, body: failure(ERROR_CODES.CHANNEL_PERMISSION_DENIED, message) };
     }
 
     await this.persistence.deleteChannelMember(input.channelId, targetMember.userId);
@@ -373,7 +379,7 @@ export class ChannelService {
     if (!actorMember) {
       return { status: 404, body: failure(ERROR_CODES.CHANNEL_NOT_FOUND, "참여 중인 채널이 아닙니다") };
     }
-    if (actorMember.role === "owner") {
+    if (!canQuit(actorMember.role)) {
       return { status: 409, body: failure(ERROR_CODES.CHANNEL_OWNER_TRANSFER_REQUIRED, "owner는 소유권 이전 후 탈퇴할 수 있습니다") };
     }
     await this.persistence.deleteChannelMember(input.channelId, actor.id);
@@ -403,7 +409,7 @@ export class ChannelService {
     if (!targetMember) {
       return { status: 404, body: failure(ERROR_CODES.CHANNEL_NOT_FOUND, "대상 멤버를 찾을 수 없습니다") };
     }
-    if (targetMember.role === "owner") {
+    if (!canTransferOwnership(actorMember.role, targetMember.role)) {
       return { status: 409, body: failure(ERROR_CODES.CHANNEL_PERMISSION_DENIED, "이미 owner입니다") };
     }
 
