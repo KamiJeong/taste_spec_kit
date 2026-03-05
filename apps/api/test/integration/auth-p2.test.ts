@@ -93,6 +93,8 @@ async function run() {
       body: { email: "p2@example.com", password: "NewPassw0rd!" }
     });
     assert.equal(login.status, 200);
+    const accessToken = login.body.data.accessToken as string | undefined;
+    assert.ok(typeof accessToken === "string" && accessToken.length > 0);
     const setCookie = login.headers.get("set-cookie");
     const sid = readCookie(setCookie, "sid");
     const csrf = readCookie(setCookie, "csrfToken");
@@ -106,6 +108,20 @@ async function run() {
     });
     assert.equal(profile.status, 200);
     assert.equal(profile.body.data.profile.email, "p2@example.com");
+
+    const meByBearer = await requestJson(baseUrl, "/api/v1/auth/me", {
+      method: "GET",
+      headers: { authorization: `Bearer ${accessToken!}` }
+    });
+    assert.equal(meByBearer.status, 200);
+    assert.equal(meByBearer.body.data.user.email, "p2@example.com");
+
+    const meByInvalidBearer = await requestJson(baseUrl, "/api/v1/auth/me", {
+      method: "GET",
+      headers: { authorization: "Bearer invalid.token.value" }
+    });
+    assert.equal(meByInvalidBearer.status, 401);
+    assert.equal(meByInvalidBearer.body.code, "AUTH_SESSION_REQUIRED");
 
     const patch = await requestJson(baseUrl, "/api/v1/users/profile", {
       method: "PATCH",

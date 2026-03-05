@@ -6,6 +6,7 @@ import { cookieOf } from "../shared/request-cookie";
 import { CsrfGuard } from "../shared/guards/csrf.guard";
 import { ApiCreatedValidation, ApiOkCsrf, ApiOkUnauthorized, ApiOkValidation } from "../shared/swagger-responses";
 import { ApiEndpoint, ApiSessionCookieAuth, ApiSessionMutationAuth } from "../shared/swagger-route";
+import { TokenService } from "../token/token.service";
 import { AuthService } from "./auth.service";
 import {
   emailBodySchema,
@@ -30,7 +31,19 @@ function auditContextFromReq(req: Request): { ip: string; userAgent: string } {
 @ApiTags("auth")
 @Controller("/api/v1/auth")
 export class AuthController {
-  constructor(private readonly auth: AuthService) {}
+  constructor(
+    private readonly auth: AuthService,
+    private readonly tokens: TokenService
+  ) {}
+
+  private bearerUserIdOf(req: Request): string | undefined {
+    const raw = req.headers.authorization;
+    if (typeof raw !== "string") return undefined;
+    const [scheme, token] = raw.trim().split(/\s+/, 2);
+    if (scheme?.toLowerCase() !== "bearer" || !token) return undefined;
+    const verified = this.tokens.verifyAccessToken(token);
+    return verified?.userId;
+  }
 
   @ApiEndpoint("Sign up with email/password")
   @ApiBody({ type: SignupDto })
@@ -144,7 +157,7 @@ export class AuthController {
   @ApiOkUnauthorized("Current user")
   @Get("/me")
   async me(@Req() req: Request, @Res() res: Response) {
-    const result = await this.auth.me({ sid: cookieOf(req, "sid") });
+    const result = await this.auth.me({ sid: cookieOf(req, "sid"), userId: this.bearerUserIdOf(req) });
     res.status(result.status).json(result.body);
   }
 }

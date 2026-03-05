@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
-import { PersistenceService } from "../persistence/persistence.service";
+import { AuditLogRepository } from "./audit-log.repository";
 
 export interface AuditContext {
   ip: string;
@@ -28,7 +28,7 @@ export type AuditEventType =
 
 @Injectable()
 export class AuditLogService {
-  constructor(private readonly persistence: PersistenceService) {}
+  constructor(private readonly repository: AuditLogRepository) {}
 
   async record(input: {
     eventType: AuditEventType;
@@ -38,7 +38,7 @@ export class AuditLogService {
     email?: string | null;
     reasonCode?: string | null;
   }): Promise<void> {
-    await this.persistence.storeAuditLog({
+    await this.repository.storeAuditLog({
       eventId: randomUUID(),
       eventType: input.eventType,
       userId: input.userId ?? null,

@@ -157,6 +157,11 @@ Related env flags:
 - `API_DOCS_ENABLED` (default true outside production)
 - `API_DOCS_PROTECTED` (if true -> docs endpoints return 403)
 
+GraphQL manual test template:
+
+- [`apps/api/docs/graphql-manual-test-template.md`](./apps/api/docs/graphql-manual-test-template.md)
+- Local UI placeholder page: `http://localhost:3000/graphql/ui` (non-production default)
+
 ## Testing
 
 Root shortcuts:

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
+import { Client } from "pg";
 import "../load-env";
 import { createApp } from "../../src/main";
-import { PersistenceService } from "../../src/modules/persistence/persistence.service";
 
 async function requestJson(
   baseUrl: string,
@@ -62,11 +62,14 @@ async function run() {
     assert.equal(locked.status, 401);
     assert.equal(locked.body.code, "AUTH_INVALID_CREDENTIALS");
 
-    const persistence = app.get(PersistenceService);
-    const user = await persistence.findUserByEmail("lock@example.com");
-    assert.ok(user);
-    user.lockedUntil = Date.now() - 1;
-    await persistence.updateUser(user);
+    assert.ok(process.env.DATABASE_URL, "DATABASE_URL is required");
+    const db = new Client({ connectionString: process.env.DATABASE_URL });
+    await db.connect();
+    try {
+      await db.query(`UPDATE users SET locked_until = $1 WHERE email = $2`, [Date.now() - 1, "lock@example.com"]);
+    } finally {
+      await db.end();
+    }
 
     const unlocked = await requestJson(baseUrl, "/api/v1/auth/login", {
       method: "POST",

@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { ApiGraphqlModule } from "./graphql/graphql.module";
 import { AuthModule } from "./auth/auth.module";
 import { UserModule } from "./user/user.module";
 import { ChannelModule } from "./channel/channel.module";
@@ -8,13 +9,14 @@ import { TokenModule } from "./token/token.module";
 import { MailModule } from "./mail/mail.module";
 import { QueueModule } from "./queue/queue.module";
 import { AuditLogModule } from "./audit-log/audit-log.module";
-import { PersistenceModule } from "./persistence/persistence.module";
+import { DatabaseModule } from "./database/database.module";
 import { SharedModule } from "./shared/shared.module";
 
 @Module({
   imports: [
+    ApiGraphqlModule,
     SharedModule,
-    PersistenceModule,
+    DatabaseModule,
     SessionModule,
     TokenModule,
     MailModule,

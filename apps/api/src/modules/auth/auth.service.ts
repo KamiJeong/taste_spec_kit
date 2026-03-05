@@ -4,10 +4,10 @@ import * as argon2 from "argon2";
 import { ERROR_CODES } from "@packages/contracts-auth";
 import { AuditLogService, type AuditContext } from "../audit-log/audit-log.service";
 import { MAIL_SERVICE, type MailService } from "../mail/mail.service";
-import { PersistenceService } from "../persistence/persistence.service";
 import { SessionService } from "../session/session.service";
 import { TokenService } from "../token/token.service";
 import { failure, success } from "../shared/http-contract";
+import { AuthRepository } from "./auth.repository";
 
 const LOGIN_LOCK_THRESHOLD = 5;
 const LOGIN_LOCK_MS = 15 * 60 * 1000;
@@ -23,7 +23,7 @@ export class AuthService {
   private readonly rateLimitBuckets = new Map<string, { count: number; resetAt: number }>();
 
   constructor(
-    private readonly persistence: PersistenceService,
+    private readonly repository: AuthRepository,
     private readonly sessions: SessionService,
     private readonly tokens: TokenService,
     private readonly auditLogs: AuditLogService,
@@ -49,7 +49,7 @@ export class AuthService {
 
   async signup(input: { email: string; password: string; name?: string | null }, context: AuditContext) {
     const email = input.email.trim().toLowerCase();
-    if (await this.persistence.findUserByEmail(email)) {
+    if (await this.repository.findUserByEmail(email)) {
       await this.auditLogs.record({
         eventType: "AUTH_SIGNUP",
         result: "FAILURE",
@@ -77,10 +77,10 @@ export class AuthService {
       deletionScheduledAt: null,
       createdAt: new Date().toISOString()
     };
-    await this.persistence.createUser(user);
+    await this.repository.createUser(user);
 
     const tokenRow = this.tokens.issueVerificationToken();
-    await this.persistence.storeVerificationToken({
+    await this.repository.storeVerificationToken({
       tokenHash: tokenRow.tokenHash,
       userId: user.id,
       expiresAt: tokenRow.expiresAt,
@@ -107,7 +107,7 @@ export class AuthService {
 
   async verifyEmail(input: { token: string }, context: AuditContext) {
     const tokenHash = this.tokens.hashToken(input.token);
-    const row = await this.persistence.findVerificationToken(tokenHash);
+    const row = await this.repository.findVerificationToken(tokenHash);
     if (!row || row.usedAt) {
       await this.auditLogs.record({
         eventType: "AUTH_VERIFY_EMAIL",
@@ -132,7 +132,7 @@ export class AuthService {
         body: failure(ERROR_CODES.AUTH_TOKEN_EXPIRED, "인증 링크가 만료되었습니다")
       };
     }
-    const user = await this.persistence.findUserById(row.userId);
+    const user = await this.repository.findUserById(row.userId);
     if (!user) {
       await this.auditLogs.record({
         eventType: "AUTH_VERIFY_EMAIL",
@@ -145,9 +145,9 @@ export class AuthService {
         body: failure(ERROR_CODES.AUTH_TOKEN_INVALID, "유효하지 않은 인증 토큰입니다")
       };
     }
-    await this.persistence.markVerificationTokenUsed(tokenHash, Date.now());
+    await this.repository.markVerificationTokenUsed(tokenHash, Date.now());
     user.emailVerified = true;
-    await this.persistence.updateUser(user);
+    await this.repository.updateUser(user);
     await this.auditLogs.record({
       eventType: "AUTH_VERIFY_EMAIL",
       result: "SUCCESS",
@@ -163,7 +163,7 @@ export class AuthService {
 
   // Test-only helper to force expiry for integration regression scenarios.
   async expireVerificationTokenForTest(token: string): Promise<void> {
-    await this.persistence.expireVerificationTokenForTest(this.tokens.hashToken(token));
+    await this.repository.expireVerificationTokenForTest(this.tokens.hashToken(token));
   }
 
   async resendVerification(input: { email: string }, context: AuditContext) {
@@ -185,7 +185,7 @@ export class AuthService {
     }
 
     this.resendCooldownByEmail.set(email, now);
-    const user = await this.persistence.findUserByEmail(email);
+    const user = await this.repository.findUserByEmail(email);
     if (!user || user.emailVerified) {
       return {
         status: 200,
@@ -193,7 +193,7 @@ export class AuthService {
       };
     }
     const tokenRow = this.tokens.issueVerificationToken();
-    await this.persistence.storeVerificationToken({
+    await this.repository.storeVerificationToken({
       tokenHash: tokenRow.tokenHash,
       userId: user.id,
       expiresAt: tokenRow.expiresAt,
@@ -228,7 +228,7 @@ export class AuthService {
     }
 
     this.forgotPasswordCooldownByEmail.set(email, now);
-    const user = await this.persistence.findUserByEmail(email);
+    const user = await this.repository.findUserByEmail(email);
     if (!user) {
       return {
         status: 200,
@@ -237,7 +237,7 @@ export class AuthService {
     }
 
     const tokenRow = this.tokens.issuePasswordResetToken();
-    await this.persistence.storePasswordResetToken({
+    await this.repository.storePasswordResetToken({
       tokenHash: tokenRow.tokenHash,
       userId: user.id,
       expiresAt: tokenRow.expiresAt,
@@ -256,7 +256,7 @@ export class AuthService {
 
   async resetPassword(input: { token: string; newPassword: string }, context: AuditContext) {
     const tokenHash = this.tokens.hashToken(input.token);
-    const row = await this.persistence.findPasswordResetToken(tokenHash);
+    const row = await this.repository.findPasswordResetToken(tokenHash);
     if (!row || row.usedAt) {
       await this.auditLogs.record({
         eventType: "AUTH_RESET_PASSWORD",
@@ -281,7 +281,7 @@ export class AuthService {
         body: failure(ERROR_CODES.AUTH_TOKEN_EXPIRED, "재설정 링크가 만료되었습니다")
       };
     }
-    const user = await this.persistence.findUserById(row.userId);
+    const user = await this.repository.findUserById(row.userId);
     if (!user) {
       await this.auditLogs.record({
         eventType: "AUTH_RESET_PASSWORD",
@@ -296,8 +296,8 @@ export class AuthService {
     }
 
     user.passwordHash = await argon2.hash(input.newPassword, { type: argon2.argon2id });
-    await this.persistence.updateUser(user);
-    await this.persistence.markPasswordResetTokenUsed(tokenHash, Date.now());
+    await this.repository.updateUser(user);
+    await this.repository.markPasswordResetTokenUsed(tokenHash, Date.now());
     await this.auditLogs.record({
       eventType: "AUTH_RESET_PASSWORD",
       result: "SUCCESS",
@@ -314,7 +314,7 @@ export class AuthService {
 
   // Test-only helper for reset token expiry regression tests.
   async expireResetTokenForTest(token: string): Promise<void> {
-    await this.persistence.expirePasswordResetTokenForTest(this.tokens.hashToken(token));
+    await this.repository.expirePasswordResetTokenForTest(this.tokens.hashToken(token));
     this.forgotPasswordCooldownByEmail.clear();
   }
 
@@ -334,7 +334,7 @@ export class AuthService {
         body: failure(ERROR_CODES.RATE_LIMIT_EXCEEDED, "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요")
       };
     }
-    const user = await this.persistence.findUserByEmail(loginEmail);
+    const user = await this.repository.findUserByEmail(loginEmail);
     if (!user) {
       await this.auditLogs.record({
         eventType: "AUTH_LOGIN",
@@ -366,7 +366,7 @@ export class AuthService {
     if (user.lockedUntil && user.lockedUntil <= now) {
       user.lockedUntil = null;
       user.failedLoginAttempts = 0;
-      await this.persistence.updateUser(user);
+      await this.repository.updateUser(user);
     }
 
     const passwordOk = await argon2.verify(user.passwordHash, input.password);
@@ -376,7 +376,7 @@ export class AuthService {
         user.failedLoginAttempts = 0;
         user.lockedUntil = Date.now() + LOGIN_LOCK_MS;
       }
-      await this.persistence.updateUser(user);
+      await this.repository.updateUser(user);
       await this.auditLogs.record({
         eventType: "AUTH_LOGIN",
         result: "FAILURE",
@@ -393,7 +393,7 @@ export class AuthService {
 
     user.failedLoginAttempts = 0;
     user.lockedUntil = null;
-    await this.persistence.updateUser(user);
+    await this.repository.updateUser(user);
 
     if (!user.emailVerified) {
       await this.auditLogs.record({
@@ -424,6 +424,7 @@ export class AuthService {
       };
     }
     const sid = await this.sessions.create(user.id);
+    const accessToken = this.tokens.issueAccessToken({ sid, userId: user.id });
     await this.auditLogs.record({
       eventType: "AUTH_LOGIN",
       result: "SUCCESS",
@@ -442,20 +443,16 @@ export class AuthService {
           name: user.name,
           emailVerified: user.emailVerified,
           createdAt: user.createdAt
-        }
+        },
+        accessToken: accessToken.token,
+        tokenType: "Bearer",
+        accessTokenExpiresIn: accessToken.expiresInSeconds
       })
     };
   }
 
-  async me(input: { sid?: string }) {
-    const userId = await this.sessions.getUserId(input.sid);
-    if (!userId) {
-      return {
-        status: 401,
-        body: failure(ERROR_CODES.AUTH_SESSION_REQUIRED, "인증이 필요합니다")
-      };
-    }
-    const user = await this.persistence.findUserById(userId);
+  async me(input: { sid?: string; userId?: string }) {
+    const user = await this.resolveMeUser(input);
     if (!user) {
       return {
         status: 401,
@@ -476,9 +473,18 @@ export class AuthService {
     };
   }
 
+  private async resolveMeUser(input: { sid?: string; userId?: string }) {
+    if (input.userId) {
+      return this.repository.findUserById(input.userId);
+    }
+    const userId = await this.sessions.getUserId(input.sid);
+    if (!userId) return null;
+    return this.repository.findUserById(userId);
+  }
+
   async logout(input: { sid?: string }, context: AuditContext) {
     const userId = await this.sessions.getUserId(input.sid);
-    const user = userId ? await this.persistence.findUserById(userId) : null;
+    const user = userId ? await this.repository.findUserById(userId) : null;
     await this.sessions.destroy(input.sid);
     await this.auditLogs.record({
       eventType: "AUTH_LOGOUT",

@@ -32,6 +32,33 @@ function readCookie(raw: string | null, name: string): string | undefined {
   return match ? decodeURIComponent(match[1]) : undefined;
 }
 
+const FORBIDDEN_USER_SECURITY_FIELDS = [
+  "passwordHash",
+  "failedLoginAttempts",
+  "lockedUntil",
+  "deletionScheduledAt",
+  "isActive"
+] as const;
+
+function assertNoForbiddenUserSecurityFields(value: unknown, path = "root"): void {
+  if (value === null || typeof value !== "object") return;
+
+  if (Array.isArray(value)) {
+    value.forEach((item, index) => assertNoForbiddenUserSecurityFields(item, `${path}[${index}]`));
+    return;
+  }
+
+  const record = value as Record<string, unknown>;
+  for (const key of Object.keys(record)) {
+    assert.equal(
+      FORBIDDEN_USER_SECURITY_FIELDS.includes(key as (typeof FORBIDDEN_USER_SECURITY_FIELDS)[number]),
+      false,
+      `forbidden field "${key}" exposed at ${path}.${key}`
+    );
+    assertNoForbiddenUserSecurityFields(record[key], `${path}.${key}`);
+  }
+}
+
 async function signupVerifyLogin(baseUrl: string, email: string) {
   const signup = await requestJson(baseUrl, "/api/v1/auth/signup", {
     method: "POST",
@@ -87,6 +114,10 @@ async function run() {
     const myChannels = await requestJson(baseUrl, "/api/v1/channels", { cookie: auth.cookie });
     assert.equal(myChannels.status, 200);
     assert.ok(myChannels.body.data.channels.length >= 1);
+    assertNoForbiddenUserSecurityFields(myChannels.body.data.channels, "channels");
+    const first = myChannels.body.data.channels[0];
+    assert.ok(first.creator, "creator must exist");
+    assert.ok(Array.isArray(first.users), "users must exist");
 
     const meAfterChannelOps = await requestJson(baseUrl, "/api/v1/auth/me", { cookie: auth.cookie });
     assert.equal(meAfterChannelOps.status, 200);
