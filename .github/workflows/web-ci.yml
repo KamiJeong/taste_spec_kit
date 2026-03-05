@@ -77,9 +77,46 @@ jobs:
         if: steps.changes.outputs.web == 'true'
         run: pnpm --filter @apps/web typecheck
 
-      - name: Web unit/integration tests
+      - name: Web unit/integration tests with coverage
         if: steps.changes.outputs.web == 'true'
-        run: pnpm --filter @apps/web test
+        run: pnpm --filter @apps/web test:coverage
+
+      - name: Coverage summary (web)
+        if: always() && steps.changes.outputs.web == 'true'
+        run: |
+          node <<'NODE'
+          const fs = require("node:fs")
+          const summaryPath = "apps/web/coverage/coverage-summary.json"
+          if (!fs.existsSync(summaryPath)) {
+            fs.appendFileSync(
+              process.env.GITHUB_STEP_SUMMARY,
+              "### Web Coverage\nCoverage summary not found (tests may have failed).\n",
+            )
+            process.exit(0)
+          }
+          const total = JSON.parse(fs.readFileSync(summaryPath, "utf8")).total
+          const pct = (value) => (typeof value === "number" ? value.toFixed(2) : "0.00")
+          const lines = [
+            "### Web Coverage",
+            "",
+            "| Metric | Coverage |",
+            "| --- | ---: |",
+            "| Lines | " + pct(total.lines && total.lines.pct) + "% |",
+            "| Statements | " + pct(total.statements && total.statements.pct) + "% |",
+            "| Functions | " + pct(total.functions && total.functions.pct) + "% |",
+            "| Branches | " + pct(total.branches && total.branches.pct) + "% |",
+            "",
+          ]
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join("\n"))
+          NODE
+
+      - name: Upload coverage artifact (web)
+        if: always() && steps.changes.outputs.web == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: web-coverage
+          path: apps/web/coverage
+          if-no-files-found: warn
 
       - name: Web e2e tests
         if: steps.changes.outputs.web == 'true'

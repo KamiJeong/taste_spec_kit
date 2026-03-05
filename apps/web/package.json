@@ -9,6 +9,7 @@
     "start": "next start -p 3001",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage --coverage.include=src/** --coverage.reporter=text --coverage.reporter=json-summary --coverage.reporter=lcov",
     "test:watch": "vitest",
     "test:e2e": "playwright test --grep-invert @real-api",
     "test:e2e:real": "playwright test --grep @real-api"
@@ -25,6 +26,7 @@
     "zod": "^4.3.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.49.0",
     "@tailwindcss/postcss": "^4.1.12",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -32,7 +34,7 @@
     "@types/node": "^22.10.2",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
-    "@playwright/test": "^1.49.0",
+    "@vitest/coverage-v8": "^2.1.9",
     "jsdom": "^28.1.0",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.9.3",
