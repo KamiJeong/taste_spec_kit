@@ -9,6 +9,53 @@ Monorepo for building and validating a spec-driven product workflow with:
 
 This repository uses **Spec Kit** as the default delivery process.
 
+## Spec Kit Delivery Progress
+
+Current delivery visibility (spec folders `01` to `10`):
+
+| Spec ID | Feature | Status | Last Update | Link |
+| --- | --- | --- | --- | --- |
+| 01 | Design System Foundation + shadcn/ui Ownership | Implemented | 2026-02-24 | `specs/01-design-system/` |
+| 02 | Email Auth Backend | Implemented | 2026-02-23 | `specs/02-email-auth-backend/` |
+| 03 | Email Auth Frontend | Implemented | 2026-02-23 | `specs/03-email-auth-frontend/` |
+| 04 | Codex Issue Autoflow | Implemented | 2026-02-26 | `specs/04-codex-issue-autoflow/` |
+| 05 | Codex Telegram Issue Notify | Implemented | 2026-02-27 | `specs/05-codex-telegram-issue-notify/` |
+| 06 | Codex Health Check | Implemented | 2026-02-28 | `specs/06-codex-health-check/` |
+| 07 | API Docs Swagger | Implemented | 2026-03-01 | `specs/07-api-docs-swagger/` |
+| 08 | Channel Governance | Implemented | 2026-03-03 | `specs/08-channel-governance/` |
+| 09 | Channel Posts | Implemented | 2026-03-04 | `specs/09-channel-posts/` |
+| 10 | GitHub Coverage Reporting | Implemented | 2026-03-05 | `specs/10-github-coverage-reporting/` |
+
+Spec Kit + Codex baseline:
+- Spec-first delivery (`spec -> plan -> tasks -> implementation`) is now the repository default.
+- Recent CI improvements include required-check stability, GitHub coverage summary/artifacts, and Telegram coverage notifications.
+
+## Spec History
+
+Date-based entries:
+
+- 2026-02-23: [`specs/history/2026-02-23.md`](./specs/history/2026-02-23.md)
+- 2026-03-05: [`specs/history/2026-03-05.md`](./specs/history/2026-03-05.md)
+
+Rule:
+- For every merged feature, add one dated entry under `specs/history/` and update this section link list.
+
+## README Update Policy (Mandatory)
+
+When a new feature branch is merged, update `README.md` in the same PR (or immediately after merge) with this checklist:
+
+1. Update `Spec Kit Delivery Progress`:
+   - Add new spec row (next ID)
+   - Set status and last update date (`YYYY-MM-DD`)
+   - Add spec folder link
+2. Update `Spec History`:
+   - Add a dated link entry under `specs/history/`
+3. Keep sections concise:
+   - README = overview and links
+   - Detailed logs stay in `specs/<id>-*/` or `specs/history/*.md`
+4. Sync rule:
+   - No feature is considered fully done until README progress/history is updated.
+
 ## What We Are Building
 
 Current implemented focus:

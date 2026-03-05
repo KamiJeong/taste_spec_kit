@@ -33,3 +33,11 @@ Source of truth: `.github/workflows/branch-name-policy.yml`
 1. Check current branch: `git branch --show-current`
 2. Create a valid branch: `git checkout -b feature/<task-name>`
 3. Verify branch name again: `git branch --show-current`
+
+## README Sync Rule (Mandatory)
+
+- For every merged feature, `README.md` must be updated.
+- Minimum required updates:
+  1. `Spec Kit Delivery Progress` row (status/date/link)
+  2. `Spec History` dated link (`specs/history/YYYY-MM-DD.md`)
+- A feature is not fully done until README progress/history is synced.
