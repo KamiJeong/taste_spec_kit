@@ -28,5 +28,5 @@ Tech-Stack: specs/00-tech-stack.md
 
 ## Phase 5: Documentation & Rollout
 
-- [ ] GQL-T013 README/운영 문서에 GraphQL 사용 범위 명시
+- [x] GQL-T013 README/운영 문서에 GraphQL 사용 범위 명시
 - [ ] GQL-T014 complexity/depth 제한 도입 계획 기록

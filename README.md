@@ -11,7 +11,7 @@ This repository uses **Spec Kit** as the default delivery process.
 
 ## Spec Kit Delivery Progress
 
-Current delivery visibility (spec folders `01` to `10`):
+Current delivery visibility (spec folders `01` to `12`):
 
 | Spec ID | Feature | Status | Last Update | Link |
 | --- | --- | --- | --- | --- |
@@ -25,6 +25,8 @@ Current delivery visibility (spec folders `01` to `10`):
 | 08 | Channel Governance | Implemented | 2026-03-03 | `specs/08-channel-governance/` |
 | 09 | Channel Posts | Implemented | 2026-03-04 | `specs/09-channel-posts/` |
 | 10 | GitHub Coverage Reporting | Implemented | 2026-03-05 | `specs/10-github-coverage-reporting/` |
+| 11 | README Spec Kit Progress/History | Implemented | 2026-03-05 | `specs/11-readme-spec-kit-progress-history/` |
+| 12 | GraphQL API Foundation | In Progress | 2026-03-05 | `specs/12-graphql-api-foundation/` |
 
 Spec Kit + Codex baseline:
 - Spec-first delivery (`spec -> plan -> tasks -> implementation`) is now the repository default.
