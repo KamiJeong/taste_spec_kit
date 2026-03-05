@@ -77,9 +77,96 @@ jobs:
         if: steps.changes.outputs.web == 'true'
         run: pnpm --filter @apps/web typecheck
 
-      - name: Web unit/integration tests
+      - name: Web unit/integration tests with coverage
         if: steps.changes.outputs.web == 'true'
-        run: pnpm --filter @apps/web test
+        run: pnpm --filter @apps/web test:coverage
+
+      - name: Coverage summary (web)
+        if: always() && steps.changes.outputs.web == 'true'
+        run: |
+          node <<'NODE'
+          const fs = require("node:fs")
+          const summaryPath = "apps/web/coverage/coverage-summary.json"
+          if (!fs.existsSync(summaryPath)) {
+            fs.appendFileSync(
+              process.env.GITHUB_STEP_SUMMARY,
+              "### Web Coverage\nCoverage summary not found (tests may have failed).\n",
+            )
+            process.exit(0)
+          }
+          const total = JSON.parse(fs.readFileSync(summaryPath, "utf8")).total
+          const pct = (value) => (typeof value === "number" ? value.toFixed(2) : "0.00")
+          const lines = [
+            "### Web Coverage",
+            "",
+            "| Metric | Coverage |",
+            "| --- | ---: |",
+            "| Lines | " + pct(total.lines && total.lines.pct) + "% |",
+            "| Statements | " + pct(total.statements && total.statements.pct) + "% |",
+            "| Functions | " + pct(total.functions && total.functions.pct) + "% |",
+            "| Branches | " + pct(total.branches && total.branches.pct) + "% |",
+            "",
+          ]
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join("\n"))
+          NODE
+
+      - name: Upload coverage artifact (web)
+        if: always() && steps.changes.outputs.web == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: web-coverage
+          path: apps/web/coverage
+          if-no-files-found: warn
+
+      - name: Telegram coverage report (web)
+        if: always() && steps.changes.outputs.web == 'true'
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          REF_NAME: ${{ github.ref_name }}
+          EVENT_NAME: ${{ github.event_name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          if [ -z "${TELEGRAM_BOT_TOKEN}" ] || [ -z "${TELEGRAM_CHAT_ID}" ]; then
+            echo "TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID is not set. Skipping Telegram."
+            exit 0
+          fi
+
+          SUMMARY_PATH="apps/web/coverage/coverage-summary.json"
+          if [ ! -f "${SUMMARY_PATH}" ]; then
+            TG_TEXT="Web coverage summary not found. Repo: ${REPO}\nRef: ${REF_NAME}\nRun: ${RUN_URL}"
+          else
+            TG_TEXT="$(node -e '
+              const fs = require("node:fs")
+              const p = "apps/web/coverage/coverage-summary.json"
+              const total = JSON.parse(fs.readFileSync(p, "utf8")).total || {}
+              const pct = (v) => (typeof v === "number" ? v.toFixed(2) : "0.00")
+              const repo = process.env.REPO
+              const runUrl = process.env.RUN_URL
+              const ref = process.env.REF_NAME
+              const eventName = process.env.EVENT_NAME
+              const pr = process.env.PR_NUMBER
+              const contextLine = eventName === "pull_request" && pr ? `PR: #${pr}` : `Ref: ${ref}`
+              const lines = [
+                "Coverage Report (Web)",
+                `Repo: ${repo}`,
+                contextLine,
+                `Lines: ${pct(total.lines && total.lines.pct)}%`,
+                `Statements: ${pct(total.statements && total.statements.pct)}%`,
+                `Functions: ${pct(total.functions && total.functions.pct)}%`,
+                `Branches: ${pct(total.branches && total.branches.pct)}%`,
+                `Run: ${runUrl}`,
+              ]
+              process.stdout.write(lines.join("\n"))
+            ')"
+          fi
+
+          curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d "chat_id=${TELEGRAM_CHAT_ID}" \
+            --data-urlencode "text=${TG_TEXT}" \
+            -d "disable_web_page_preview=true"
 
       - name: Web e2e tests
         if: steps.changes.outputs.web == 'true'
