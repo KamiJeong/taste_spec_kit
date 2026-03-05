@@ -116,6 +116,56 @@ jobs:
           path: apps/storybook/coverage
           if-no-files-found: warn
 
+      - name: Telegram coverage report (design-system)
+        if: always() && steps.changes.outputs.design_system == 'true'
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          REF_NAME: ${{ github.ref_name }}
+          EVENT_NAME: ${{ github.event_name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          if [ -z "${TELEGRAM_BOT_TOKEN}" ] || [ -z "${TELEGRAM_CHAT_ID}" ]; then
+            echo "TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID is not set. Skipping Telegram."
+            exit 0
+          fi
+
+          SUMMARY_PATH="apps/storybook/coverage/coverage-summary.json"
+          if [ ! -f "${SUMMARY_PATH}" ]; then
+            TG_TEXT="Design-system coverage summary not found. Repo: ${REPO}\nRef: ${REF_NAME}\nRun: ${RUN_URL}"
+          else
+            TG_TEXT="$(node -e '
+              const fs = require("node:fs")
+              const p = "apps/storybook/coverage/coverage-summary.json"
+              const total = JSON.parse(fs.readFileSync(p, "utf8")).total || {}
+              const pct = (v) => (typeof v === "number" ? v.toFixed(2) : "0.00")
+              const repo = process.env.REPO
+              const runUrl = process.env.RUN_URL
+              const ref = process.env.REF_NAME
+              const eventName = process.env.EVENT_NAME
+              const pr = process.env.PR_NUMBER
+              const contextLine = eventName === "pull_request" && pr ? `PR: #${pr}` : `Ref: ${ref}`
+              const lines = [
+                "Coverage Report (Design System)",
+                `Repo: ${repo}`,
+                contextLine,
+                `Lines: ${pct(total.lines && total.lines.pct)}%`,
+                `Statements: ${pct(total.statements && total.statements.pct)}%`,
+                `Functions: ${pct(total.functions && total.functions.pct)}%`,
+                `Branches: ${pct(total.branches && total.branches.pct)}%`,
+                `Run: ${runUrl}`,
+              ]
+              process.stdout.write(lines.join("\n"))
+            ')"
+          fi
+
+          curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d "chat_id=${TELEGRAM_CHAT_ID}" \
+            --data-urlencode "text=${TG_TEXT}" \
+            -d "disable_web_page_preview=true"
+
       - name: Storybook build
         if: steps.changes.outputs.design_system == 'true'
         run: pnpm --filter @repo/storybook build-storybook

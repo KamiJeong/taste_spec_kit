@@ -35,12 +35,15 @@ Vitest 기반인 web/storybook 테스트에 coverage 출력 옵션을 추가하�
   - `GITHUB_STEP_SUMMARY`에 Line/Statement/Function/Branch coverage %
 - 보존 방식
   - `actions/upload-artifact`로 coverage 디렉터리 업로드
+- 알림 방식
+  - `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` 시크릿이 존재하면 Telegram `sendMessage` 호출
 
 ## Risks & Mitigations
 
 - coverage provider 미설치 위험: `@vitest/coverage-v8`를 devDependency로 추가
 - 경로/파일 누락 위험: summary 스크립트에서 파일 존재 체크 후 실패 처리
 - 실행시간 증가: 기존 test 단계 대체로 중복 실행 방지
+- Telegram 시크릿 누락 위험: 시크릿 미설정 시 skip 처리(실패로 간주하지 않음)
 
 ## Test Strategy
 

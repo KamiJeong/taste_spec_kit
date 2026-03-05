@@ -19,14 +19,17 @@ Tech-Stack: specs/00-tech-stack.md
 - [x] COV-T007 `design-system-ci.yml`에 coverage 실행 단계 추가
 - [x] COV-T008 coverage summary(Job Summary) 출력 단계 추가
 - [x] COV-T009 coverage artifact 업로드 단계 추가
+- [x] COV-T012 Telegram coverage 알림 단계 추가(web/design-system)
 
 ## Phase 4: Verification
 
 - [x] COV-T010 로컬 coverage 실행 검증(web/storybook)
 - [x] COV-T011 변경 파일 diff/self-review
+- [x] COV-T013 Telegram 알림 단계 조건식/시크릿 fallback 검증
 
-## Done Checklist
+## Post-Implementation Validation (GitHub Runtime)
 
-- [ ] PR에서 coverage 수치가 보인다.
-- [ ] coverage artifact 다운로드가 가능하다.
-- [ ] 기존 web/design-system CI 동작을 깨지 않는다.
+- [ ] Coverage metrics are visible in PR job summaries.
+- [ ] Coverage artifacts can be downloaded from workflow runs.
+- [ ] Existing web/design-system CI checks still pass in GitHub Actions.
+- [ ] Coverage Telegram notification is delivered when secrets are configured.
