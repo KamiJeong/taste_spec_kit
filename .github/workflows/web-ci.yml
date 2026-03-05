@@ -14,16 +14,7 @@ on:
       - "turbo.json"
       - "tsconfig.base.json"
   pull_request:
-    paths:
-      - "apps/web/**"
-      - "packages/ui/**"
-      - "packages/contracts-auth/**"
-      - ".github/workflows/web-ci.yml"
-      - "package.json"
-      - "pnpm-lock.yaml"
-      - "pnpm-workspace.yaml"
-      - "turbo.json"
-      - "tsconfig.base.json"
+    types: [opened, synchronize, reopened, ready_for_review]
 
 concurrency:
   group: web-ci-${{ github.workflow }}-${{ github.ref }}
@@ -33,30 +24,60 @@ jobs:
   web-check:
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    permissions:
+      contents: read
     steps:
+      - name: Detect relevant changes
+        id: changes
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        with:
+          filters: |
+            web:
+              - "apps/web/**"
+              - "packages/ui/**"
+              - "packages/contracts-auth/**"
+              - ".github/workflows/web-ci.yml"
+              - "package.json"
+              - "pnpm-lock.yaml"
+              - "pnpm-workspace.yaml"
+              - "turbo.json"
+              - "tsconfig.base.json"
+
       - name: Checkout
-        uses: actions/checkout@v4
+        if: steps.changes.outputs.web == 'true'
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        if: steps.changes.outputs.web == 'true'
+        uses: pnpm/action-setup@9fd676a19091d4595eefd76e4bd31c97133911f1 # v4.2.0
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        if: steps.changes.outputs.web == 'true'
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
           cache: pnpm
 
       - name: Install dependencies
+        if: steps.changes.outputs.web == 'true'
         run: pnpm install --frozen-lockfile
 
       - name: Install Playwright browser
+        if: steps.changes.outputs.web == 'true'
         run: pnpm --filter @apps/web exec playwright install --with-deps chromium
 
       - name: Web typecheck
+        if: steps.changes.outputs.web == 'true'
         run: pnpm --filter @apps/web typecheck
 
       - name: Web unit/integration tests
+        if: steps.changes.outputs.web == 'true'
         run: pnpm --filter @apps/web test
 
       - name: Web e2e tests
+        if: steps.changes.outputs.web == 'true'
         run: pnpm --filter @apps/web test:e2e
+
+      - name: Skip (no web changes)
+        if: steps.changes.outputs.web != 'true'
+        run: echo "No web-related changes detected; skipping heavy checks."
