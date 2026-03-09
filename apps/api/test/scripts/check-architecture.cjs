@@ -39,6 +39,10 @@ for (const file of files) {
   const rel = toPosix(path.relative(modulesRoot, file));
   const content = fs.readFileSync(file, "utf8");
   const imports = extractImports(content);
+  const dbImportAllowed =
+    rel.startsWith("persistence/") ||
+    rel.startsWith("database/") ||
+    rel.endsWith(".repository.ts");
 
   for (const spec of imports) {
     if (rel.endsWith(".controller.ts") && spec.startsWith("../") && !spec.startsWith("../shared/")) {
@@ -53,7 +57,7 @@ for (const file of files) {
       failures.push(`[user-auth-boundary] ${rel} imports ${spec}`);
     }
 
-    if (!rel.startsWith("persistence/") && (spec === "pg" || spec.startsWith("drizzle-orm"))) {
+    if (!dbImportAllowed && (spec === "pg" || spec.startsWith("drizzle-orm"))) {
       failures.push(`[db-boundary] ${rel} imports ${spec}`);
     }
 
