@@ -5,13 +5,14 @@ import { createApp } from "../../src/main";
 async function requestJson(
   baseUrl: string,
   path: string,
-  options: { method?: string; body?: unknown; cookie?: string } = {}
+  options: { method?: string; body?: unknown; cookie?: string; headers?: Record<string, string> } = {}
 ) {
   const res = await fetch(`${baseUrl}${path}`, {
     method: options.method ?? "GET",
     headers: {
       "content-type": "application/json",
-      ...(options.cookie ? { cookie: options.cookie } : {})
+      ...(options.cookie ? { cookie: options.cookie } : {}),
+      ...(options.headers ?? {})
     },
     body: options.body ? JSON.stringify(options.body) : undefined
   });
@@ -52,10 +53,12 @@ async function run() {
       body: { email, password: "Passw0rd!" }
     });
     assert.equal(login.status, 200);
-    const cookie = login.headers.get("set-cookie") ?? undefined;
-    assert.ok(cookie?.includes("sid="));
+    const accessToken = login.body?.data?.accessToken as string | undefined;
+    assert.ok(accessToken);
 
-    const me = await requestJson(baseUrl, "/api/v1/auth/me", { cookie });
+    const me = await requestJson(baseUrl, "/api/v1/auth/me", {
+      headers: { authorization: `Bearer ${accessToken}` }
+    });
     assert.equal(me.status, 200);
     assert.equal(me.body.data.user.email, email);
 

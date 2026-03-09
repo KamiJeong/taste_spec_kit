@@ -28,16 +28,22 @@ function setupSwagger(app: Awaited<ReturnType<typeof NestFactory.create>>): void
     .setTitle("taste_spec_kit API")
     .setDescription("Auth/User API documentation")
     .setVersion("1.0")
-    .addCookieAuth("sid", {
-      type: "apiKey",
-      in: "cookie"
-    })
+    .addBearerAuth()
+    .addApiKey(
+      {
+        type: "apiKey",
+        in: "cookie",
+        name: "csrfToken",
+        description: "CSRF token cookie used with x-csrf-token for state-changing requests"
+      },
+      "csrfCookie"
+    )
     .addApiKey(
       {
         type: "apiKey",
         in: "header",
         name: "x-csrf-token",
-        description: "Required for state-changing requests with sid cookie"
+        description: "Required for state-changing requests and must match csrfToken cookie"
       },
       "csrfToken"
     )
