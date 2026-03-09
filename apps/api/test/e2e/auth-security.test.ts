@@ -53,17 +53,18 @@ async function run() {
       body: { email, password: "Passw0rd!" }
     });
     assert.equal(login.status, 200);
+    const accessToken = login.body?.data?.accessToken as string | undefined;
+    assert.ok(accessToken);
 
     const setCookie = login.headers.get("set-cookie");
-    const sid = readCookie(setCookie, "sid");
     const csrf = readCookie(setCookie, "csrfToken");
-    assert.ok(sid);
     assert.ok(csrf);
-    const cookie = `sid=${encodeURIComponent(sid!)}; csrfToken=${encodeURIComponent(csrf!)}`;
+    const cookie = `csrfToken=${encodeURIComponent(csrf!)}`;
 
     const logoutWithoutCsrf = await requestJson(baseUrl, "/api/v1/auth/logout", {
       method: "POST",
-      cookie
+      cookie,
+      headers: { authorization: `Bearer ${accessToken}` }
     });
     assert.equal(logoutWithoutCsrf.status, 403);
     assert.equal(logoutWithoutCsrf.body.code, "AUTH_CSRF_INVALID");
@@ -71,7 +72,7 @@ async function run() {
     const logoutWithCsrf = await requestJson(baseUrl, "/api/v1/auth/logout", {
       method: "POST",
       cookie,
-      headers: { "x-csrf-token": csrf! }
+      headers: { authorization: `Bearer ${accessToken}`, "x-csrf-token": csrf! }
     });
     assert.equal(logoutWithCsrf.status, 200);
 

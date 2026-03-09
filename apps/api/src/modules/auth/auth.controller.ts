@@ -2,8 +2,9 @@ import { Body, Controller, Get, Post, Query, Req, Res, UseGuards } from "@nestjs
 import type { Request, Response } from "express";
 import { ApiBody, ApiQuery, ApiTags } from "@nestjs/swagger";
 import { validateWithZod } from "../shared/zod-validation";
-import { cookieOf } from "../shared/request-cookie";
+import { AuthGuard } from "../shared/guards/auth.guard";
 import { CsrfGuard } from "../shared/guards/csrf.guard";
+import { requestAuthOf } from "../shared/request-auth";
 import { ApiCreatedValidation, ApiOkCsrf, ApiOkUnauthorized, ApiOkValidation } from "../shared/swagger-responses";
 import { ApiEndpoint, ApiSessionCookieAuth, ApiSessionMutationAuth } from "../shared/swagger-route";
 import { AuthService } from "./auth.service";
@@ -106,7 +107,7 @@ export class AuthController {
     res.status(result.status).json(result.body);
   }
 
-  @ApiEndpoint("Login and issue session cookie")
+  @ApiEndpoint("Login and issue access token")
   @ApiBody({ type: LoginDto })
   @ApiOkUnauthorized("Login success", "Login rejected")
   @Post("/login")
@@ -120,31 +121,31 @@ export class AuthController {
     const result = await this.auth.login(validated.data, auditContextFromReq(req));
     if ("sid" in result && result.sid) {
       const csrfToken = encodeURIComponent(result.csrfToken);
-      res.setHeader("set-cookie", [
-        `sid=${encodeURIComponent(result.sid)}; HttpOnly; Path=/`,
-        `csrfToken=${csrfToken}; Path=/`
-      ]);
+      res.setHeader("set-cookie", [`csrfToken=${csrfToken}; Path=/`]);
     }
     res.status(result.status).json(result.body);
   }
 
-  @ApiEndpoint("Logout and clear session cookie")
+  @ApiEndpoint("Logout current token session")
   @ApiSessionMutationAuth()
   @ApiOkCsrf("Logout success")
-  @UseGuards(CsrfGuard)
+  @UseGuards(AuthGuard, CsrfGuard)
   @Post("/logout")
   async logout(@Req() req: Request, @Res() res: Response) {
-    const result = await this.auth.logout({ sid: cookieOf(req, "sid") }, auditContextFromReq(req));
-    res.setHeader("set-cookie", ["sid=; HttpOnly; Path=/; Max-Age=0", "csrfToken=; Path=/; Max-Age=0"]);
+    const auth = requestAuthOf(req);
+    const result = await this.auth.logout({ sid: auth.sid }, auditContextFromReq(req));
+    res.setHeader("set-cookie", ["csrfToken=; Path=/; Max-Age=0"]);
     res.status(result.status).json(result.body);
   }
 
-  @ApiEndpoint("Get current session user")
+  @ApiEndpoint("Get current authenticated user")
   @ApiSessionCookieAuth()
   @ApiOkUnauthorized("Current user")
+  @UseGuards(AuthGuard)
   @Get("/me")
   async me(@Req() req: Request, @Res() res: Response) {
-    const result = await this.auth.me({ sid: cookieOf(req, "sid") });
+    const auth = requestAuthOf(req);
+    const result = await this.auth.me({ sid: auth.sid, userId: auth.userId });
     res.status(result.status).json(result.body);
   }
 }

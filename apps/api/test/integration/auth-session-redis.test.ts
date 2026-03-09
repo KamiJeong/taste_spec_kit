@@ -24,10 +24,13 @@ async function requestJson(
   return { status: res.status, headers: res.headers, body: json };
 }
 
-function sidFromSetCookie(raw: string): string {
-  const first = raw.split(";")[0] ?? "";
-  const [, value] = first.split("=");
-  return decodeURIComponent(value ?? "");
+function sidFromAccessToken(accessToken: string): string {
+  const parts = accessToken.split(".");
+  assert.equal(parts.length, 3);
+  const payloadRaw = Buffer.from(parts[1]!, "base64url").toString("utf8");
+  const payload = JSON.parse(payloadRaw) as { sid?: string };
+  assert.ok(payload.sid);
+  return payload.sid;
 }
 
 function readCookie(raw: string | null, name: string): string | undefined {
@@ -73,13 +76,14 @@ async function run() {
     });
     assert.equal(login.status, 200);
 
+    const accessToken = login.body?.data?.accessToken as string | undefined;
+    assert.ok(accessToken);
     const setCookie = login.headers.get("set-cookie") ?? "";
-    assert.ok(setCookie.includes("sid="));
-    const sid = sidFromSetCookie(setCookie);
     const csrf = readCookie(setCookie, "csrfToken");
     const userId = login.body.data.user.id as string;
     assert.ok(csrf);
-    const authCookie = `sid=${encodeURIComponent(sid)}; csrfToken=${encodeURIComponent(csrf!)}`;
+    const sid = sidFromAccessToken(accessToken!);
+    const csrfCookie = `csrfToken=${encodeURIComponent(csrf!)}`;
 
     const sessionKey = `sess:${sid}`;
     const userSessionsKey = `sess:user:${userId}`;
@@ -100,8 +104,8 @@ async function run() {
 
     const logout = await requestJson(baseUrl, "/api/v1/auth/logout", {
       method: "POST",
-      cookie: authCookie,
-      headers: { "x-csrf-token": csrf! }
+      cookie: csrfCookie,
+      headers: { authorization: `Bearer ${accessToken!}`, "x-csrf-token": csrf! }
     });
     assert.equal(logout.status, 200);
 

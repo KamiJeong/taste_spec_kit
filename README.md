@@ -11,7 +11,7 @@ This repository uses **Spec Kit** as the default delivery process.
 
 ## Spec Kit Delivery Progress
 
-Current delivery visibility (spec folders `01` to `10`):
+Current delivery visibility (spec folders `01` to `12`):
 
 | Spec ID | Feature | Status | Last Update | Link |
 | --- | --- | --- | --- | --- |
@@ -25,6 +25,8 @@ Current delivery visibility (spec folders `01` to `10`):
 | 08 | Channel Governance | Implemented | 2026-03-03 | `specs/08-channel-governance/` |
 | 09 | Channel Posts | Implemented | 2026-03-04 | `specs/09-channel-posts/` |
 | 10 | GitHub Coverage Reporting | Implemented | 2026-03-05 | `specs/10-github-coverage-reporting/` |
+| 11 | README Spec Kit Progress/History | Implemented | 2026-03-05 | `specs/11-readme-spec-kit-progress-history/` |
+| 12 | GraphQL API Foundation | In Progress | 2026-03-05 | `specs/12-graphql-api-foundation/` |
 
 Spec Kit + Codex baseline:
 - Spec-first delivery (`spec -> plan -> tasks -> implementation`) is now the repository default.
@@ -156,6 +158,20 @@ Related env flags:
 
 - `API_DOCS_ENABLED` (default true outside production)
 - `API_DOCS_PROTECTED` (if true -> docs endpoints return 403)
+
+GraphQL manual test template:
+
+- New user onboarding guide: [`docs/graphql/README.md`](./docs/graphql/README.md)
+- Shared quick template: [`docs/graphql/test-template.md`](./docs/graphql/test-template.md)
+- Full manual template: [`docs/graphql/manual-test-template.md`](./docs/graphql/manual-test-template.md)
+- Local UI placeholder page: `http://localhost:3000/graphql/ui` (non-production default)
+
+Auth guard policy (REST + GraphQL):
+
+- Protected endpoints use shared `AuthGuard`
+- Auth source: `Authorization: Bearer <access-token>`
+- Unauthorized code: `AUTH_SESSION_REQUIRED`
+- CSRF required for all state-changing requests (`x-csrf-token` == `csrfToken` cookie), including bearer-auth mutations
 
 ## Testing
 

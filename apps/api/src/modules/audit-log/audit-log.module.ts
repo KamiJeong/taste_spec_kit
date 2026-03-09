@@ -1,10 +1,11 @@
 import { Module } from "@nestjs/common";
-import { PersistenceModule } from "../persistence/persistence.module";
+import { DatabaseModule } from "../database/database.module";
+import { AuditLogRepository } from "./audit-log.repository";
 import { AuditLogService } from "./audit-log.service";
 
 @Module({
-  imports: [PersistenceModule],
-  providers: [AuditLogService],
+  imports: [DatabaseModule],
+  providers: [AuditLogRepository, AuditLogService],
   exports: [AuditLogService]
 })
 export class AuditLogModule {}

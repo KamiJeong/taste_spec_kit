@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import "../load-env";
 import { createApp } from "../../src/main";
 
-type AuthCtx = { cookie: string; csrfToken: string; userId: string; email: string };
+type AuthCtx = { csrfCookie: string; csrfToken: string; accessToken: string; userId: string; email: string };
 
 async function requestJson(
   baseUrl: string,
@@ -42,7 +42,9 @@ async function signupVerifyLogin(baseUrl: string, email: string): Promise<AuthCt
   });
   assert.equal(signup.status, 201);
 
-  const verify = await requestJson(baseUrl, `/api/v1/auth/verify-email?token=${signup.body.data.verificationToken}`);
+  const verificationToken = signup.body?.data?.verificationToken as string | undefined;
+  assert.ok(verificationToken, "verificationToken is required in integration test");
+  const verify = await requestJson(baseUrl, `/api/v1/auth/verify-email?token=${verificationToken}`);
   assert.equal(verify.status, 200);
 
   const login = await requestJson(baseUrl, "/api/v1/auth/login", {
@@ -51,26 +53,32 @@ async function signupVerifyLogin(baseUrl: string, email: string): Promise<AuthCt
   });
   assert.equal(login.status, 200);
 
+  const accessToken = login.body?.data?.accessToken as string | undefined;
+  assert.ok(accessToken);
   const setCookie = login.headers.get("set-cookie");
-  const sid = readCookie(setCookie, "sid");
   const csrf = readCookie(setCookie, "csrfToken");
-  assert.ok(sid);
   assert.ok(csrf);
-  const cookie = `sid=${encodeURIComponent(sid!)}; csrfToken=${encodeURIComponent(csrf!)}`;
+  const csrfCookie = `csrfToken=${encodeURIComponent(csrf!)}`;
 
-  const me = await requestJson(baseUrl, "/api/v1/auth/me", { cookie });
+  const me = await requestJson(baseUrl, "/api/v1/auth/me", {
+    headers: { authorization: `Bearer ${accessToken}` }
+  });
   assert.equal(me.status, 200);
 
   return {
-    cookie,
+    csrfCookie,
     csrfToken: csrf!,
+    accessToken: accessToken!,
     userId: me.body.data.user.id,
     email
   };
 }
 
-function authHeaders(auth: AuthCtx): Record<string, string> {
-  return { "x-csrf-token": auth.csrfToken };
+function authHeaders(auth: AuthCtx, withCsrf = false): Record<string, string> {
+  return {
+    authorization: `Bearer ${auth.accessToken}`,
+    ...(withCsrf ? { "x-csrf-token": auth.csrfToken } : {})
+  };
 }
 
 async function run() {
@@ -90,8 +98,8 @@ async function run() {
 
     const create1 = await requestJson(baseUrl, "/api/v1/channels", {
       method: "POST",
-      cookie: owner.cookie,
-      headers: authHeaders(owner),
+      cookie: owner.csrfCookie,
+      headers: authHeaders(owner, true),
       body: { name: "channel-one" }
     });
     assert.equal(create1.status, 201);
@@ -99,8 +107,8 @@ async function run() {
 
     const create2 = await requestJson(baseUrl, "/api/v1/channels", {
       method: "POST",
-      cookie: owner.cookie,
-      headers: authHeaders(owner),
+      cookie: owner.csrfCookie,
+      headers: authHeaders(owner, true),
       body: { name: "channel-two" }
     });
     assert.equal(create2.status, 201);
@@ -108,27 +116,25 @@ async function run() {
 
     const reorderOwned = await requestJson(baseUrl, "/api/v1/channels/reorder-owned", {
       method: "POST",
-      cookie: owner.cookie,
-      headers: authHeaders(owner),
+      cookie: owner.csrfCookie,
+      headers: authHeaders(owner, true),
       body: { channelIds: [channelTwoId, channelOneId] }
     });
     assert.equal(reorderOwned.status, 200);
 
-    const ownerChannels = await requestJson(baseUrl, "/api/v1/channels", { cookie: owner.cookie });
+    const ownerChannels = await requestJson(baseUrl, "/api/v1/channels", { headers: authHeaders(owner) });
     assert.equal(ownerChannels.status, 200);
     assert.equal(ownerChannels.body.data.channels[0].id, channelTwoId);
     assert.equal(ownerChannels.body.data.channels[1].id, channelOneId);
 
     const managerJoin = await requestJson(baseUrl, `/api/v1/channels/${channelOneId}/join-requests`, {
       method: "POST",
-      cookie: managerUser.cookie,
-      headers: authHeaders(managerUser)
+      cookie: managerUser.csrfCookie,
+      headers: authHeaders(managerUser, true)
     });
     assert.equal(managerJoin.status, 201);
 
-    const ownerApproveManagerList = await requestJson(baseUrl, `/api/v1/channels/${channelOneId}/join-requests`, {
-      cookie: owner.cookie
-    });
+    const ownerApproveManagerList = await requestJson(baseUrl, `/api/v1/channels/${channelOneId}/join-requests`, { headers: authHeaders(owner) });
     assert.equal(ownerApproveManagerList.status, 200);
     const managerRequestId = ownerApproveManagerList.body.data.requests.find(
       (row: any) => row.requesterUserId === managerUser.userId
@@ -138,28 +144,26 @@ async function run() {
     const approveManager = await requestJson(
       baseUrl,
       `/api/v1/channels/${channelOneId}/join-requests/${managerRequestId}/approve`,
-      { method: "POST", cookie: owner.cookie, headers: authHeaders(owner) }
+      { method: "POST", cookie: owner.csrfCookie, headers: authHeaders(owner, true) }
     );
     assert.equal(approveManager.status, 200);
 
     const addManager = await requestJson(baseUrl, `/api/v1/channels/${channelOneId}/managers`, {
       method: "POST",
-      cookie: owner.cookie,
-      headers: authHeaders(owner),
+      cookie: owner.csrfCookie,
+      headers: authHeaders(owner, true),
       body: { userId: managerUser.userId }
     });
     assert.equal(addManager.status, 200);
 
     const memberJoin = await requestJson(baseUrl, `/api/v1/channels/${channelOneId}/join-requests`, {
       method: "POST",
-      cookie: memberUser.cookie,
-      headers: authHeaders(memberUser)
+      cookie: memberUser.csrfCookie,
+      headers: authHeaders(memberUser, true)
     });
     assert.equal(memberJoin.status, 201);
 
-    const managerPending = await requestJson(baseUrl, `/api/v1/channels/${channelOneId}/join-requests`, {
-      cookie: managerUser.cookie
-    });
+    const managerPending = await requestJson(baseUrl, `/api/v1/channels/${channelOneId}/join-requests`, { headers: authHeaders(managerUser) });
     assert.equal(managerPending.status, 200);
     const memberRequestId = managerPending.body.data.requests.find(
       (row: any) => row.requesterUserId === memberUser.userId
@@ -169,28 +173,28 @@ async function run() {
     const approveMember = await requestJson(
       baseUrl,
       `/api/v1/channels/${channelOneId}/join-requests/${memberRequestId}/approve`,
-      { method: "POST", cookie: managerUser.cookie, headers: authHeaders(managerUser) }
+      { method: "POST", cookie: managerUser.csrfCookie, headers: authHeaders(managerUser, true) }
     );
     assert.equal(approveMember.status, 200);
 
     const outsiderJoin1 = await requestJson(baseUrl, `/api/v1/channels/${channelTwoId}/join-requests`, {
       method: "POST",
-      cookie: outsider.cookie,
-      headers: authHeaders(outsider)
+      cookie: outsider.csrfCookie,
+      headers: authHeaders(outsider, true)
     });
     assert.equal(outsiderJoin1.status, 201);
     const outsiderJoin2 = await requestJson(baseUrl, `/api/v1/channels/${channelTwoId}/join-requests`, {
       method: "POST",
-      cookie: outsider.cookie,
-      headers: authHeaders(outsider)
+      cookie: outsider.csrfCookie,
+      headers: authHeaders(outsider, true)
     });
     assert.equal(outsiderJoin2.status, 409);
     assert.equal(outsiderJoin2.body.code, "CHANNEL_JOIN_REQUEST_PENDING");
 
     const managerKickOwner = await requestJson(baseUrl, `/api/v1/channels/${channelOneId}/kick`, {
       method: "POST",
-      cookie: managerUser.cookie,
-      headers: authHeaders(managerUser),
+      cookie: managerUser.csrfCookie,
+      headers: authHeaders(managerUser, true),
       body: { userId: owner.userId }
     });
     assert.equal(managerKickOwner.status, 403);
@@ -198,13 +202,13 @@ async function run() {
 
     const managerKickMember = await requestJson(baseUrl, `/api/v1/channels/${channelOneId}/kick`, {
       method: "POST",
-      cookie: managerUser.cookie,
-      headers: authHeaders(managerUser),
+      cookie: managerUser.csrfCookie,
+      headers: authHeaders(managerUser, true),
       body: { userId: memberUser.userId }
     });
     assert.equal(managerKickMember.status, 200);
 
-    const memberChannelsAfterKick = await requestJson(baseUrl, "/api/v1/channels", { cookie: memberUser.cookie });
+    const memberChannelsAfterKick = await requestJson(baseUrl, "/api/v1/channels", { headers: authHeaders(memberUser) });
     assert.equal(memberChannelsAfterKick.status, 200);
     assert.equal(
       memberChannelsAfterKick.body.data.channels.some((row: any) => row.id === channelOneId),
@@ -213,33 +217,33 @@ async function run() {
 
     const ownerQuitBeforeTransfer = await requestJson(baseUrl, `/api/v1/channels/${channelOneId}/quit`, {
       method: "POST",
-      cookie: owner.cookie,
-      headers: authHeaders(owner)
+      cookie: owner.csrfCookie,
+      headers: authHeaders(owner, true)
     });
     assert.equal(ownerQuitBeforeTransfer.status, 409);
     assert.equal(ownerQuitBeforeTransfer.body.code, "CHANNEL_OWNER_TRANSFER_REQUIRED");
 
     const transfer = await requestJson(baseUrl, `/api/v1/channels/${channelOneId}/transfer-ownership`, {
       method: "POST",
-      cookie: owner.cookie,
-      headers: authHeaders(owner),
+      cookie: owner.csrfCookie,
+      headers: authHeaders(owner, true),
       body: { targetUserId: managerUser.userId, previousOwnerRole: "manager" }
     });
     assert.equal(transfer.status, 200);
 
     const ownerQuitAfterTransfer = await requestJson(baseUrl, `/api/v1/channels/${channelOneId}/quit`, {
       method: "POST",
-      cookie: owner.cookie,
-      headers: authHeaders(owner)
+      cookie: owner.csrfCookie,
+      headers: authHeaders(owner, true)
     });
     assert.equal(ownerQuitAfterTransfer.status, 200);
 
-    const managerChannels = await requestJson(baseUrl, "/api/v1/channels", { cookie: managerUser.cookie });
+    const managerChannels = await requestJson(baseUrl, "/api/v1/channels", { headers: authHeaders(managerUser) });
     const managerIds = managerChannels.body.data.channels.map((row: any) => row.id) as string[];
     const reorderMine = await requestJson(baseUrl, "/api/v1/channels/reorder-my-list", {
       method: "POST",
-      cookie: managerUser.cookie,
-      headers: authHeaders(managerUser),
+      cookie: managerUser.csrfCookie,
+      headers: authHeaders(managerUser, true),
       body: { channelIds: managerIds }
     });
     assert.equal(reorderMine.status, 200);

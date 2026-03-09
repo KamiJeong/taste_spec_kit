@@ -21,13 +21,18 @@
     "pretest:integration": "pnpm --filter @packages/contracts-auth build",
     "pretest:e2e": "pnpm --filter @packages/contracts-auth build",
     "test": "pnpm run test:unit && pnpm run test:integration && pnpm run test:e2e",
+    "test:graphql:smoke": "pnpm --filter @packages/contracts-auth build && pnpm run env:setup && pnpm run db:migrate && set NODE_ENV=test&& ts-node test/integration/graphql-channel-post.test.ts",
     "test:unit": "ts-node test/unit/health.test.ts && ts-node test/unit/http-contract.test.ts && ts-node test/unit/token.service.test.ts && ts-node test/unit/zod-validation.test.ts && ts-node test/unit/channel.service.test.ts && ts-node test/unit/channel-post.schemas.test.ts",
-    "test:integration": "pnpm run env:setup && set NODE_ENV=test&& ts-node test/integration/env.test.ts && ts-node test/integration/fail-fast.test.ts && ts-node test/integration/swagger-docs.test.ts && pnpm run db:migrate && ts-node test/integration/migration.test.ts && pnpm run test:reset-state && ts-node test/integration/channel-flows.test.ts && ts-node test/integration/channel-post-flows.test.ts && ts-node test/integration/channel-auth-regression.test.ts && ts-node test/integration/auth-p1.test.ts && ts-node test/integration/auth-p2.test.ts && ts-node test/integration/auth-p3.test.ts && ts-node test/integration/auth-lockout.test.ts && ts-node test/integration/auth-session-redis.test.ts && ts-node test/integration/auth-session-invalidation.test.ts && ts-node test/integration/auth-audit-log.test.ts && ts-node test/integration/auth-validation.test.ts && ts-node test/integration/auth-idempotent.test.ts && ts-node test/integration/auth-envelope.test.ts && ts-node test/integration/auth-security-baseline.test.ts",
-    "test:e2e": "ts-node test/e2e/smoke.test.ts && ts-node test/e2e/auth-happy-path.test.ts && ts-node test/e2e/auth-security.test.ts"
+    "test:integration": "pnpm run env:setup && pnpm run db:migrate && set NODE_ENV=test&& ts-node test/integration/env.test.ts && ts-node test/integration/fail-fast.test.ts && ts-node test/integration/swagger-docs.test.ts && ts-node test/integration/graphql-disabled.test.ts && ts-node test/integration/graphql-channel-post.test.ts && ts-node test/integration/migration.test.ts && pnpm run test:reset-state && ts-node test/integration/channel-flows.test.ts && ts-node test/integration/channel-post-flows.test.ts && ts-node test/integration/channel-auth-regression.test.ts && ts-node test/integration/auth-p1.test.ts && ts-node test/integration/auth-p2.test.ts && ts-node test/integration/auth-p3.test.ts && ts-node test/integration/auth-lockout.test.ts && ts-node test/integration/auth-session-redis.test.ts && ts-node test/integration/auth-session-invalidation.test.ts && ts-node test/integration/auth-audit-log.test.ts && ts-node test/integration/auth-validation.test.ts && ts-node test/integration/auth-idempotent.test.ts && ts-node test/integration/auth-envelope.test.ts && ts-node test/integration/auth-security-baseline.test.ts",
+    "test:e2e": "pnpm run env:setup && pnpm run db:migrate && ts-node test/e2e/smoke.test.ts && ts-node test/e2e/auth-happy-path.test.ts && ts-node test/e2e/auth-security.test.ts"
   },
   "dependencies": {
+    "@apollo/server": "^5.4.0",
+    "@as-integrations/express5": "^1.1.2",
+    "@nestjs/apollo": "^13.2.4",
     "@nestjs/common": "^11",
     "@nestjs/core": "^11",
+    "@nestjs/graphql": "^13.2.4",
     "@nestjs/platform-express": "^11",
     "@nestjs/swagger": "^11.2.6",
     "@packages/contracts-auth": "workspace:*",
@@ -35,6 +40,7 @@
     "better-auth": "^1.4.18",
     "bullmq": "^5.70.1",
     "drizzle-orm": "^0.45.1",
+    "graphql": "^16.13.1",
     "nodemailer": "^6.10.1",
     "pg": "^8.18.0",
     "redis": "^5.11.0",
@@ -45,8 +51,8 @@
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
-    "@types/nodemailer": "^6.4.17",
     "@types/node": "^22",
+    "@types/nodemailer": "^6.4.17",
     "@types/pg": "^8.16.0",
     "drizzle-kit": "^0.31.9",
     "ts-node": "^10.9.2",

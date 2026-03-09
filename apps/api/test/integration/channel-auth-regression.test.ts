@@ -32,6 +32,33 @@ function readCookie(raw: string | null, name: string): string | undefined {
   return match ? decodeURIComponent(match[1]) : undefined;
 }
 
+const FORBIDDEN_USER_SECURITY_FIELDS = [
+  "passwordHash",
+  "failedLoginAttempts",
+  "lockedUntil",
+  "deletionScheduledAt",
+  "isActive"
+] as const;
+
+function assertNoForbiddenUserSecurityFields(value: unknown, path = "root"): void {
+  if (value === null || typeof value !== "object") return;
+
+  if (Array.isArray(value)) {
+    value.forEach((item, index) => assertNoForbiddenUserSecurityFields(item, `${path}[${index}]`));
+    return;
+  }
+
+  const record = value as Record<string, unknown>;
+  for (const key of Object.keys(record)) {
+    assert.equal(
+      FORBIDDEN_USER_SECURITY_FIELDS.includes(key as (typeof FORBIDDEN_USER_SECURITY_FIELDS)[number]),
+      false,
+      `forbidden field "${key}" exposed at ${path}.${key}`
+    );
+    assertNoForbiddenUserSecurityFields(record[key], `${path}.${key}`);
+  }
+}
+
 async function signupVerifyLogin(baseUrl: string, email: string) {
   const signup = await requestJson(baseUrl, "/api/v1/auth/signup", {
     method: "POST",
@@ -47,16 +74,16 @@ async function signupVerifyLogin(baseUrl: string, email: string) {
     body: { email, password: "Passw0rd!" }
   });
   assert.equal(login.status, 200);
+  const accessToken = login.body.data.accessToken as string | undefined;
+  assert.ok(typeof accessToken === "string" && accessToken.length > 0);
 
   const setCookie = login.headers.get("set-cookie");
-  const sid = readCookie(setCookie, "sid");
   const csrf = readCookie(setCookie, "csrfToken");
-  assert.ok(sid);
   assert.ok(csrf);
 
   return {
-    cookie: `sid=${encodeURIComponent(sid!)}; csrfToken=${encodeURIComponent(csrf!)}`,
-    csrfToken: csrf!
+    csrfToken: csrf!,
+    accessToken: accessToken!
   };
 }
 
@@ -71,35 +98,71 @@ async function run() {
   try {
     const suffix = Date.now();
     const auth = await signupVerifyLogin(baseUrl, `channel-regression-${suffix}@example.com`);
+    const csrfCookie = `csrfToken=${encodeURIComponent(auth.csrfToken)}`;
 
-    const meBefore = await requestJson(baseUrl, "/api/v1/auth/me", { cookie: auth.cookie });
+    const meBefore = await requestJson(baseUrl, "/api/v1/auth/me", {
+      headers: { authorization: `Bearer ${auth.accessToken}` }
+    });
     assert.equal(meBefore.status, 200);
     const userId = meBefore.body.data.user.id as string;
 
     const createChannel = await requestJson(baseUrl, "/api/v1/channels", {
       method: "POST",
-      cookie: auth.cookie,
-      headers: { "x-csrf-token": auth.csrfToken },
+      cookie: csrfCookie,
+      headers: {
+        authorization: `Bearer ${auth.accessToken}`,
+        "x-csrf-token": auth.csrfToken
+      },
       body: { name: "regression-channel" }
     });
     assert.equal(createChannel.status, 201);
 
-    const myChannels = await requestJson(baseUrl, "/api/v1/channels", { cookie: auth.cookie });
+    const myChannels = await requestJson(baseUrl, "/api/v1/channels", {
+      headers: { authorization: `Bearer ${auth.accessToken}` }
+    });
     assert.equal(myChannels.status, 200);
     assert.ok(myChannels.body.data.channels.length >= 1);
+    assertNoForbiddenUserSecurityFields(myChannels.body.data.channels, "channels");
+    const first = myChannels.body.data.channels[0];
+    assert.ok(first.creator, "creator must exist");
+    assert.ok(Array.isArray(first.users), "users must exist");
 
-    const meAfterChannelOps = await requestJson(baseUrl, "/api/v1/auth/me", { cookie: auth.cookie });
+    const meAfterChannelOps = await requestJson(baseUrl, "/api/v1/auth/me", {
+      headers: { authorization: `Bearer ${auth.accessToken}` }
+    });
     assert.equal(meAfterChannelOps.status, 200);
     assert.equal(meAfterChannelOps.body.data.user.id, userId);
 
+    const myChannelsByBearer = await requestJson(baseUrl, "/api/v1/channels", {
+      headers: { authorization: `Bearer ${auth.accessToken}` }
+    });
+    assert.equal(myChannelsByBearer.status, 200);
+    assert.ok(myChannelsByBearer.body.data.channels.length >= 1);
+
+    const createChannelByBearer = await requestJson(baseUrl, "/api/v1/channels", {
+      method: "POST",
+      cookie: csrfCookie,
+      headers: {
+        authorization: `Bearer ${auth.accessToken}`,
+        "x-csrf-token": auth.csrfToken
+      },
+      body: { name: "regression-channel-bearer" }
+    });
+    assert.equal(createChannelByBearer.status, 201);
+
     const logout = await requestJson(baseUrl, "/api/v1/auth/logout", {
       method: "POST",
-      cookie: auth.cookie,
-      headers: { "x-csrf-token": auth.csrfToken }
+      cookie: csrfCookie,
+      headers: {
+        authorization: `Bearer ${auth.accessToken}`,
+        "x-csrf-token": auth.csrfToken
+      }
     });
     assert.equal(logout.status, 200);
 
-    const meAfterLogout = await requestJson(baseUrl, "/api/v1/auth/me", { cookie: auth.cookie });
+    const meAfterLogout = await requestJson(baseUrl, "/api/v1/auth/me", {
+      headers: { authorization: `Bearer ${auth.accessToken}` }
+    });
     assert.equal(meAfterLogout.status, 401);
 
     console.log("integration: channel auth regression ok");

@@ -2,23 +2,26 @@ import { Inject, Injectable } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
 import { ERROR_CODES } from "@packages/contracts-auth";
 import { AuditLogService, type AuditContext } from "../audit-log/audit-log.service";
-import { PersistenceService } from "../persistence/persistence.service";
 import { SessionService } from "../session/session.service";
 import { failure, success } from "../shared/http-contract";
+import { ChannelPostRepository } from "./channel-post.repository";
 
 @Injectable()
 export class ChannelPostService {
   constructor(
-    private readonly persistence: PersistenceService,
+    private readonly repository: ChannelPostRepository,
     private readonly sessions: SessionService,
     private readonly auditLogs: AuditLogService,
     @Inject("CONTRACT_RUNTIME") private readonly _contracts: unknown
   ) {}
 
-  private async resolveUserBySid(sid?: string) {
-    const userId = await this.sessions.getUserId(sid);
+  private async resolveUser(input: { sid?: string; userId?: string }) {
+    if (input.userId) {
+      return this.repository.findUserById(input.userId);
+    }
+    const userId = await this.sessions.getUserId(input.sid);
     if (!userId) return null;
-    return this.persistence.findUserById(userId);
+    return this.repository.findUserById(userId);
   }
 
   private encodeCursor(input: { createdAt: string; id: string }): string {
@@ -44,24 +47,24 @@ export class ChannelPostService {
     }
   }
 
-  private async getActorWithMembership(input: { sid?: string; channelId: string }) {
-    const actor = await this.resolveUserBySid(input.sid);
+  private async getActorWithMembership(input: { sid?: string; userId?: string; channelId: string }) {
+    const actor = await this.resolveUser({ sid: input.sid, userId: input.userId });
     if (!actor) {
       return { kind: "error" as const, response: { status: 401, body: failure(ERROR_CODES.AUTH_SESSION_REQUIRED, "인증이 필요합니다") } };
     }
-    const channel = await this.persistence.findChannelById(input.channelId);
+    const channel = await this.repository.findChannelById(input.channelId);
     if (!channel) {
       return { kind: "error" as const, response: { status: 404, body: failure(ERROR_CODES.CHANNEL_NOT_FOUND, "채널을 찾을 수 없습니다") } };
     }
-    const membership = await this.persistence.findChannelMember(input.channelId, actor.id);
+    const membership = await this.repository.findChannelMember(input.channelId, actor.id);
     if (!membership) {
       return { kind: "error" as const, response: { status: 403, body: failure(ERROR_CODES.CHANNEL_PERMISSION_DENIED, "권한이 없습니다") } };
     }
     return { kind: "ok" as const, actor, membership };
   }
 
-  async createPost(input: { sid?: string; channelId: string; title: string; content: string }, context: AuditContext) {
-    const resolved = await this.getActorWithMembership({ sid: input.sid, channelId: input.channelId });
+  async createPost(input: { sid?: string; userId?: string; channelId: string; title: string; content: string }, context: AuditContext) {
+    const resolved = await this.getActorWithMembership({ sid: input.sid, userId: input.userId, channelId: input.channelId });
     if (resolved.kind === "error") return resolved.response;
     if (resolved.membership.role !== "owner" && resolved.membership.role !== "manager") {
       return { status: 403, body: failure(ERROR_CODES.CHANNEL_PERMISSION_DENIED, "권한이 없습니다") };
@@ -69,7 +72,7 @@ export class ChannelPostService {
 
     const now = new Date().toISOString();
     const postId = randomUUID();
-    await this.persistence.createChannelPost({
+    await this.repository.createChannelPost({
       id: postId,
       channelId: input.channelId,
       authorUserId: resolved.actor.id,
@@ -104,8 +107,8 @@ export class ChannelPostService {
     };
   }
 
-  async listPosts(input: { sid?: string; channelId: string; limit: number; cursor?: string }) {
-    const resolved = await this.getActorWithMembership({ sid: input.sid, channelId: input.channelId });
+  async listPosts(input: { sid?: string; userId?: string; channelId: string; limit: number; cursor?: string }) {
+    const resolved = await this.getActorWithMembership({ sid: input.sid, userId: input.userId, channelId: input.channelId });
     if (resolved.kind === "error") return resolved.response;
 
     const decodedCursor = this.decodeCursor(input.cursor);
@@ -113,7 +116,7 @@ export class ChannelPostService {
       return { status: 400, body: failure(ERROR_CODES.VALIDATION_ERROR, "cursor 형식이 올바르지 않습니다") };
     }
 
-    const rows = await this.persistence.listChannelPosts({
+    const rows = await this.repository.listChannelPosts({
       channelId: input.channelId,
       limit: input.limit,
       cursor: decodedCursor ?? undefined
@@ -144,7 +147,7 @@ export class ChannelPostService {
     const resolved = await this.getActorWithMembership({ sid: input.sid, channelId: input.channelId });
     if (resolved.kind === "error") return resolved.response;
 
-    const post = await this.persistence.findChannelPostById(input.channelId, input.postId);
+    const post = await this.repository.findChannelPostById(input.channelId, input.postId);
     if (!post) {
       return { status: 404, body: failure(ERROR_CODES.CHANNEL_POST_NOT_FOUND, "게시글을 찾을 수 없습니다") };
     }
@@ -175,7 +178,7 @@ export class ChannelPostService {
     }
 
     const now = new Date().toISOString();
-    const updated = await this.persistence.updateChannelPost({
+    const updated = await this.repository.updateChannelPost({
       channelId: input.channelId,
       postId: input.postId,
       title: typeof input.title === "string" ? input.title.trim() : undefined,
@@ -221,7 +224,7 @@ export class ChannelPostService {
       return { status: 403, body: failure(ERROR_CODES.CHANNEL_PERMISSION_DENIED, "권한이 없습니다") };
     }
 
-    const deleted = await this.persistence.softDeleteChannelPost(input.channelId, input.postId, new Date().toISOString());
+    const deleted = await this.repository.softDeleteChannelPost(input.channelId, input.postId, new Date().toISOString());
     if (!deleted) {
       return { status: 404, body: failure(ERROR_CODES.CHANNEL_POST_NOT_FOUND, "게시글을 찾을 수 없습니다") };
     }

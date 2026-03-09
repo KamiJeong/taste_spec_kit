@@ -1,8 +1,9 @@
 import { Body, Controller, Delete, Get, Param, Post, Req, Res, UseGuards } from "@nestjs/common";
 import { ApiBody, ApiParam, ApiTags } from "@nestjs/swagger";
 import type { Request, Response } from "express";
+import { AuthGuard } from "../shared/guards/auth.guard";
 import { CsrfGuard } from "../shared/guards/csrf.guard";
-import { cookieOf } from "../shared/request-cookie";
+import { requestAuthOf } from "../shared/request-auth";
 import { ApiOkCsrf, ApiOkUnauthorized, ApiOkValidation, ApiOkValidationCsrf } from "../shared/swagger-responses";
 import { ApiEndpoint, ApiSessionCookieAuth, ApiSessionMutationAuth } from "../shared/swagger-route";
 import { validateWithZod } from "../shared/zod-validation";
@@ -29,6 +30,7 @@ function auditContextFromReq(req: Request): { ip: string; userAgent: string } {
 
 @ApiTags("channels")
 @ApiSessionCookieAuth()
+@UseGuards(AuthGuard)
 @Controller("/api/v1/channels")
 export class ChannelController {
   constructor(private readonly channels: ChannelService) {}
@@ -43,8 +45,9 @@ export class ChannelController {
     const payload: CreateChannelBody = body;
     const validated = validateWithZod(createChannelSchema, payload);
     if (!validated.ok) return res.status(validated.response.status).json(validated.response.body);
+    const auth = requestAuthOf(req);
     const result = await this.channels.createChannel(
-      { sid: cookieOf(req, "sid"), name: validated.data.name },
+      { sid: auth.sid, userId: auth.userId, name: validated.data.name },
       auditContextFromReq(req)
     );
     return res.status(result.status).json(result.body);
@@ -54,7 +57,8 @@ export class ChannelController {
   @ApiOkUnauthorized("Channel list")
   @Get()
   async listMyChannels(@Req() req: Request, @Res() res: Response) {
-    const result = await this.channels.listMyChannels({ sid: cookieOf(req, "sid") });
+    const auth = requestAuthOf(req);
+    const result = await this.channels.listMyChannels({ sid: auth.sid, userId: auth.userId });
     return res.status(result.status).json(result.body);
   }
 
@@ -65,7 +69,8 @@ export class ChannelController {
   @UseGuards(CsrfGuard)
   @Post(":channelId/join-requests")
   async createJoinRequest(@Req() req: Request, @Param("channelId") channelId: string, @Res() res: Response) {
-    const result = await this.channels.createJoinRequest({ sid: cookieOf(req, "sid"), channelId }, auditContextFromReq(req));
+    const auth = requestAuthOf(req);
+    const result = await this.channels.createJoinRequest({ sid: auth.sid, channelId }, auditContextFromReq(req));
     return res.status(result.status).json(result.body);
   }
 
@@ -74,7 +79,8 @@ export class ChannelController {
   @ApiOkUnauthorized("Pending requests")
   @Get(":channelId/join-requests")
   async listPendingRequests(@Req() req: Request, @Param("channelId") channelId: string, @Res() res: Response) {
-    const result = await this.channels.listPendingRequests({ sid: cookieOf(req, "sid"), channelId });
+    const auth = requestAuthOf(req);
+    const result = await this.channels.listPendingRequests({ sid: auth.sid, channelId });
     return res.status(result.status).json(result.body);
   }
 
@@ -91,8 +97,9 @@ export class ChannelController {
     @Param("requestId") requestId: string,
     @Res() res: Response
   ) {
+    const auth = requestAuthOf(req);
     const result = await this.channels.reviewJoinRequest(
-      { sid: cookieOf(req, "sid"), channelId, requestId, decision: "approved" },
+      { sid: auth.sid, channelId, requestId, decision: "approved" },
       auditContextFromReq(req)
     );
     return res.status(result.status).json(result.body);
@@ -111,8 +118,9 @@ export class ChannelController {
     @Param("requestId") requestId: string,
     @Res() res: Response
   ) {
+    const auth = requestAuthOf(req);
     const result = await this.channels.reviewJoinRequest(
-      { sid: cookieOf(req, "sid"), channelId, requestId, decision: "rejected" },
+      { sid: auth.sid, channelId, requestId, decision: "rejected" },
       auditContextFromReq(req)
     );
     return res.status(result.status).json(result.body);
@@ -134,8 +142,9 @@ export class ChannelController {
     const payload: AddManagerBody = body;
     const validated = validateWithZod(addManagerSchema, payload);
     if (!validated.ok) return res.status(validated.response.status).json(validated.response.body);
+    const auth = requestAuthOf(req);
     const result = await this.channels.addManager(
-      { sid: cookieOf(req, "sid"), channelId, targetUserId: validated.data.userId },
+      { sid: auth.sid, channelId, targetUserId: validated.data.userId },
       auditContextFromReq(req)
     );
     return res.status(result.status).json(result.body);
@@ -154,8 +163,9 @@ export class ChannelController {
     @Param("userId") userId: string,
     @Res() res: Response
   ) {
+    const auth = requestAuthOf(req);
     const result = await this.channels.removeManager(
-      { sid: cookieOf(req, "sid"), channelId, targetUserId: userId },
+      { sid: auth.sid, channelId, targetUserId: userId },
       auditContextFromReq(req)
     );
     return res.status(result.status).json(result.body);
@@ -177,8 +187,9 @@ export class ChannelController {
     const payload: KickMemberBody = body;
     const validated = validateWithZod(kickMemberSchema, payload);
     if (!validated.ok) return res.status(validated.response.status).json(validated.response.body);
+    const auth = requestAuthOf(req);
     const result = await this.channels.kickMember(
-      { sid: cookieOf(req, "sid"), channelId, targetUserId: validated.data.userId },
+      { sid: auth.sid, channelId, targetUserId: validated.data.userId },
       auditContextFromReq(req)
     );
     return res.status(result.status).json(result.body);
@@ -191,7 +202,8 @@ export class ChannelController {
   @UseGuards(CsrfGuard)
   @Post(":channelId/quit")
   async quitChannel(@Req() req: Request, @Param("channelId") channelId: string, @Res() res: Response) {
-    const result = await this.channels.quitChannel({ sid: cookieOf(req, "sid"), channelId }, auditContextFromReq(req));
+    const auth = requestAuthOf(req);
+    const result = await this.channels.quitChannel({ sid: auth.sid, channelId }, auditContextFromReq(req));
     return res.status(result.status).json(result.body);
   }
 
@@ -210,9 +222,10 @@ export class ChannelController {
   ) {
     const validated = validateWithZod(transferOwnershipSchema, body);
     if (!validated.ok) return res.status(validated.response.status).json(validated.response.body);
+    const auth = requestAuthOf(req);
     const result = await this.channels.transferOwnership(
       {
-        sid: cookieOf(req, "sid"),
+        sid: auth.sid,
         channelId,
         targetUserId: validated.data.targetUserId,
         previousOwnerRole: validated.data.previousOwnerRole ?? "manager"
@@ -232,7 +245,8 @@ export class ChannelController {
     const payload: ReorderChannelsBody = body;
     const validated = validateWithZod(reorderChannelsSchema, payload);
     if (!validated.ok) return res.status(validated.response.status).json(validated.response.body);
-    const result = await this.channels.reorderOwnedChannels({ sid: cookieOf(req, "sid"), channelIds: validated.data.channelIds });
+    const auth = requestAuthOf(req);
+    const result = await this.channels.reorderOwnedChannels({ sid: auth.sid, channelIds: validated.data.channelIds });
     return res.status(result.status).json(result.body);
   }
 
@@ -246,7 +260,8 @@ export class ChannelController {
     const payload: ReorderChannelsBody = body;
     const validated = validateWithZod(reorderChannelsSchema, payload);
     if (!validated.ok) return res.status(validated.response.status).json(validated.response.body);
-    const result = await this.channels.reorderMyChannels({ sid: cookieOf(req, "sid"), channelIds: validated.data.channelIds });
+    const auth = requestAuthOf(req);
+    const result = await this.channels.reorderMyChannels({ sid: auth.sid, channelIds: validated.data.channelIds });
     return res.status(result.status).json(result.body);
   }
 }

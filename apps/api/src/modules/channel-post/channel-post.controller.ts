@@ -1,8 +1,9 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, Res, UseGuards } from "@nestjs/common";
 import { ApiBody, ApiParam, ApiQuery, ApiTags } from "@nestjs/swagger";
 import type { Request, Response } from "express";
+import { AuthGuard } from "../shared/guards/auth.guard";
 import { CsrfGuard } from "../shared/guards/csrf.guard";
-import { cookieOf } from "../shared/request-cookie";
+import { requestAuthOf } from "../shared/request-auth";
 import { ApiOkCsrf, ApiOkUnauthorized, ApiOkValidationCsrf } from "../shared/swagger-responses";
 import { ApiEndpoint, ApiSessionCookieAuth, ApiSessionMutationAuth } from "../shared/swagger-route";
 import { validateWithZod } from "../shared/zod-validation";
@@ -25,6 +26,7 @@ function auditContextFromReq(req: Request): { ip: string; userAgent: string } {
 
 @ApiTags("channel-posts")
 @ApiSessionCookieAuth()
+@UseGuards(AuthGuard)
 @Controller("/api/v1/channels/:channelId/posts")
 export class ChannelPostController {
   constructor(private readonly posts: ChannelPostService) {}
@@ -45,9 +47,11 @@ export class ChannelPostController {
     const payload: CreateChannelPostBody = body;
     const validated = validateWithZod(createChannelPostSchema, payload);
     if (!validated.ok) return res.status(validated.response.status).json(validated.response.body);
+    const auth = requestAuthOf(req);
     const result = await this.posts.createPost(
       {
-        sid: cookieOf(req, "sid"),
+        sid: auth.sid,
+        userId: auth.userId,
         channelId,
         title: validated.data.title,
         content: validated.data.content
@@ -72,8 +76,10 @@ export class ChannelPostController {
   ) {
     const validated = validateWithZod(listChannelPostsQuerySchema, { limit: limit ?? 20, cursor });
     if (!validated.ok) return res.status(validated.response.status).json(validated.response.body);
+    const auth = requestAuthOf(req);
     const result = await this.posts.listPosts({
-      sid: cookieOf(req, "sid"),
+      sid: auth.sid,
+      userId: auth.userId,
       channelId,
       limit: validated.data.limit,
       cursor: validated.data.cursor
@@ -87,7 +93,8 @@ export class ChannelPostController {
   @ApiOkUnauthorized("Post detail")
   @Get(":postId")
   async getPost(@Req() req: Request, @Param("channelId") channelId: string, @Param("postId") postId: string, @Res() res: Response) {
-    const result = await this.posts.getPost({ sid: cookieOf(req, "sid"), channelId, postId });
+    const auth = requestAuthOf(req);
+    const result = await this.posts.getPost({ sid: auth.sid, channelId, postId });
     return res.status(result.status).json(result.body);
   }
 
@@ -109,9 +116,10 @@ export class ChannelPostController {
     const payload: UpdateChannelPostBody = body;
     const validated = validateWithZod(updateChannelPostSchema, payload);
     if (!validated.ok) return res.status(validated.response.status).json(validated.response.body);
+    const auth = requestAuthOf(req);
     const result = await this.posts.updatePost(
       {
-        sid: cookieOf(req, "sid"),
+        sid: auth.sid,
         channelId,
         postId,
         title: validated.data.title,
@@ -136,7 +144,8 @@ export class ChannelPostController {
     @Param("postId") postId: string,
     @Res() res: Response
   ) {
-    const result = await this.posts.deletePost({ sid: cookieOf(req, "sid"), channelId, postId }, auditContextFromReq(req));
+    const auth = requestAuthOf(req);
+    const result = await this.posts.deletePost({ sid: auth.sid, channelId, postId }, auditContextFromReq(req));
     return res.status(result.status).json(result.body);
   }
 }

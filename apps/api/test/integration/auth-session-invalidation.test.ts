@@ -57,41 +57,41 @@ async function run() {
       method: "POST",
       body: { email: "invalidate-all@example.com", password: "Passw0rd!" }
     });
+    const accessTokenA = loginA.body?.data?.accessToken as string | undefined;
+    assert.ok(accessTokenA);
     const setCookieA = loginA.headers.get("set-cookie");
-    const sidA = readCookie(setCookieA, "sid");
     const csrfA = readCookie(setCookieA, "csrfToken");
     assert.equal(loginA.status, 200);
-    assert.ok(sidA);
     assert.ok(csrfA);
-    const cookieA = `sid=${encodeURIComponent(sidA!)}; csrfToken=${encodeURIComponent(csrfA!)}`;
+    const cookieA = `csrfToken=${encodeURIComponent(csrfA!)}`;
 
     const loginB = await requestJson(baseUrl, "/api/v1/auth/login", {
       method: "POST",
       body: { email: "invalidate-all@example.com", password: "Passw0rd!" }
     });
+    const accessTokenB = loginB.body?.data?.accessToken as string | undefined;
+    assert.ok(accessTokenB);
     const setCookieB = loginB.headers.get("set-cookie");
-    const sidB = readCookie(setCookieB, "sid");
     const csrfB = readCookie(setCookieB, "csrfToken");
     assert.equal(loginB.status, 200);
-    assert.ok(sidB);
     assert.ok(csrfB);
-    const cookieB = `sid=${encodeURIComponent(sidB!)}; csrfToken=${encodeURIComponent(csrfB!)}`;
+    const cookieB = `csrfToken=${encodeURIComponent(csrfB!)}`;
 
-    const meA = await requestJson(baseUrl, "/api/v1/auth/me", { cookie: cookieA });
-    const meB = await requestJson(baseUrl, "/api/v1/auth/me", { cookie: cookieB });
+    const meA = await requestJson(baseUrl, "/api/v1/auth/me", { headers: { authorization: `Bearer ${accessTokenA}` } });
+    const meB = await requestJson(baseUrl, "/api/v1/auth/me", { headers: { authorization: `Bearer ${accessTokenB}` } });
     assert.equal(meA.status, 200);
     assert.equal(meB.status, 200);
 
     const deactivate = await requestJson(baseUrl, "/api/v1/users/deactivate", {
       method: "POST",
       cookie: cookieA,
-      headers: { "x-csrf-token": csrfA! },
+      headers: { authorization: `Bearer ${accessTokenA}`, "x-csrf-token": csrfA! },
       body: { password: "Passw0rd!" }
     });
     assert.equal(deactivate.status, 200);
 
-    const meAfterA = await requestJson(baseUrl, "/api/v1/auth/me", { cookie: cookieA });
-    const meAfterB = await requestJson(baseUrl, "/api/v1/auth/me", { cookie: cookieB });
+    const meAfterA = await requestJson(baseUrl, "/api/v1/auth/me", { headers: { authorization: `Bearer ${accessTokenA}` } });
+    const meAfterB = await requestJson(baseUrl, "/api/v1/auth/me", { headers: { authorization: `Bearer ${accessTokenB}` } });
     assert.equal(meAfterA.status, 401);
     assert.equal(meAfterB.status, 401);
     assert.equal(meAfterA.body.code, "AUTH_SESSION_REQUIRED");

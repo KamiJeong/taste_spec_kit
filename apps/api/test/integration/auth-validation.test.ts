@@ -5,19 +5,27 @@ import { createApp } from "../../src/main";
 async function requestJson(
   baseUrl: string,
   path: string,
-  options: { method?: string; body?: unknown; cookie?: string } = {}
+  options: { method?: string; body?: unknown; cookie?: string; headers?: Record<string, string> } = {}
 ) {
   const res = await fetch(`${baseUrl}${path}`, {
     method: options.method ?? "GET",
     headers: {
       "content-type": "application/json",
-      ...(options.cookie ? { cookie: options.cookie } : {})
+      ...(options.cookie ? { cookie: options.cookie } : {}),
+      ...(options.headers ?? {})
     },
     body: options.body ? JSON.stringify(options.body) : undefined
   });
 
   const json = (await res.json()) as any;
   return { status: res.status, headers: res.headers, body: json };
+}
+
+function readCookie(raw: string | null, name: string): string | undefined {
+  if (!raw) return undefined;
+  const match = raw.match(new RegExp(`${name}=([^;,\n]+)`));
+  if (!match) return undefined;
+  return decodeURIComponent(match[1]);
 }
 
 async function run() {
@@ -47,8 +55,29 @@ async function run() {
     assert.equal(invalidLogin.status, 400);
     assert.equal(invalidLogin.body.code, "VALIDATION_ERROR");
 
+    const email = `validation-${Date.now()}@example.com`;
+    const signup = await requestJson(baseUrl, "/api/v1/auth/signup", {
+      method: "POST",
+      body: { email, password: "Passw0rd!", name: "Validation User" }
+    });
+    assert.equal(signup.status, 201);
+    const verify = await requestJson(baseUrl, `/api/v1/auth/verify-email?token=${signup.body.data.verificationToken}`);
+    assert.equal(verify.status, 200);
+    const login = await requestJson(baseUrl, "/api/v1/auth/login", {
+      method: "POST",
+      body: { email, password: "Passw0rd!" }
+    });
+    assert.equal(login.status, 200);
+    const accessToken = login.body?.data?.accessToken as string | undefined;
+    assert.ok(accessToken);
+    const csrf = readCookie(login.headers.get("set-cookie"), "csrfToken");
+    assert.ok(csrf);
+    const csrfCookie = `csrfToken=${encodeURIComponent(csrf!)}`;
+
     const invalidPatch = await requestJson(baseUrl, "/api/v1/users/profile", {
       method: "PATCH",
+      cookie: csrfCookie,
+      headers: { authorization: `Bearer ${accessToken}`, "x-csrf-token": csrf! },
       body: {}
     });
     assert.equal(invalidPatch.status, 400);
@@ -56,6 +85,8 @@ async function run() {
 
     const invalidDeactivate = await requestJson(baseUrl, "/api/v1/users/deactivate", {
       method: "POST",
+      cookie: csrfCookie,
+      headers: { authorization: `Bearer ${accessToken}`, "x-csrf-token": csrf! },
       body: { password: "" }
     });
     assert.equal(invalidDeactivate.status, 400);

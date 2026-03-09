@@ -35,12 +35,13 @@ async function run() {
   const address = server.address();
   const port = typeof address === "object" && address ? address.port : 0;
   const baseUrl = `http://127.0.0.1:${port}`;
+  const email = `security-baseline-${Date.now()}@example.com`;
 
   try {
     const signup = await requestJson(baseUrl, "/api/v1/auth/signup", {
       method: "POST",
       body: {
-        email: "security-baseline@example.com",
+        email,
         password: "Passw0rd!",
         name: "Security Baseline"
       }
@@ -55,20 +56,21 @@ async function run() {
 
     const login = await requestJson(baseUrl, "/api/v1/auth/login", {
       method: "POST",
-      body: { email: "security-baseline@example.com", password: "Passw0rd!" }
+      body: { email, password: "Passw0rd!" }
     });
     assert.equal(login.status, 200);
 
+    const accessToken = login.body?.data?.accessToken as string | undefined;
+    assert.ok(accessToken);
     const setCookie = login.headers.get("set-cookie");
-    const sid = readCookie(setCookie, "sid");
     const csrf = readCookie(setCookie, "csrfToken");
-    assert.ok(sid);
     assert.ok(csrf);
-    const cookie = `sid=${encodeURIComponent(sid!)}; csrfToken=${encodeURIComponent(csrf!)}`;
+    const csrfCookie = `csrfToken=${encodeURIComponent(csrf!)}`;
 
     const patchWithoutCsrf = await requestJson(baseUrl, "/api/v1/users/profile", {
       method: "PATCH",
-      cookie,
+      cookie: csrfCookie,
+      headers: { authorization: `Bearer ${accessToken}` },
       body: { name: "No Csrf" }
     });
     assert.equal(patchWithoutCsrf.status, 403);
@@ -76,23 +78,24 @@ async function run() {
 
     const patchWithCsrf = await requestJson(baseUrl, "/api/v1/users/profile", {
       method: "PATCH",
-      cookie,
-      headers: { "x-csrf-token": csrf! },
+      cookie: csrfCookie,
+      headers: { authorization: `Bearer ${accessToken}`, "x-csrf-token": csrf! },
       body: { name: "With Csrf" }
     });
     assert.equal(patchWithCsrf.status, 200);
 
     const logoutWithoutCsrf = await requestJson(baseUrl, "/api/v1/auth/logout", {
       method: "POST",
-      cookie
+      cookie: csrfCookie,
+      headers: { authorization: `Bearer ${accessToken}` }
     });
     assert.equal(logoutWithoutCsrf.status, 403);
     assert.equal(logoutWithoutCsrf.body.code, "AUTH_CSRF_INVALID");
 
     const logoutWithCsrf = await requestJson(baseUrl, "/api/v1/auth/logout", {
       method: "POST",
-      cookie,
-      headers: { "x-csrf-token": csrf! }
+      cookie: csrfCookie,
+      headers: { authorization: `Bearer ${accessToken}`, "x-csrf-token": csrf! }
     });
     assert.equal(logoutWithCsrf.status, 200);
 
