@@ -161,8 +161,17 @@ Related env flags:
 
 GraphQL manual test template:
 
-- [`apps/api/docs/graphql-manual-test-template.md`](./apps/api/docs/graphql-manual-test-template.md)
+- New user onboarding guide: [`docs/graphql/README.md`](./docs/graphql/README.md)
+- Shared quick template: [`docs/graphql/test-template.md`](./docs/graphql/test-template.md)
+- Full manual template: [`docs/graphql/manual-test-template.md`](./docs/graphql/manual-test-template.md)
 - Local UI placeholder page: `http://localhost:3000/graphql/ui` (non-production default)
+
+Auth guard policy (REST + GraphQL):
+
+- Protected endpoints use shared `AuthGuard`
+- Auth source: `Authorization: Bearer <access-token>`
+- Unauthorized code: `AUTH_SESSION_REQUIRED`
+- CSRF required for all state-changing requests (`x-csrf-token` == `csrfToken` cookie), including bearer-auth mutations
 
 ## Testing
 

@@ -28,5 +28,6 @@ Tech-Stack: specs/00-tech-stack.md
 
 ## Phase 5: Documentation & Rollout
 
-- [x] GQL-T013 README/운영 문서에 GraphQL 사용 범위 명시
+- [x] GQL-T013 README/운영 문서에 GraphQL 사용 범위 및 AuthGuard(REST+GraphQL) 정책 명시
 - [ ] GQL-T014 complexity/depth 제한 도입 계획 기록
+- [x] GQL-T015 GraphQL 테스트 템플릿 문서 공유 경로 정리 (`docs/graphql/README.md`, `docs/graphql/test-template.md`, `docs/graphql/manual-test-template.md`)
