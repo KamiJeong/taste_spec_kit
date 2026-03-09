@@ -26,18 +26,25 @@ REST를 유지한 상태에서 GraphQL foundation을 병행 구축한다.
 
 - `apps/api/src/modules/graphql/`
   - `graphql.module.ts`
-  - scalar/common utils(필요 시)
+  - `common/graphql-context.ts`
+  - `common/graphql-response.ts`
+  - `common/graphql-csrf.ts`
+  - `common/graphql-audit.ts`
 - 도메인 resolver(기존 모듈 병행)
+  - `apps/api/src/modules/auth/auth.resolver.ts`
+  - `apps/api/src/modules/user/user.resolver.ts`
+  - `apps/api/src/modules/channel/channel.resolver.ts`
   - `apps/api/src/modules/channel-post/channel-post.resolver.ts`
-  - DTO/GraphQL object/input 타입
+  - 각 모듈 `graphql/*.types.ts`로 ObjectType 분리
 - App wiring
-  - `app.module.ts`에 GraphQLModule 등록
+  - `apps/api/src/modules/index.ts`에서 `API_GRAPHQL_ENABLED` 기반 `ApiGraphqlModule` 조건부 등록
   - env flag 기반 introspection/playground 제어
 
 ## Security & Policy
 
 - 기존 auth/session 컨텍스트를 GraphQL context에 주입
 - role guard 재사용 또는 동일 규칙 guard 추가
+- GraphQL Query는 인증만 요구, Mutation은 CSRF 검증 추가 적용
 - production 기본값:
   - introspection: off
   - playground: off
@@ -49,12 +56,14 @@ REST를 유지한 상태에서 GraphQL foundation을 병행 구축한다.
   - resolver-level 권한 분기
 - Integration:
   - `/graphql` Query/Mutation 성공/실패 케이스
+  - `API_GRAPHQL_ENABLED=false`일 때 `/graphql`, `/graphql/ui` 404 검증
   - 비인증/비권한 접근 차단 검증
 - Regression:
   - 기존 REST test suite 통과
 
 ## Delivery Phases
 
-1. GraphQL foundation setup (dependency + module wiring)
-2. Channel-post minimal Query/Mutation
-3. Security hardening + tests + docs
+1. GraphQL foundation setup (dependency + module wiring + kill switch)
+2. Domain surface 확장(auth/user/channel/channel-post)
+3. Security hardening(CSRF for mutation) + tests + docs
+4. Resolver 구조 정리(공통 유틸 + 타입 파일 분리)

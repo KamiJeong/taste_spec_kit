@@ -7,12 +7,13 @@ import { TokenModule } from "../token/token.module";
 import { SharedModule } from "../shared/shared.module";
 import { AuthController } from "./auth.controller";
 import { AuthRepository } from "./auth.repository";
+import { AuthResolver } from "./auth.resolver";
 import { AuthService } from "./auth.service";
 
 @Module({
   imports: [DatabaseModule, SessionModule, TokenModule, MailModule, AuditLogModule, SharedModule],
   controllers: [AuthController],
-  providers: [AuthRepository, AuthService],
+  providers: [AuthRepository, AuthService, AuthResolver],
   exports: [AuthService]
 })
 export class AuthModule {}

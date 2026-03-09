@@ -6,12 +6,13 @@ import { SharedModule } from "../shared/shared.module";
 import { TokenModule } from "../token/token.module";
 import { UserController } from "./user.controller";
 import { UserRepository } from "./user.repository";
+import { UserResolver } from "./user.resolver";
 import { UserService } from "./user.service";
 
 @Module({
   imports: [DatabaseModule, SessionModule, AuditLogModule, SharedModule, TokenModule],
   controllers: [UserController],
-  providers: [UserRepository, UserService],
+  providers: [UserRepository, UserService, UserResolver],
   exports: [UserService]
 })
 export class UserModule {}

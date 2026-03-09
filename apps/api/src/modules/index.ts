@@ -12,9 +12,20 @@ import { AuditLogModule } from "./audit-log/audit-log.module";
 import { DatabaseModule } from "./database/database.module";
 import { SharedModule } from "./shared/shared.module";
 
+function envBool(name: string, fallback: boolean): boolean {
+  const raw = process.env[name];
+  if (typeof raw !== "string" || raw.trim() === "") return fallback;
+  const value = raw.trim().toLowerCase();
+  return value === "1" || value === "true" || value === "yes" || value === "on";
+}
+
+function isGraphqlEnabled(): boolean {
+  return envBool("API_GRAPHQL_ENABLED", true);
+}
+
 @Module({
   imports: [
-    ApiGraphqlModule,
+    ...(isGraphqlEnabled() ? [ApiGraphqlModule] : []),
     SharedModule,
     DatabaseModule,
     SessionModule,
