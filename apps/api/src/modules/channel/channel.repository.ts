@@ -17,7 +17,6 @@ export interface ChannelPublicUser {
   id: string;
   email: string;
   name: string | null;
-  emailVerified: boolean;
 }
 
 @Injectable()
@@ -100,7 +99,7 @@ export class ChannelRepository {
     const userIds = [...new Set(members.map((row) => row.userId))];
     const users = await this.database.db.query.usersTable.findMany({
       where: inArray(usersTable.id, userIds),
-      columns: { id: true, email: true, name: true, emailVerified: true }
+      columns: { id: true, email: true, name: true }
     });
     const usersById = new Map(users.map((row) => [row.id, row] as const));
 
@@ -116,8 +115,7 @@ export class ChannelRepository {
         user: {
           id: user.id,
           email: user.email,
-          name: user.name ?? null,
-          emailVerified: user.emailVerified
+          name: user.name ?? null
         }
       });
     }
@@ -277,4 +275,3 @@ export class ChannelRepository {
     });
   }
 }
-

@@ -58,17 +58,17 @@ async function run() {
       body: { email: "p3@example.com", password: "Passw0rd!" }
     });
     assert.equal(login.status, 200);
+    const accessToken = login.body?.data?.accessToken as string | undefined;
+    assert.ok(accessToken);
     const setCookie = login.headers.get("set-cookie");
-    const sid = readCookie(setCookie, "sid");
     const csrf = readCookie(setCookie, "csrfToken");
-    assert.ok(sid);
     assert.ok(csrf);
-    const cookie = `sid=${encodeURIComponent(sid!)}; csrfToken=${encodeURIComponent(csrf!)}`;
+    const csrfCookie = `csrfToken=${encodeURIComponent(csrf!)}`;
 
     const invalidDeletionReq = await requestJson(baseUrl, "/api/v1/users/request-deletion", {
       method: "POST",
-      cookie,
-      headers: { "x-csrf-token": csrf! },
+      cookie: csrfCookie,
+      headers: { authorization: `Bearer ${accessToken}`, "x-csrf-token": csrf! },
       body: { password: "WrongPassw0rd!" }
     });
     assert.equal(invalidDeletionReq.status, 401);
@@ -76,8 +76,8 @@ async function run() {
 
     const requestDeletion = await requestJson(baseUrl, "/api/v1/users/request-deletion", {
       method: "POST",
-      cookie,
-      headers: { "x-csrf-token": csrf! },
+      cookie: csrfCookie,
+      headers: { authorization: `Bearer ${accessToken}`, "x-csrf-token": csrf! },
       body: { password: "Passw0rd!" }
     });
     assert.equal(requestDeletion.status, 200);
@@ -86,16 +86,16 @@ async function run() {
 
     const cancelDeletion = await requestJson(baseUrl, "/api/v1/users/cancel-deletion", {
       method: "POST",
-      cookie,
-      headers: { "x-csrf-token": csrf! }
+      cookie: csrfCookie,
+      headers: { authorization: `Bearer ${accessToken}`, "x-csrf-token": csrf! }
     });
     assert.equal(cancelDeletion.status, 200);
     assert.equal(cancelDeletion.body.data.accountState, "ACTIVE");
 
     const invalidDeactivate = await requestJson(baseUrl, "/api/v1/users/deactivate", {
       method: "POST",
-      cookie,
-      headers: { "x-csrf-token": csrf! },
+      cookie: csrfCookie,
+      headers: { authorization: `Bearer ${accessToken}`, "x-csrf-token": csrf! },
       body: { password: "WrongPassw0rd!" }
     });
     assert.equal(invalidDeactivate.status, 401);
@@ -103,8 +103,8 @@ async function run() {
 
     const deactivate = await requestJson(baseUrl, "/api/v1/users/deactivate", {
       method: "POST",
-      cookie,
-      headers: { "x-csrf-token": csrf! },
+      cookie: csrfCookie,
+      headers: { authorization: `Bearer ${accessToken}`, "x-csrf-token": csrf! },
       body: { password: "Passw0rd!" }
     });
     assert.equal(deactivate.status, 200);
@@ -112,7 +112,7 @@ async function run() {
     assert.ok((deactivate.headers.get("set-cookie") ?? "").includes("Max-Age=0"));
 
     const meAfterDeactivate = await requestJson(baseUrl, "/api/v1/auth/me", {
-      cookie
+      headers: { authorization: `Bearer ${accessToken}` }
     });
     assert.equal(meAfterDeactivate.status, 401);
     assert.equal(meAfterDeactivate.body.code, "AUTH_SESSION_REQUIRED");

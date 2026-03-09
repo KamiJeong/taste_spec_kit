@@ -1,12 +1,12 @@
 import { applyDecorators } from "@nestjs/common";
-import { ApiCookieAuth, ApiHeader, ApiOperation } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiHeader, ApiOperation } from "@nestjs/swagger";
 
 export function ApiEndpoint(summary: string) {
   return applyDecorators(ApiOperation({ summary }));
 }
 
 export function ApiSessionCookieAuth() {
-  return applyDecorators(ApiCookieAuth("sid"));
+  return applyDecorators(ApiBearerAuth());
 }
 
 export function ApiCsrfHeader() {

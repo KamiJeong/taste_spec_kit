@@ -1,9 +1,11 @@
 import { Args, Context, Field, Int, Mutation, ObjectType, Query, Resolver } from "@nestjs/graphql";
+import { UseGuards } from "@nestjs/common";
 import { GraphQLError } from "graphql";
 import { ERROR_CODES } from "@packages/contracts-auth";
 import type { Request } from "express";
+import { AuthGuard } from "../shared/guards/auth.guard";
 import { cookieOf } from "../shared/request-cookie";
-import { TokenService } from "../token/token.service";
+import { requestAuthOf } from "../shared/request-auth";
 import { validateWithZod } from "../shared/zod-validation";
 import { createChannelSchema } from "./channel.schemas";
 import { ChannelService } from "./channel.service";
@@ -74,9 +76,6 @@ class ChannelUserNode {
 
   @Field(() => String, { nullable: true })
   name!: string | null;
-
-  @Field()
-  emailVerified!: boolean;
 }
 
 @ObjectType()
@@ -113,33 +112,11 @@ class CreateChannelResult {
 }
 
 @Resolver()
+@UseGuards(AuthGuard)
 export class ChannelResolver {
-  constructor(
-    private readonly channels: ChannelService,
-    private readonly tokens: TokenService
-  ) {}
-
-  private extractBearerToken(req: Request): string | null {
-    const header = req.headers.authorization;
-    if (typeof header !== "string") return null;
-    const [scheme, value] = header.trim().split(/\s+/, 2);
-    if (scheme?.toLowerCase() !== "bearer" || !value) return null;
-    return value;
-  }
-
-  private resolveAuth(req: Request): { sid?: string; userId?: string } {
-    const sidFromCookie = cookieOf(req, "sid");
-    if (sidFromCookie) return { sid: sidFromCookie };
-    const bearer = this.extractBearerToken(req);
-    if (!bearer) return {};
-    const verified = this.tokens.verifyAccessToken(bearer);
-    if (!verified) return {};
-    return { userId: verified.userId };
-  }
+  constructor(private readonly channels: ChannelService) {}
 
   private ensureCsrfForMutation(req: Request): void {
-    const sid = cookieOf(req, "sid");
-    if (!sid) return;
     const csrfCookie = cookieOf(req, "csrfToken");
     const csrfHeader = req.headers["x-csrf-token"];
     const valid =
@@ -166,7 +143,7 @@ export class ChannelResolver {
 
   @Query(() => ChannelListResult, { name: "myChannels" })
   async myChannels(@Context() context: GraphqlContext): Promise<ChannelListResult> {
-    const auth = this.resolveAuth(context.req);
+    const auth = requestAuthOf(context.req);
     const result = await this.channels.listMyChannels({ sid: auth.sid, userId: auth.userId });
     if (!result.body.success) {
       throw toGraphqlError(result as ServiceResponse<unknown>);
@@ -182,7 +159,7 @@ export class ChannelResolver {
       throw toGraphqlError(validated.response as ServiceResponse<unknown>);
     }
 
-    const auth = this.resolveAuth(context.req);
+    const auth = requestAuthOf(context.req);
     const result = await this.channels.createChannel({ sid: auth.sid, userId: auth.userId, name: validated.data.name }, this.toAuditContext(context.req));
     if (!result.body.success) {
       throw toGraphqlError(result as ServiceResponse<unknown>);
