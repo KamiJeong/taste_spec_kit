@@ -3,7 +3,9 @@ import { randomUUID } from "node:crypto";
 import { ERROR_CODES } from "@packages/contracts-auth";
 import { AuditLogService, type AuditContext } from "../audit-log/audit-log.service";
 import { SessionService } from "../session/session.service";
-import { failure, success } from "../shared/http-contract";
+import { fail } from "../shared/fail";
+import { success } from "../shared/http-contract";
+import { SUCCESS_CODES } from "../shared/success-codes";
 import { ChannelRepository, type ChannelPublicUser } from "./channel.repository";
 import {
   canKickTarget,
@@ -93,12 +95,12 @@ export class ChannelService {
   async createChannel(input: { sid?: string; userId?: string; name: string }, context: AuditContext) {
     const user = await this.resolveUser({ sid: input.sid, userId: input.userId });
     if (!user) {
-      return { status: 401, body: failure(ERROR_CODES.AUTH_SESSION_REQUIRED, "인증이 필요합니다") };
+      return { status: 401, body: fail(ERROR_CODES.AUTH_SESSION_REQUIRED) };
     }
 
     const owned = await this.repository.countOwnedChannels(user.id);
     if (owned >= MAX_OWNED_CHANNELS) {
-      return { status: 409, body: failure(ERROR_CODES.CHANNEL_CREATE_LIMIT_REACHED, "채널 생성 한도를 초과했습니다") };
+      return { status: 409, body: fail(ERROR_CODES.CHANNEL_CREATE_LIMIT_REACHED) };
     }
 
     const now = new Date().toISOString();
@@ -142,7 +144,7 @@ export class ChannelService {
   async listMyChannels(input: { sid?: string; userId?: string }) {
     const user = await this.resolveUser({ sid: input.sid, userId: input.userId });
     if (!user) {
-      return { status: 401, body: failure(ERROR_CODES.AUTH_SESSION_REQUIRED, "인증이 필요합니다") };
+      return { status: 401, body: fail(ERROR_CODES.AUTH_SESSION_REQUIRED) };
     }
 
     const channels = await this.repository.listUserChannels(user.id);
@@ -196,7 +198,7 @@ export class ChannelService {
   async createJoinRequest(input: { sid?: string; channelId: string }, context: AuditContext) {
     const user = await this.resolveUser({ sid: input.sid });
     if (!user) {
-      return { status: 401, body: failure(ERROR_CODES.AUTH_SESSION_REQUIRED, "인증이 필요합니다") };
+      return { status: 401, body: fail(ERROR_CODES.AUTH_SESSION_REQUIRED) };
     }
 
     const joinRequestRateLimitMax = this.envInt("CHANNEL_JOIN_REQUEST_RATE_LIMIT_MAX", DEFAULT_JOIN_REQUEST_RATE_LIMIT_MAX);
@@ -205,28 +207,28 @@ export class ChannelService {
     if (this.isRateLimited(joinRequestRateKey, joinRequestRateLimitMax, rateLimitWindowMs)) {
       return {
         status: 429,
-        body: failure(ERROR_CODES.RATE_LIMIT_EXCEEDED, "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요")
+        body: fail(ERROR_CODES.RATE_LIMIT_EXCEEDED)
       };
     }
 
     const channel = await this.repository.findChannelById(input.channelId);
     if (!channel) {
-      return { status: 404, body: failure(ERROR_CODES.CHANNEL_NOT_FOUND, "채널을 찾을 수 없습니다") };
+      return { status: 404, body: fail(ERROR_CODES.CHANNEL_NOT_FOUND) };
     }
 
     const membership = await this.repository.findChannelMember(input.channelId, user.id);
     if (membership) {
-      return { status: 409, body: failure(ERROR_CODES.CHANNEL_ALREADY_MEMBER, "이미 채널 멤버입니다") };
+      return { status: 409, body: fail(ERROR_CODES.CHANNEL_ALREADY_MEMBER) };
     }
 
     const joinedCount = await this.repository.countMemberships(user.id);
     if (joinedCount >= this.maxJoinedChannels()) {
-      return { status: 409, body: failure(ERROR_CODES.CHANNEL_JOIN_LIMIT_REACHED, "가입 가능한 채널 수를 초과했습니다") };
+      return { status: 409, body: fail(ERROR_CODES.CHANNEL_JOIN_LIMIT_REACHED) };
     }
 
     const pending = await this.repository.findPendingJoinRequest(input.channelId, user.id);
     if (pending) {
-      return { status: 409, body: failure(ERROR_CODES.CHANNEL_JOIN_REQUEST_PENDING, "이미 처리 대기 중인 가입 요청이 있습니다") };
+      return { status: 409, body: fail(ERROR_CODES.CHANNEL_JOIN_REQUEST_PENDING) };
     }
 
     const now = new Date().toISOString();
@@ -247,17 +249,20 @@ export class ChannelService {
       userId: user.id,
       email: user.email
     });
-    return { status: 201, body: success({ message: "가입 요청이 생성되었습니다", requestState: "PENDING" }) };
+    return {
+      status: 201,
+      body: success({ message: SUCCESS_CODES.CHANNEL_JOIN_REQUEST_CREATED, requestState: "PENDING" })
+    };
   }
 
   async listPendingRequests(input: { sid?: string; channelId: string }) {
     const user = await this.resolveUser({ sid: input.sid });
     if (!user) {
-      return { status: 401, body: failure(ERROR_CODES.AUTH_SESSION_REQUIRED, "인증이 필요합니다") };
+      return { status: 401, body: fail(ERROR_CODES.AUTH_SESSION_REQUIRED) };
     }
     const member = await this.repository.findChannelMember(input.channelId, user.id);
     if (!member || !canReviewJoinRequests(member.role)) {
-      return { status: 403, body: failure(ERROR_CODES.CHANNEL_PERMISSION_DENIED, "권한이 없습니다") };
+      return { status: 403, body: fail(ERROR_CODES.CHANNEL_PERMISSION_DENIED) };
     }
 
     const requests = await this.repository.listPendingJoinRequests(input.channelId);
@@ -280,7 +285,7 @@ export class ChannelService {
   ) {
     const actor = await this.resolveUser({ sid: input.sid });
     if (!actor) {
-      return { status: 401, body: failure(ERROR_CODES.AUTH_SESSION_REQUIRED, "인증이 필요합니다") };
+      return { status: 401, body: fail(ERROR_CODES.AUTH_SESSION_REQUIRED) };
     }
     const joinReviewRateLimitMax = this.envInt("CHANNEL_JOIN_REVIEW_RATE_LIMIT_MAX", DEFAULT_JOIN_REVIEW_RATE_LIMIT_MAX);
     const rateLimitWindowMs = this.envInt("CHANNEL_RATE_LIMIT_WINDOW_MS", DEFAULT_RATE_LIMIT_WINDOW_MS);
@@ -288,24 +293,24 @@ export class ChannelService {
     if (this.isRateLimited(joinReviewRateKey, joinReviewRateLimitMax, rateLimitWindowMs)) {
       return {
         status: 429,
-        body: failure(ERROR_CODES.RATE_LIMIT_EXCEEDED, "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요")
+        body: fail(ERROR_CODES.RATE_LIMIT_EXCEEDED)
       };
     }
 
     const actorMember = await this.repository.findChannelMember(input.channelId, actor.id);
     if (!actorMember || !canReviewJoinRequests(actorMember.role)) {
-      return { status: 403, body: failure(ERROR_CODES.CHANNEL_PERMISSION_DENIED, "권한이 없습니다") };
+      return { status: 403, body: fail(ERROR_CODES.CHANNEL_PERMISSION_DENIED) };
     }
 
     const request = await this.repository.findJoinRequestById(input.requestId);
     if (!request || request.channelId !== input.channelId || request.status !== "pending") {
-      return { status: 404, body: failure(ERROR_CODES.CHANNEL_JOIN_REQUEST_NOT_FOUND, "가입 요청을 찾을 수 없습니다") };
+      return { status: 404, body: fail(ERROR_CODES.CHANNEL_JOIN_REQUEST_NOT_FOUND) };
     }
 
     if (input.decision === "approved") {
       const joinedCount = await this.repository.countMemberships(request.requesterUserId);
       if (joinedCount >= this.maxJoinedChannels()) {
-        return { status: 409, body: failure(ERROR_CODES.CHANNEL_JOIN_LIMIT_REACHED, "대상 사용자의 채널 가입 한도를 초과했습니다") };
+        return { status: 409, body: fail(ERROR_CODES.CHANNEL_JOIN_LIMIT_REACHED) };
       }
     }
 
@@ -327,7 +332,7 @@ export class ChannelService {
           : undefined
     });
     if (!changed) {
-      return { status: 409, body: failure(ERROR_CODES.CHANNEL_JOIN_REQUEST_NOT_FOUND, "이미 처리된 요청입니다") };
+      return { status: 409, body: fail(ERROR_CODES.CHANNEL_JOIN_REQUEST_NOT_FOUND) };
     }
 
     await this.auditLogs.record({
@@ -340,26 +345,31 @@ export class ChannelService {
 
     return {
       status: 200,
-      body: success({ message: `가입 요청이 ${input.decision === "approved" ? "승인" : "거절"}되었습니다` })
+      body: success({
+        message:
+          input.decision === "approved"
+            ? SUCCESS_CODES.CHANNEL_JOIN_REQUEST_APPROVED
+            : SUCCESS_CODES.CHANNEL_JOIN_REQUEST_REJECTED
+      })
     };
   }
 
   async addManager(input: { sid?: string; channelId: string; targetUserId: string }, context: AuditContext) {
     const actor = await this.resolveUser({ sid: input.sid });
     if (!actor) {
-      return { status: 401, body: failure(ERROR_CODES.AUTH_SESSION_REQUIRED, "인증이 필요합니다") };
+      return { status: 401, body: fail(ERROR_CODES.AUTH_SESSION_REQUIRED) };
     }
     const actorMember = await this.repository.findChannelMember(input.channelId, actor.id);
     if (!actorMember || actorMember.role !== "owner") {
-      return { status: 403, body: failure(ERROR_CODES.CHANNEL_PERMISSION_DENIED, "권한이 없습니다") };
+      return { status: 403, body: fail(ERROR_CODES.CHANNEL_PERMISSION_DENIED) };
     }
 
     const targetMember = await this.repository.findChannelMember(input.channelId, input.targetUserId);
     if (!targetMember) {
-      return { status: 404, body: failure(ERROR_CODES.CHANNEL_NOT_FOUND, "대상 멤버를 찾을 수 없습니다") };
+      return { status: 404, body: fail(ERROR_CODES.CHANNEL_NOT_FOUND) };
     }
     if (!canManageManager(actorMember.role, targetMember.role)) {
-      return { status: 403, body: failure(ERROR_CODES.CHANNEL_PERMISSION_DENIED, "owner 권한은 변경할 수 없습니다") };
+      return { status: 403, body: fail(ERROR_CODES.CHANNEL_PERMISSION_DENIED) };
     }
 
     await this.repository.upsertChannelMember({ ...targetMember, role: "manager", updatedAt: new Date().toISOString() });
@@ -370,22 +380,22 @@ export class ChannelService {
       userId: actor.id,
       email: actor.email
     });
-    return { status: 200, body: success({ message: "매니저가 지정되었습니다" }) };
+    return { status: 200, body: success({ message: SUCCESS_CODES.CHANNEL_MANAGER_ASSIGNED }) };
   }
 
   async removeManager(input: { sid?: string; channelId: string; targetUserId: string }, context: AuditContext) {
     const actor = await this.resolveUser({ sid: input.sid });
     if (!actor) {
-      return { status: 401, body: failure(ERROR_CODES.AUTH_SESSION_REQUIRED, "인증이 필요합니다") };
+      return { status: 401, body: fail(ERROR_CODES.AUTH_SESSION_REQUIRED) };
     }
     const actorMember = await this.repository.findChannelMember(input.channelId, actor.id);
     if (!actorMember || actorMember.role !== "owner") {
-      return { status: 403, body: failure(ERROR_CODES.CHANNEL_PERMISSION_DENIED, "권한이 없습니다") };
+      return { status: 403, body: fail(ERROR_CODES.CHANNEL_PERMISSION_DENIED) };
     }
 
     const targetMember = await this.repository.findChannelMember(input.channelId, input.targetUserId);
     if (!targetMember || targetMember.role !== "manager") {
-      return { status: 404, body: failure(ERROR_CODES.CHANNEL_NOT_FOUND, "대상 매니저를 찾을 수 없습니다") };
+      return { status: 404, body: fail(ERROR_CODES.CHANNEL_NOT_FOUND) };
     }
 
     await this.repository.upsertChannelMember({ ...targetMember, role: "member", updatedAt: new Date().toISOString() });
@@ -396,27 +406,25 @@ export class ChannelService {
       userId: actor.id,
       email: actor.email
     });
-    return { status: 200, body: success({ message: "매니저 권한이 해제되었습니다" }) };
+    return { status: 200, body: success({ message: SUCCESS_CODES.CHANNEL_MANAGER_REMOVED }) };
   }
 
   async kickMember(input: { sid?: string; channelId: string; targetUserId: string }, context: AuditContext) {
     const actor = await this.resolveUser({ sid: input.sid });
     if (!actor) {
-      return { status: 401, body: failure(ERROR_CODES.AUTH_SESSION_REQUIRED, "인증이 필요합니다") };
+      return { status: 401, body: fail(ERROR_CODES.AUTH_SESSION_REQUIRED) };
     }
     const actorMember = await this.repository.findChannelMember(input.channelId, actor.id);
     if (!actorMember || !canReviewJoinRequests(actorMember.role)) {
-      return { status: 403, body: failure(ERROR_CODES.CHANNEL_PERMISSION_DENIED, "권한이 없습니다") };
+      return { status: 403, body: fail(ERROR_CODES.CHANNEL_PERMISSION_DENIED) };
     }
 
     const targetMember = await this.repository.findChannelMember(input.channelId, input.targetUserId);
     if (!targetMember) {
-      return { status: 404, body: failure(ERROR_CODES.CHANNEL_NOT_FOUND, "대상 멤버를 찾을 수 없습니다") };
+      return { status: 404, body: fail(ERROR_CODES.CHANNEL_NOT_FOUND) };
     }
     if (!canKickTarget(actorMember.role, targetMember.role)) {
-      const message =
-        targetMember.role === "owner" ? "owner는 강퇴할 수 없습니다" : "manager는 manager를 강퇴할 수 없습니다";
-      return { status: 403, body: failure(ERROR_CODES.CHANNEL_PERMISSION_DENIED, message) };
+      return { status: 403, body: fail(ERROR_CODES.CHANNEL_PERMISSION_DENIED) };
     }
 
     await this.repository.deleteChannelMember(input.channelId, targetMember.userId);
@@ -427,20 +435,20 @@ export class ChannelService {
       userId: actor.id,
       email: actor.email
     });
-    return { status: 200, body: success({ message: "멤버가 강퇴되었습니다" }) };
+    return { status: 200, body: success({ message: SUCCESS_CODES.CHANNEL_MEMBER_KICKED }) };
   }
 
   async quitChannel(input: { sid?: string; channelId: string }, context: AuditContext) {
     const actor = await this.resolveUser({ sid: input.sid });
     if (!actor) {
-      return { status: 401, body: failure(ERROR_CODES.AUTH_SESSION_REQUIRED, "인증이 필요합니다") };
+      return { status: 401, body: fail(ERROR_CODES.AUTH_SESSION_REQUIRED) };
     }
     const actorMember = await this.repository.findChannelMember(input.channelId, actor.id);
     if (!actorMember) {
-      return { status: 404, body: failure(ERROR_CODES.CHANNEL_NOT_FOUND, "참여 중인 채널이 아닙니다") };
+      return { status: 404, body: fail(ERROR_CODES.CHANNEL_NOT_FOUND) };
     }
     if (!canQuit(actorMember.role)) {
-      return { status: 409, body: failure(ERROR_CODES.CHANNEL_OWNER_TRANSFER_REQUIRED, "owner는 소유권 이전 후 탈퇴할 수 있습니다") };
+      return { status: 409, body: fail(ERROR_CODES.CHANNEL_OWNER_TRANSFER_REQUIRED) };
     }
     await this.repository.deleteChannelMember(input.channelId, actor.id);
     await this.auditLogs.record({
@@ -450,7 +458,7 @@ export class ChannelService {
       userId: actor.id,
       email: actor.email
     });
-    return { status: 200, body: success({ message: "채널에서 탈퇴했습니다" }) };
+    return { status: 200, body: success({ message: SUCCESS_CODES.CHANNEL_QUIT }) };
   }
 
   async transferOwnership(
@@ -459,18 +467,18 @@ export class ChannelService {
   ) {
     const actor = await this.resolveUser({ sid: input.sid });
     if (!actor) {
-      return { status: 401, body: failure(ERROR_CODES.AUTH_SESSION_REQUIRED, "인증이 필요합니다") };
+      return { status: 401, body: fail(ERROR_CODES.AUTH_SESSION_REQUIRED) };
     }
     const actorMember = await this.repository.findChannelMember(input.channelId, actor.id);
     if (!actorMember || actorMember.role !== "owner") {
-      return { status: 403, body: failure(ERROR_CODES.CHANNEL_PERMISSION_DENIED, "권한이 없습니다") };
+      return { status: 403, body: fail(ERROR_CODES.CHANNEL_PERMISSION_DENIED) };
     }
     const targetMember = await this.repository.findChannelMember(input.channelId, input.targetUserId);
     if (!targetMember) {
-      return { status: 404, body: failure(ERROR_CODES.CHANNEL_NOT_FOUND, "대상 멤버를 찾을 수 없습니다") };
+      return { status: 404, body: fail(ERROR_CODES.CHANNEL_NOT_FOUND) };
     }
     if (!canTransferOwnership(actorMember.role, targetMember.role)) {
-      return { status: 409, body: failure(ERROR_CODES.CHANNEL_PERMISSION_DENIED, "이미 owner입니다") };
+      return { status: 409, body: fail(ERROR_CODES.CHANNEL_PERMISSION_DENIED) };
     }
 
     const now = new Date().toISOString();
@@ -488,38 +496,41 @@ export class ChannelService {
       userId: actor.id,
       email: actor.email
     });
-    return { status: 200, body: success({ message: "소유권이 이전되었습니다", ownerUserId: targetMember.userId }) };
+    return {
+      status: 200,
+      body: success({ message: SUCCESS_CODES.CHANNEL_OWNERSHIP_TRANSFERRED, ownerUserId: targetMember.userId })
+    };
   }
 
   async reorderOwnedChannels(input: { sid?: string; channelIds: string[] }) {
     const actor = await this.resolveUser({ sid: input.sid });
     if (!actor) {
-      return { status: 401, body: failure(ERROR_CODES.AUTH_SESSION_REQUIRED, "인증이 필요합니다") };
+      return { status: 401, body: fail(ERROR_CODES.AUTH_SESSION_REQUIRED) };
     }
 
     const memberships = await this.repository.listUserChannels(actor.id);
     const ownedIds = memberships.filter((row) => row.role === "owner").map((row) => row.channel.id);
     if (!this.sameSet(ownedIds, input.channelIds)) {
-      return { status: 400, body: failure(ERROR_CODES.VALIDATION_ERROR, "소유 채널 전체 id 순서를 전달해야 합니다") };
+      return { status: 400, body: fail(ERROR_CODES.VALIDATION_ERROR) };
     }
 
     await this.repository.saveUserChannelOrder(actor.id, input.channelIds, new Date().toISOString());
-    return { status: 200, body: success({ message: "소유 채널 순서가 저장되었습니다" }) };
+    return { status: 200, body: success({ message: SUCCESS_CODES.CHANNEL_OWNED_ORDER_SAVED }) };
   }
 
   async reorderMyChannels(input: { sid?: string; channelIds: string[] }) {
     const actor = await this.resolveUser({ sid: input.sid });
     if (!actor) {
-      return { status: 401, body: failure(ERROR_CODES.AUTH_SESSION_REQUIRED, "인증이 필요합니다") };
+      return { status: 401, body: fail(ERROR_CODES.AUTH_SESSION_REQUIRED) };
     }
 
     const memberships = await this.repository.listUserChannels(actor.id);
     const myIds = memberships.map((row) => row.channel.id);
     if (!this.sameSet(myIds, input.channelIds)) {
-      return { status: 400, body: failure(ERROR_CODES.VALIDATION_ERROR, "참여 채널 전체 id 순서를 전달해야 합니다") };
+      return { status: 400, body: fail(ERROR_CODES.VALIDATION_ERROR) };
     }
 
     await this.repository.saveUserChannelOrder(actor.id, input.channelIds, new Date().toISOString());
-    return { status: 200, body: success({ message: "내 채널 순서가 저장되었습니다" }) };
+    return { status: 200, body: success({ message: SUCCESS_CODES.CHANNEL_MY_ORDER_SAVED }) };
   }
 }

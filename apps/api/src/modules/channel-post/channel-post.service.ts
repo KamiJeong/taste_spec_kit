@@ -3,7 +3,9 @@ import { randomUUID } from "node:crypto";
 import { ERROR_CODES } from "@packages/contracts-auth";
 import { AuditLogService, type AuditContext } from "../audit-log/audit-log.service";
 import { SessionService } from "../session/session.service";
-import { failure, success } from "../shared/http-contract";
+import { fail } from "../shared/fail";
+import { success } from "../shared/http-contract";
+import { SUCCESS_CODES } from "../shared/success-codes";
 import { ChannelPostRepository } from "./channel-post.repository";
 
 @Injectable()
@@ -50,15 +52,15 @@ export class ChannelPostService {
   private async getActorWithMembership(input: { sid?: string; userId?: string; channelId: string }) {
     const actor = await this.resolveUser({ sid: input.sid, userId: input.userId });
     if (!actor) {
-      return { kind: "error" as const, response: { status: 401, body: failure(ERROR_CODES.AUTH_SESSION_REQUIRED, "인증이 필요합니다") } };
+      return { kind: "error" as const, response: { status: 401, body: fail(ERROR_CODES.AUTH_SESSION_REQUIRED) } };
     }
     const channel = await this.repository.findChannelById(input.channelId);
     if (!channel) {
-      return { kind: "error" as const, response: { status: 404, body: failure(ERROR_CODES.CHANNEL_NOT_FOUND, "채널을 찾을 수 없습니다") } };
+      return { kind: "error" as const, response: { status: 404, body: fail(ERROR_CODES.CHANNEL_NOT_FOUND) } };
     }
     const membership = await this.repository.findChannelMember(input.channelId, actor.id);
     if (!membership) {
-      return { kind: "error" as const, response: { status: 403, body: failure(ERROR_CODES.CHANNEL_PERMISSION_DENIED, "권한이 없습니다") } };
+      return { kind: "error" as const, response: { status: 403, body: fail(ERROR_CODES.CHANNEL_PERMISSION_DENIED) } };
     }
     return { kind: "ok" as const, actor, membership };
   }
@@ -67,7 +69,7 @@ export class ChannelPostService {
     const resolved = await this.getActorWithMembership({ sid: input.sid, userId: input.userId, channelId: input.channelId });
     if (resolved.kind === "error") return resolved.response;
     if (resolved.membership.role !== "owner" && resolved.membership.role !== "manager") {
-      return { status: 403, body: failure(ERROR_CODES.CHANNEL_PERMISSION_DENIED, "권한이 없습니다") };
+      return { status: 403, body: fail(ERROR_CODES.CHANNEL_PERMISSION_DENIED) };
     }
 
     const now = new Date().toISOString();
@@ -113,7 +115,7 @@ export class ChannelPostService {
 
     const decodedCursor = this.decodeCursor(input.cursor);
     if (input.cursor && !decodedCursor) {
-      return { status: 400, body: failure(ERROR_CODES.VALIDATION_ERROR, "cursor 형식이 올바르지 않습니다") };
+      return { status: 400, body: fail(ERROR_CODES.VALIDATION_ERROR) };
     }
 
     const rows = await this.repository.listChannelPosts({
@@ -149,7 +151,7 @@ export class ChannelPostService {
 
     const post = await this.repository.findChannelPostById(input.channelId, input.postId);
     if (!post) {
-      return { status: 404, body: failure(ERROR_CODES.CHANNEL_POST_NOT_FOUND, "게시글을 찾을 수 없습니다") };
+      return { status: 404, body: fail(ERROR_CODES.CHANNEL_POST_NOT_FOUND) };
     }
     return {
       status: 200,
@@ -174,7 +176,7 @@ export class ChannelPostService {
     const resolved = await this.getActorWithMembership({ sid: input.sid, channelId: input.channelId });
     if (resolved.kind === "error") return resolved.response;
     if (resolved.membership.role !== "owner" && resolved.membership.role !== "manager") {
-      return { status: 403, body: failure(ERROR_CODES.CHANNEL_PERMISSION_DENIED, "권한이 없습니다") };
+      return { status: 403, body: fail(ERROR_CODES.CHANNEL_PERMISSION_DENIED) };
     }
 
     const now = new Date().toISOString();
@@ -187,10 +189,10 @@ export class ChannelPostService {
       updatedAt: now
     });
     if (updated.state === "not_found") {
-      return { status: 404, body: failure(ERROR_CODES.CHANNEL_POST_NOT_FOUND, "게시글을 찾을 수 없습니다") };
+      return { status: 404, body: fail(ERROR_CODES.CHANNEL_POST_NOT_FOUND) };
     }
     if (updated.state === "conflict") {
-      return { status: 409, body: failure(ERROR_CODES.CHANNEL_POST_VERSION_CONFLICT, "게시글이 다른 요청에 의해 변경되었습니다") };
+      return { status: 409, body: fail(ERROR_CODES.CHANNEL_POST_VERSION_CONFLICT) };
     }
 
     await this.auditLogs.record({
@@ -221,12 +223,12 @@ export class ChannelPostService {
     const resolved = await this.getActorWithMembership({ sid: input.sid, channelId: input.channelId });
     if (resolved.kind === "error") return resolved.response;
     if (resolved.membership.role !== "owner" && resolved.membership.role !== "manager") {
-      return { status: 403, body: failure(ERROR_CODES.CHANNEL_PERMISSION_DENIED, "권한이 없습니다") };
+      return { status: 403, body: fail(ERROR_CODES.CHANNEL_PERMISSION_DENIED) };
     }
 
     const deleted = await this.repository.softDeleteChannelPost(input.channelId, input.postId, new Date().toISOString());
     if (!deleted) {
-      return { status: 404, body: failure(ERROR_CODES.CHANNEL_POST_NOT_FOUND, "게시글을 찾을 수 없습니다") };
+      return { status: 404, body: fail(ERROR_CODES.CHANNEL_POST_NOT_FOUND) };
     }
 
     await this.auditLogs.record({
@@ -236,6 +238,6 @@ export class ChannelPostService {
       userId: resolved.actor.id,
       email: resolved.actor.email
     });
-    return { status: 200, body: success({ message: "게시글이 삭제되었습니다" }) };
+    return { status: 200, body: success({ message: SUCCESS_CODES.CHANNEL_POST_DELETED }) };
   }
 }

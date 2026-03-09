@@ -1,0 +1,22 @@
+{
+  "AUTH_SIGNUP_VERIFICATION_SENT": "이메일 인증 링크를 발송했습니다",
+  "AUTH_EMAIL_VERIFIED": "계정이 활성화되었습니다",
+  "AUTH_VERIFICATION_RESEND_ACCEPTED": "재발송 요청이 접수되었습니다",
+  "AUTH_PASSWORD_RESET_LINK_SENT": "비밀번호 재설정 링크를 이메일로 발송했습니다",
+  "AUTH_PASSWORD_CHANGED": "비밀번호가 변경되었습니다",
+  "AUTH_LOGOUT": "로그아웃되었습니다",
+  "CHANNEL_JOIN_REQUEST_CREATED": "가입 요청이 생성되었습니다",
+  "CHANNEL_JOIN_REQUEST_APPROVED": "가입 요청이 승인되었습니다",
+  "CHANNEL_JOIN_REQUEST_REJECTED": "가입 요청이 거절되었습니다",
+  "CHANNEL_MANAGER_ASSIGNED": "매니저가 지정되었습니다",
+  "CHANNEL_MANAGER_REMOVED": "매니저 권한이 해제되었습니다",
+  "CHANNEL_MEMBER_KICKED": "멤버가 강퇴되었습니다",
+  "CHANNEL_QUIT": "채널에서 탈퇴했습니다",
+  "CHANNEL_OWNERSHIP_TRANSFERRED": "소유권이 이전되었습니다",
+  "CHANNEL_OWNED_ORDER_SAVED": "소유 채널 순서가 저장되었습니다",
+  "CHANNEL_MY_ORDER_SAVED": "내 채널 순서가 저장되었습니다",
+  "CHANNEL_POST_DELETED": "게시글이 삭제되었습니다",
+  "USER_ACCOUNT_DEACTIVATED": "계정이 비활성화되었습니다",
+  "USER_DELETION_SCHEDULED": "계정 삭제가 예약되었습니다",
+  "USER_DELETION_CANCELED": "계정 삭제 예약이 취소되었습니다"
+}

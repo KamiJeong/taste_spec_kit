@@ -21,7 +21,7 @@ export class ChannelResolver {
     const auth = requestAuthOf(context.req);
     const result = await this.channels.listMyChannels({ sid: auth.sid, userId: auth.userId });
     if (!result.body.success) {
-      throw toGraphqlError(result as ServiceResponse<unknown>);
+      throw toGraphqlError(result as ServiceResponse<unknown>, context.req);
     }
     return { channels: result.body.data.channels };
   }
@@ -31,7 +31,7 @@ export class ChannelResolver {
     ensureCsrfForMutation(context.req);
     const validated = validateWithZod(createChannelSchema, { name });
     if (!validated.ok) {
-      throw toGraphqlError(validated.response as ServiceResponse<unknown>);
+      throw toGraphqlError(validated.response as ServiceResponse<unknown>, context.req);
     }
 
     const auth = requestAuthOf(context.req);
@@ -40,7 +40,7 @@ export class ChannelResolver {
       auditContextFromReq(context.req)
     );
     if (!result.body.success) {
-      throw toGraphqlError(result as ServiceResponse<unknown>);
+      throw toGraphqlError(result as ServiceResponse<unknown>, context.req);
     }
 
     return {

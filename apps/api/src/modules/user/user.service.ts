@@ -3,7 +3,9 @@ import * as argon2 from "argon2";
 import { ERROR_CODES } from "@packages/contracts-auth";
 import { AuditLogService, type AuditContext } from "../audit-log/audit-log.service";
 import { SessionService } from "../session/session.service";
-import { failure, success } from "../shared/http-contract";
+import { fail } from "../shared/fail";
+import { success } from "../shared/http-contract";
+import { SUCCESS_CODES } from "../shared/success-codes";
 import { UserRepository } from "./user.repository";
 
 @Injectable()
@@ -26,7 +28,7 @@ export class UserService {
     if (!user) {
       return {
         status: 401,
-        body: failure(ERROR_CODES.AUTH_SESSION_REQUIRED, "인증이 필요합니다")
+        body: fail(ERROR_CODES.AUTH_SESSION_REQUIRED)
       };
     }
     return {
@@ -48,7 +50,7 @@ export class UserService {
     if (!user) {
       return {
         status: 401,
-        body: failure(ERROR_CODES.AUTH_SESSION_REQUIRED, "인증이 필요합니다")
+        body: fail(ERROR_CODES.AUTH_SESSION_REQUIRED)
       };
     }
 
@@ -62,7 +64,7 @@ export class UserService {
       if (existing && existing.id !== user.id) {
         return {
           status: 409,
-          body: failure(ERROR_CODES.USER_EMAIL_ALREADY_EXISTS, "이미 가입된 이메일입니다")
+          body: fail(ERROR_CODES.USER_EMAIL_ALREADY_EXISTS)
         };
       }
       if (nextEmail !== user.email) {
@@ -91,21 +93,21 @@ export class UserService {
     if (!user) {
       return {
         status: 401,
-        body: failure(ERROR_CODES.AUTH_SESSION_REQUIRED, "인증이 필요합니다")
+        body: fail(ERROR_CODES.AUTH_SESSION_REQUIRED)
       };
     }
     const ok = await argon2.verify(user.passwordHash, input.currentPassword);
     if (!ok) {
       return {
         status: 401,
-        body: failure(ERROR_CODES.AUTH_INVALID_CREDENTIALS, "이메일 또는 비밀번호가 올바르지 않습니다")
+        body: fail(ERROR_CODES.AUTH_INVALID_CREDENTIALS)
       };
     }
     user.passwordHash = await argon2.hash(input.newPassword, { type: argon2.argon2id });
     await this.repository.updateUser(user);
     return {
       status: 200,
-      body: success({ message: "비밀번호가 변경되었습니다" })
+      body: success({ message: SUCCESS_CODES.AUTH_PASSWORD_CHANGED })
     };
   }
 
@@ -120,7 +122,7 @@ export class UserService {
       });
       return {
         status: 401,
-        body: failure(ERROR_CODES.AUTH_SESSION_REQUIRED, "인증이 필요합니다")
+        body: fail(ERROR_CODES.AUTH_SESSION_REQUIRED)
       };
     }
     const ok = await argon2.verify(user.passwordHash, input.password);
@@ -135,7 +137,7 @@ export class UserService {
       });
       return {
         status: 401,
-        body: failure(ERROR_CODES.AUTH_INVALID_CREDENTIALS, "이메일 또는 비밀번호가 올바르지 않습니다")
+        body: fail(ERROR_CODES.AUTH_INVALID_CREDENTIALS)
       };
     }
     user.isActive = false;
@@ -151,7 +153,7 @@ export class UserService {
     return {
       status: 200,
       body: success({
-        message: "계정이 비활성화되었습니다",
+        message: SUCCESS_CODES.USER_ACCOUNT_DEACTIVATED,
         accountState: "DEACTIVATED"
       })
     };
@@ -162,20 +164,20 @@ export class UserService {
     if (!user) {
       return {
         status: 401,
-        body: failure(ERROR_CODES.AUTH_SESSION_REQUIRED, "인증이 필요합니다")
+        body: fail(ERROR_CODES.AUTH_SESSION_REQUIRED)
       };
     }
     if (!user.isActive) {
       return {
         status: 403,
-        body: failure(ERROR_CODES.USER_ACCOUNT_DEACTIVATED, "비활성화된 계정입니다")
+        body: fail(ERROR_CODES.USER_ACCOUNT_DEACTIVATED)
       };
     }
     const ok = await argon2.verify(user.passwordHash, input.password);
     if (!ok) {
       return {
         status: 401,
-        body: failure(ERROR_CODES.AUTH_INVALID_CREDENTIALS, "이메일 또는 비밀번호가 올바르지 않습니다")
+        body: fail(ERROR_CODES.AUTH_INVALID_CREDENTIALS)
       };
     }
 
@@ -187,7 +189,7 @@ export class UserService {
     return {
       status: 200,
       body: success({
-        message: "계정 삭제가 예약되었습니다",
+        message: SUCCESS_CODES.USER_DELETION_SCHEDULED,
         accountState: "DELETION_SCHEDULED",
         scheduledDeletionAt
       })
@@ -199,13 +201,13 @@ export class UserService {
     if (!user) {
       return {
         status: 401,
-        body: failure(ERROR_CODES.AUTH_SESSION_REQUIRED, "인증이 필요합니다")
+        body: fail(ERROR_CODES.AUTH_SESSION_REQUIRED)
       };
     }
     if (!user.isActive) {
       return {
         status: 403,
-        body: failure(ERROR_CODES.USER_ACCOUNT_DEACTIVATED, "비활성화된 계정입니다")
+        body: fail(ERROR_CODES.USER_ACCOUNT_DEACTIVATED)
       };
     }
     user.deletionScheduledAt = null;
@@ -214,7 +216,7 @@ export class UserService {
     return {
       status: 200,
       body: success({
-        message: "계정 삭제 예약이 취소되었습니다",
+        message: SUCCESS_CODES.USER_DELETION_CANCELED,
         accountState: "ACTIVE"
       })
     };

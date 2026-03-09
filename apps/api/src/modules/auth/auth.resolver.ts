@@ -17,7 +17,7 @@ export class AuthResolver {
     const auth = requestAuthOf(context.req);
     const result = await this.auth.me({ sid: auth.sid, userId: auth.userId });
     if (!result.body.success) {
-      throw toGraphqlError(result as ServiceResponse<unknown>);
+      throw toGraphqlError(result as ServiceResponse<unknown>, context.req);
     }
     return {
       user: result.body.data.user
