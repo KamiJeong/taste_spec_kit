@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
 import { ERROR_CODES } from "@packages/contracts-auth";
 import type { Request, Response } from "express";
-import { failure } from "../http-contract";
+import { fail } from "../fail";
 import { cookieOf } from "../request-cookie";
 
 @Injectable()
@@ -20,7 +20,7 @@ export class CsrfGuard implements CanActivate {
 
     if (valid) return true;
 
-    res.status(403).json(failure(ERROR_CODES.AUTH_CSRF_INVALID, "CSRF 검증에 실패했습니다"));
+    res.status(403).json(fail(ERROR_CODES.AUTH_CSRF_INVALID));
     return false;
   }
 }

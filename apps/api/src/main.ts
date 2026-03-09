@@ -4,6 +4,9 @@ import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { AppModule } from "./app.module";
 import { randomUUID } from "node:crypto";
 import { loadApiEnv } from "./config/load-env";
+import { localizeErrorBody } from "./modules/shared/i18n/localize-error";
+import { resolveLocaleFromRequest } from "./modules/shared/i18n/locale";
+import { I18nService } from "nestjs-i18n";
 
 loadApiEnv();
 
@@ -60,9 +63,18 @@ function setupSwagger(app: Awaited<ReturnType<typeof NestFactory.create>>): void
 
 export async function createApp() {
   const app = await NestFactory.create(AppModule);
+  const i18n = app.get(I18nService);
   app.use((req: any, res: any, next: () => void) => {
     const requestId = (req.headers["x-request-id"] as string) || randomUUID();
     res.setHeader("X-Request-Id", requestId);
+    next();
+  });
+  app.use((req: any, res: any, next: () => void) => {
+    const originalJson = res.json.bind(res);
+    res.json = (body: unknown) => {
+      const locale = resolveLocaleFromRequest(req);
+      return originalJson(localizeErrorBody(i18n, body, locale));
+    };
     next();
   });
 

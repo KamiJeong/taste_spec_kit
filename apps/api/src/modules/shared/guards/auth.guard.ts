@@ -3,8 +3,11 @@ import { GqlExecutionContext } from "@nestjs/graphql";
 import { ERROR_CODES } from "@packages/contracts-auth";
 import type { Request, Response } from "express";
 import { GraphQLError } from "graphql";
+import { I18nService } from "nestjs-i18n";
 import { TokenService } from "../../token/token.service";
-import { failure } from "../http-contract";
+import { fail } from "../fail";
+import { resolveLocaleFromAcceptLanguage, resolveLocaleFromRequest } from "../i18n/locale";
+import { localizeErrorMessage } from "../i18n/error-messages";
 import { setRequestAuth } from "../request-auth";
 
 type GraphqlRequestContext = {
@@ -13,24 +16,27 @@ type GraphqlRequestContext = {
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private readonly tokens: TokenService) {}
+  constructor(
+    private readonly tokens: TokenService,
+    private readonly i18n: I18nService
+  ) {}
 
   canActivate(context: ExecutionContext): boolean {
     const request = this.getRequest(context);
     if (!request) {
-      this.reject(context);
+      this.reject(context, null);
       return false;
     }
 
     const bearerToken = this.extractBearerToken(request);
     if (!bearerToken) {
-      this.reject(context);
+      this.reject(context, request);
       return false;
     }
 
     const verified = this.tokens.verifyAccessToken(bearerToken);
     if (!verified) {
-      this.reject(context);
+      this.reject(context, request);
       return false;
     }
 
@@ -54,9 +60,16 @@ export class AuthGuard implements CanActivate {
     return value;
   }
 
-  private reject(context: ExecutionContext): void {
+  private reject(context: ExecutionContext, req: Request | null): void {
+    const locale = req ? resolveLocaleFromRequest(req) : resolveLocaleFromAcceptLanguage(undefined);
+    const message = localizeErrorMessage(
+      this.i18n,
+      ERROR_CODES.AUTH_SESSION_REQUIRED,
+      locale,
+      "Authentication is required"
+    );
     if (context.getType<string>() === "graphql") {
-      throw new GraphQLError("인증이 필요합니다", {
+      throw new GraphQLError(message, {
         extensions: {
           code: ERROR_CODES.AUTH_SESSION_REQUIRED,
           httpStatus: 401
@@ -65,6 +78,6 @@ export class AuthGuard implements CanActivate {
     }
 
     const res = context.switchToHttp().getResponse<Response>();
-    res.status(401).json(failure(ERROR_CODES.AUTH_SESSION_REQUIRED, "인증이 필요합니다"));
+    res.status(401).json(fail(ERROR_CODES.AUTH_SESSION_REQUIRED));
   }
 }

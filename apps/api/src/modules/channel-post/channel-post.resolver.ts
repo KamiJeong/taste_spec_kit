@@ -25,7 +25,7 @@ export class ChannelPostResolver {
   ): Promise<ChannelPostConnection> {
     const validated = validateWithZod(listChannelPostsQuerySchema, { limit, cursor });
     if (!validated.ok) {
-      throw toGraphqlError(validated.response as ServiceResponse<unknown>);
+      throw toGraphqlError(validated.response as ServiceResponse<unknown>, context.req);
     }
 
     const auth = requestAuthOf(context.req);
@@ -37,7 +37,7 @@ export class ChannelPostResolver {
       cursor: validated.data.cursor
     });
     if (!result.body.success) {
-      throw toGraphqlError(result as ServiceResponse<unknown>);
+      throw toGraphqlError(result as ServiceResponse<unknown>, context.req);
     }
 
     return {
@@ -57,7 +57,7 @@ export class ChannelPostResolver {
 
     const validated = validateWithZod(createChannelPostSchema, { title, content });
     if (!validated.ok) {
-      throw toGraphqlError(validated.response as ServiceResponse<unknown>);
+      throw toGraphqlError(validated.response as ServiceResponse<unknown>, context.req);
     }
 
     const auth = requestAuthOf(context.req);
@@ -72,7 +72,7 @@ export class ChannelPostResolver {
       auditContextFromReq(context.req)
     );
     if (!result.body.success) {
-      throw toGraphqlError(result as ServiceResponse<unknown>);
+      throw toGraphqlError(result as ServiceResponse<unknown>, context.req);
     }
 
     return {

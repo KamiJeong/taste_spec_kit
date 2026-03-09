@@ -1,0 +1,22 @@
+{
+  "AUTH_SIGNUP_VERIFICATION_SENT": "Verification email has been sent",
+  "AUTH_EMAIL_VERIFIED": "Account is now active",
+  "AUTH_VERIFICATION_RESEND_ACCEPTED": "Verification resend request accepted",
+  "AUTH_PASSWORD_RESET_LINK_SENT": "Password reset link has been sent",
+  "AUTH_PASSWORD_CHANGED": "Password has been changed",
+  "AUTH_LOGOUT": "Logged out",
+  "CHANNEL_JOIN_REQUEST_CREATED": "Join request has been created",
+  "CHANNEL_JOIN_REQUEST_APPROVED": "Join request has been approved",
+  "CHANNEL_JOIN_REQUEST_REJECTED": "Join request has been rejected",
+  "CHANNEL_MANAGER_ASSIGNED": "Manager has been assigned",
+  "CHANNEL_MANAGER_REMOVED": "Manager role has been removed",
+  "CHANNEL_MEMBER_KICKED": "Member has been removed",
+  "CHANNEL_QUIT": "You left the channel",
+  "CHANNEL_OWNERSHIP_TRANSFERRED": "Ownership has been transferred",
+  "CHANNEL_OWNED_ORDER_SAVED": "Owned channel order has been saved",
+  "CHANNEL_MY_ORDER_SAVED": "My channel order has been saved",
+  "CHANNEL_POST_DELETED": "Post has been deleted",
+  "USER_ACCOUNT_DEACTIVATED": "Account has been deactivated",
+  "USER_DELETION_SCHEDULED": "Account deletion has been scheduled",
+  "USER_DELETION_CANCELED": "Account deletion schedule has been canceled"
+}

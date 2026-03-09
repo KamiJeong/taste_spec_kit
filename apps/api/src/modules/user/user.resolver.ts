@@ -17,7 +17,7 @@ export class UserResolver {
     const auth = requestAuthOf(context.req);
     const result = await this.user.getProfile({ sid: auth.sid });
     if (!result.body.success) {
-      throw toGraphqlError(result as ServiceResponse<unknown>);
+      throw toGraphqlError(result as ServiceResponse<unknown>, context.req);
     }
     return {
       profile: result.body.data.profile

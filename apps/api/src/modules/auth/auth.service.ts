@@ -6,7 +6,9 @@ import { AuditLogService, type AuditContext } from "../audit-log/audit-log.servi
 import { MAIL_SERVICE, type MailService } from "../mail/mail.service";
 import { SessionService } from "../session/session.service";
 import { TokenService } from "../token/token.service";
-import { failure, success } from "../shared/http-contract";
+import { fail } from "../shared/fail";
+import { success } from "../shared/http-contract";
+import { SUCCESS_CODES } from "../shared/success-codes";
 import { AuthRepository } from "./auth.repository";
 
 const LOGIN_LOCK_THRESHOLD = 5;
@@ -59,7 +61,7 @@ export class AuthService {
       });
       return {
         status: 409,
-        body: failure(ERROR_CODES.USER_EMAIL_ALREADY_EXISTS, "이미 가입된 이메일입니다")
+        body: fail(ERROR_CODES.USER_EMAIL_ALREADY_EXISTS)
       };
     }
 
@@ -98,7 +100,7 @@ export class AuthService {
     return {
       status: 201,
       body: success({
-        message: "이메일 인증 링크를 발송했습니다",
+        message: SUCCESS_CODES.AUTH_SIGNUP_VERIFICATION_SENT,
         accountState: "PENDING_VERIFICATION",
         ...(this.shouldExposeDebugTokens() ? { verificationToken: tokenRow.token } : {})
       })
@@ -117,7 +119,7 @@ export class AuthService {
       });
       return {
         status: 400,
-        body: failure(ERROR_CODES.AUTH_TOKEN_INVALID, "유효하지 않은 인증 토큰입니다")
+        body: fail(ERROR_CODES.AUTH_TOKEN_INVALID)
       };
     }
     if (row.expiresAt <= Date.now()) {
@@ -129,7 +131,7 @@ export class AuthService {
       });
       return {
         status: 400,
-        body: failure(ERROR_CODES.AUTH_TOKEN_EXPIRED, "인증 링크가 만료되었습니다")
+        body: fail(ERROR_CODES.AUTH_TOKEN_EXPIRED)
       };
     }
     const user = await this.repository.findUserById(row.userId);
@@ -142,7 +144,7 @@ export class AuthService {
       });
       return {
         status: 400,
-        body: failure(ERROR_CODES.AUTH_TOKEN_INVALID, "유효하지 않은 인증 토큰입니다")
+        body: fail(ERROR_CODES.AUTH_TOKEN_INVALID)
       };
     }
     await this.repository.markVerificationTokenUsed(tokenHash, Date.now());
@@ -157,7 +159,7 @@ export class AuthService {
     });
     return {
       status: 200,
-      body: success({ message: "계정이 활성화되었습니다", accountState: "ACTIVE" })
+      body: success({ message: SUCCESS_CODES.AUTH_EMAIL_VERIFIED, accountState: "ACTIVE" })
     };
   }
 
@@ -172,7 +174,7 @@ export class AuthService {
     if (this.isRateLimited(rateKey, REQUEST_RATE_LIMIT_MAX)) {
       return {
         status: 429,
-        body: failure(ERROR_CODES.RATE_LIMIT_EXCEEDED, "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요")
+        body: fail(ERROR_CODES.RATE_LIMIT_EXCEEDED)
       };
     }
     const now = Date.now();
@@ -180,7 +182,7 @@ export class AuthService {
     if (lastRequestedAt && now - lastRequestedAt < IDEMPOTENT_COOLDOWN_MS) {
       return {
         status: 200,
-        body: success({ message: "재발송 요청이 접수되었습니다", cooldownActive: true })
+        body: success({ message: SUCCESS_CODES.AUTH_VERIFICATION_RESEND_ACCEPTED, cooldownActive: true })
       };
     }
 
@@ -189,7 +191,7 @@ export class AuthService {
     if (!user || user.emailVerified) {
       return {
         status: 200,
-        body: success({ message: "재발송 요청이 접수되었습니다" })
+        body: success({ message: SUCCESS_CODES.AUTH_VERIFICATION_RESEND_ACCEPTED })
       };
     }
     const tokenRow = this.tokens.issueVerificationToken();
@@ -203,7 +205,7 @@ export class AuthService {
     return {
       status: 200,
       body: success({
-        message: "재발송 요청이 접수되었습니다",
+        message: SUCCESS_CODES.AUTH_VERIFICATION_RESEND_ACCEPTED,
         ...(this.shouldExposeDebugTokens() ? { verificationToken: tokenRow.token } : {})
       })
     };
@@ -215,7 +217,7 @@ export class AuthService {
     if (this.isRateLimited(rateKey, REQUEST_RATE_LIMIT_MAX)) {
       return {
         status: 429,
-        body: failure(ERROR_CODES.RATE_LIMIT_EXCEEDED, "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요")
+        body: fail(ERROR_CODES.RATE_LIMIT_EXCEEDED)
       };
     }
     const now = Date.now();
@@ -223,7 +225,7 @@ export class AuthService {
     if (lastRequestedAt && now - lastRequestedAt < IDEMPOTENT_COOLDOWN_MS) {
       return {
         status: 200,
-        body: success({ message: "비밀번호 재설정 링크를 이메일로 발송했습니다", cooldownActive: true })
+        body: success({ message: SUCCESS_CODES.AUTH_PASSWORD_RESET_LINK_SENT, cooldownActive: true })
       };
     }
 
@@ -232,7 +234,7 @@ export class AuthService {
     if (!user) {
       return {
         status: 200,
-        body: success({ message: "비밀번호 재설정 링크를 이메일로 발송했습니다" })
+        body: success({ message: SUCCESS_CODES.AUTH_PASSWORD_RESET_LINK_SENT })
       };
     }
 
@@ -248,7 +250,7 @@ export class AuthService {
     return {
       status: 200,
       body: success({
-        message: "비밀번호 재설정 링크를 이메일로 발송했습니다",
+        message: SUCCESS_CODES.AUTH_PASSWORD_RESET_LINK_SENT,
         ...(this.shouldExposeDebugTokens() ? { resetToken: tokenRow.token } : {})
       })
     };
@@ -266,7 +268,7 @@ export class AuthService {
       });
       return {
         status: 400,
-        body: failure(ERROR_CODES.AUTH_TOKEN_INVALID, "유효하지 않은 재설정 토큰입니다")
+        body: fail(ERROR_CODES.AUTH_TOKEN_INVALID)
       };
     }
     if (row.expiresAt <= Date.now()) {
@@ -278,7 +280,7 @@ export class AuthService {
       });
       return {
         status: 400,
-        body: failure(ERROR_CODES.AUTH_TOKEN_EXPIRED, "재설정 링크가 만료되었습니다")
+        body: fail(ERROR_CODES.AUTH_TOKEN_EXPIRED)
       };
     }
     const user = await this.repository.findUserById(row.userId);
@@ -291,7 +293,7 @@ export class AuthService {
       });
       return {
         status: 400,
-        body: failure(ERROR_CODES.AUTH_TOKEN_INVALID, "유효하지 않은 재설정 토큰입니다")
+        body: fail(ERROR_CODES.AUTH_TOKEN_INVALID)
       };
     }
 
@@ -308,7 +310,7 @@ export class AuthService {
 
     return {
       status: 200,
-      body: success({ message: "비밀번호가 변경되었습니다" })
+      body: success({ message: SUCCESS_CODES.AUTH_PASSWORD_CHANGED })
     };
   }
 
@@ -331,7 +333,7 @@ export class AuthService {
       });
       return {
         status: 429,
-        body: failure(ERROR_CODES.RATE_LIMIT_EXCEEDED, "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요")
+        body: fail(ERROR_CODES.RATE_LIMIT_EXCEEDED)
       };
     }
     const user = await this.repository.findUserByEmail(loginEmail);
@@ -345,7 +347,7 @@ export class AuthService {
       });
       return {
         status: 401,
-        body: failure(ERROR_CODES.AUTH_INVALID_CREDENTIALS, "이메일 또는 비밀번호가 올바르지 않습니다")
+        body: fail(ERROR_CODES.AUTH_INVALID_CREDENTIALS)
       };
     }
     const now = Date.now();
@@ -360,7 +362,7 @@ export class AuthService {
       });
       return {
         status: 401,
-        body: failure(ERROR_CODES.AUTH_INVALID_CREDENTIALS, "이메일 또는 비밀번호가 올바르지 않습니다")
+        body: fail(ERROR_CODES.AUTH_INVALID_CREDENTIALS)
       };
     }
     if (user.lockedUntil && user.lockedUntil <= now) {
@@ -387,7 +389,7 @@ export class AuthService {
       });
       return {
         status: 401,
-        body: failure(ERROR_CODES.AUTH_INVALID_CREDENTIALS, "이메일 또는 비밀번호가 올바르지 않습니다")
+        body: fail(ERROR_CODES.AUTH_INVALID_CREDENTIALS)
       };
     }
 
@@ -406,7 +408,7 @@ export class AuthService {
       });
       return {
         status: 401,
-        body: failure(ERROR_CODES.AUTH_INVALID_CREDENTIALS, "이메일 또는 비밀번호가 올바르지 않습니다")
+        body: fail(ERROR_CODES.AUTH_INVALID_CREDENTIALS)
       };
     }
     if (!user.isActive) {
@@ -420,7 +422,7 @@ export class AuthService {
       });
       return {
         status: 401,
-        body: failure(ERROR_CODES.AUTH_INVALID_CREDENTIALS, "이메일 또는 비밀번호가 올바르지 않습니다")
+        body: fail(ERROR_CODES.AUTH_INVALID_CREDENTIALS)
       };
     }
     const sid = await this.sessions.create(user.id);
@@ -456,7 +458,7 @@ export class AuthService {
     if (!user) {
       return {
         status: 401,
-        body: failure(ERROR_CODES.AUTH_SESSION_REQUIRED, "인증이 필요합니다")
+        body: fail(ERROR_CODES.AUTH_SESSION_REQUIRED)
       };
     }
     return {
@@ -495,7 +497,7 @@ export class AuthService {
     });
     return {
       status: 200,
-      body: success({ message: "로그아웃되었습니다" })
+      body: success({ message: SUCCESS_CODES.AUTH_LOGOUT })
     };
   }
 }
