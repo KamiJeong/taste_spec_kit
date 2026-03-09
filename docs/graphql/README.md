@@ -47,3 +47,18 @@ Includes:
   - For mutation, verify `x-csrf-token` equals `csrfToken` cookie value.
 - Query works only with CSRF header in your tool
   - Usually header JSON parsing issue (for example trailing comma) or missing Authorization send.
+
+## One-command smoke test
+
+Run from repository root:
+
+```bash
+pnpm --filter @apps/api test:graphql:smoke
+```
+
+Coverage in this smoke test includes:
+- bearer-required behavior
+- mutation CSRF behavior
+- `myChannels` query behavior
+- create channel mutation
+- validation/permission error code checks
