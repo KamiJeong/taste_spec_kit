@@ -19,3 +19,11 @@ function loadEnvFile(filename: string): void {
 }
 
 loadEnvFile(".env.test");
+
+if (!process.env.NODE_ENV) {
+  process.env.NODE_ENV = "test";
+}
+
+if (!process.env.MAIL_EXPOSE_TOKENS) {
+  process.env.MAIL_EXPOSE_TOKENS = "true";
+}

@@ -6,13 +6,14 @@ import { AuthService } from "../../src/modules/auth/auth.service";
 async function requestJson(
   baseUrl: string,
   path: string,
-  options: { method?: string; body?: unknown; cookie?: string } = {}
+  options: { method?: string; body?: unknown; cookie?: string; headers?: Record<string, string> } = {}
 ) {
   const res = await fetch(`${baseUrl}${path}`, {
     method: options.method ?? "GET",
     headers: {
       "content-type": "application/json",
-      ...(options.cookie ? { cookie: options.cookie } : {})
+      ...(options.cookie ? { cookie: options.cookie } : {}),
+      ...(options.headers ?? {})
     },
     body: options.body ? JSON.stringify(options.body) : undefined
   });
@@ -28,12 +29,13 @@ async function run() {
   const address = server.address();
   const port = typeof address === "object" && address ? address.port : 0;
   const baseUrl = `http://127.0.0.1:${port}`;
+  const email = `user-${Date.now()}@example.com`;
 
   try {
     const signup = await requestJson(baseUrl, "/api/v1/auth/signup", {
       method: "POST",
       body: {
-        email: "user@example.com",
+        email,
         password: "Passw0rd!",
         name: "User"
       }
@@ -46,7 +48,7 @@ async function run() {
     const duplicate = await requestJson(baseUrl, "/api/v1/auth/signup", {
       method: "POST",
       body: {
-        email: "user@example.com",
+        email,
         password: "Passw0rd!",
         name: "User"
       }
@@ -57,7 +59,7 @@ async function run() {
     const unverifiedLogin = await requestJson(baseUrl, "/api/v1/auth/login", {
       method: "POST",
       body: {
-        email: "user@example.com",
+        email,
         password: "Passw0rd!"
       }
     });
@@ -75,7 +77,7 @@ async function run() {
 
     const resend = await requestJson(baseUrl, "/api/v1/auth/resend-verification", {
       method: "POST",
-      body: { email: "user@example.com" }
+      body: { email }
     });
     assert.equal(resend.status, 200);
     assert.ok(resend.body.data.verificationToken);
@@ -88,19 +90,19 @@ async function run() {
     const relogin = await requestJson(baseUrl, "/api/v1/auth/login", {
       method: "POST",
       body: {
-        email: "user@example.com",
+        email,
         password: "Passw0rd!"
       }
     });
     assert.equal(relogin.status, 200);
-    const cookie = relogin.headers.get("set-cookie");
-    assert.ok(cookie?.includes("sid="));
+    const accessToken = relogin.body?.data?.accessToken as string | undefined;
+    assert.ok(accessToken);
 
     const me = await requestJson(baseUrl, "/api/v1/auth/me", {
-      cookie: cookie ?? undefined
+      headers: { authorization: `Bearer ${accessToken}` }
     });
     assert.equal(me.status, 200);
-    assert.equal(me.body.data.user.email, "user@example.com");
+    assert.equal(me.body.data.user.email, email);
 
     console.log("integration: p1 auth scenarios ok");
   } finally {

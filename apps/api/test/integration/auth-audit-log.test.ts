@@ -38,6 +38,7 @@ async function run() {
   const address = server.address();
   const port = typeof address === "object" && address ? address.port : 0;
   const baseUrl = `http://127.0.0.1:${port}`;
+  const email = `audit-${Date.now()}@example.com`;
 
   const db = new Client({ connectionString: process.env.DATABASE_URL });
   await db.connect();
@@ -46,7 +47,7 @@ async function run() {
     const signup = await requestJson(baseUrl, "/api/v1/auth/signup", {
       method: "POST",
       body: {
-        email: "audit@example.com",
+        email,
         password: "Passw0rd!",
         name: "Audit User"
       }
@@ -61,14 +62,13 @@ async function run() {
 
     const login = await requestJson(baseUrl, "/api/v1/auth/login", {
       method: "POST",
-      body: { email: "audit@example.com", password: "Passw0rd!" }
+      body: { email, password: "Passw0rd!" }
     });
     assert.equal(login.status, 200);
-    const cookie = login.headers.get("set-cookie") ?? "";
 
     const forgot = await requestJson(baseUrl, "/api/v1/auth/forgot-password", {
       method: "POST",
-      body: { email: "audit@example.com" }
+      body: { email }
     });
     assert.equal(forgot.status, 200);
 
@@ -80,39 +80,39 @@ async function run() {
 
     const relogin = await requestJson(baseUrl, "/api/v1/auth/login", {
       method: "POST",
-      body: { email: "audit@example.com", password: "NewPassw0rd!" }
+      body: { email, password: "NewPassw0rd!" }
     });
     assert.equal(relogin.status, 200);
+    const reloginAccessToken = relogin.body?.data?.accessToken as string | undefined;
+    assert.ok(reloginAccessToken);
     const reloginSetCookie = relogin.headers.get("set-cookie");
-    const reloginSid = readCookie(reloginSetCookie, "sid");
     const reloginCsrf = readCookie(reloginSetCookie, "csrfToken");
-    assert.ok(reloginSid);
     assert.ok(reloginCsrf);
-    const reloginCookie = `sid=${encodeURIComponent(reloginSid!)}; csrfToken=${encodeURIComponent(reloginCsrf!)}`;
+    const reloginCookie = `csrfToken=${encodeURIComponent(reloginCsrf!)}`;
 
     const logout = await requestJson(baseUrl, "/api/v1/auth/logout", {
       method: "POST",
       cookie: reloginCookie,
-      headers: { "x-csrf-token": reloginCsrf! }
+      headers: { authorization: `Bearer ${reloginAccessToken}`, "x-csrf-token": reloginCsrf! }
     });
     assert.equal(logout.status, 200);
 
     const relogin2 = await requestJson(baseUrl, "/api/v1/auth/login", {
       method: "POST",
-      body: { email: "audit@example.com", password: "NewPassw0rd!" }
+      body: { email, password: "NewPassw0rd!" }
     });
     assert.equal(relogin2.status, 200);
+    const reloginAccessToken2 = relogin2.body?.data?.accessToken as string | undefined;
+    assert.ok(reloginAccessToken2);
     const reloginSetCookie2 = relogin2.headers.get("set-cookie");
-    const reloginSid2 = readCookie(reloginSetCookie2, "sid");
     const reloginCsrf2 = readCookie(reloginSetCookie2, "csrfToken");
-    assert.ok(reloginSid2);
     assert.ok(reloginCsrf2);
-    const reloginCookie2 = `sid=${encodeURIComponent(reloginSid2!)}; csrfToken=${encodeURIComponent(reloginCsrf2!)}`;
+    const reloginCookie2 = `csrfToken=${encodeURIComponent(reloginCsrf2!)}`;
 
     const deactivate = await requestJson(baseUrl, "/api/v1/users/deactivate", {
       method: "POST",
       cookie: reloginCookie2,
-      headers: { "x-csrf-token": reloginCsrf2! },
+      headers: { authorization: `Bearer ${reloginAccessToken2}`, "x-csrf-token": reloginCsrf2! },
       body: { password: "NewPassw0rd!" }
     });
     assert.equal(deactivate.status, 200);
@@ -125,7 +125,7 @@ async function run() {
           WHERE email = $1
           ORDER BY occurred_at ASC
         `,
-        ["audit@example.com"]
+        [email]
       )
     ).rows as Array<Record<string, unknown>>;
 

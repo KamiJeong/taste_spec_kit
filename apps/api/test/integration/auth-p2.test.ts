@@ -96,15 +96,13 @@ async function run() {
     const accessToken = login.body.data.accessToken as string | undefined;
     assert.ok(typeof accessToken === "string" && accessToken.length > 0);
     const setCookie = login.headers.get("set-cookie");
-    const sid = readCookie(setCookie, "sid");
     const csrf = readCookie(setCookie, "csrfToken");
-    assert.ok(sid);
     assert.ok(csrf);
-    const cookie = `sid=${encodeURIComponent(sid!)}; csrfToken=${encodeURIComponent(csrf!)}`;
+    const csrfCookie = `csrfToken=${encodeURIComponent(csrf!)}`;
 
     const profile = await requestJson(baseUrl, "/api/v1/users/profile", {
       method: "GET",
-      cookie
+      headers: { authorization: `Bearer ${accessToken!}` }
     });
     assert.equal(profile.status, 200);
     assert.equal(profile.body.data.profile.email, "p2@example.com");
@@ -125,8 +123,8 @@ async function run() {
 
     const patch = await requestJson(baseUrl, "/api/v1/users/profile", {
       method: "PATCH",
-      cookie,
-      headers: { "x-csrf-token": csrf! },
+      cookie: csrfCookie,
+      headers: { authorization: `Bearer ${accessToken!}`, "x-csrf-token": csrf! },
       body: { name: "Updated User" }
     });
     assert.equal(patch.status, 200);
@@ -134,8 +132,8 @@ async function run() {
 
     const changePassword = await requestJson(baseUrl, "/api/v1/users/change-password", {
       method: "POST",
-      cookie,
-      headers: { "x-csrf-token": csrf! },
+      cookie: csrfCookie,
+      headers: { authorization: `Bearer ${accessToken!}`, "x-csrf-token": csrf! },
       body: {
         currentPassword: "NewPassw0rd!",
         newPassword: "ThirdPassw0rd!"
