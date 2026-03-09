@@ -1,6 +1,6 @@
 Tech-Stack: specs/00-tech-stack.md
 
-# Tasks: API Error i18n Foundation
+# Tasks: API i18n Foundation
 
 ## Phase 1: Spec Kit Docs
 

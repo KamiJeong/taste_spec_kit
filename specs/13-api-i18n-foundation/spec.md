@@ -1,8 +1,8 @@
 Tech-Stack: specs/00-tech-stack.md
 
-# Feature Specification: API Error i18n Foundation
+# Feature Specification: API i18n Foundation
 
-**Feature Branch**: `feature/api-error-i18n-foundation`  
+**Feature Branch**: `feature/api-i18n-foundation`  
 **Created**: 2026-03-09  
 **Status**: Completed  
 **Input**: "current api sending error message is korean. we need think about i18n"

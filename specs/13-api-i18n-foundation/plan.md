@@ -1,9 +1,9 @@
 Tech-Stack: specs/00-tech-stack.md
 
-# Implementation Plan: API Error i18n Foundation
+# Implementation Plan: API i18n Foundation
 
-**Branch**: `feature/api-error-i18n-foundation` | **Date**: 2026-03-09 | **Spec**: [spec.md](./spec.md)
-**Input**: Feature specification from `/specs/13-api-error-i18n-foundation/spec.md`
+**Branch**: `feature/api-i18n-foundation` | **Date**: 2026-03-09 | **Spec**: [spec.md](./spec.md)
+**Input**: Feature specification from `/specs/13-api-i18n-foundation/spec.md`
 
 ## Overview
 
