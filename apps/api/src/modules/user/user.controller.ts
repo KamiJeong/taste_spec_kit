@@ -2,8 +2,9 @@ import { Body, Controller, Get, Patch, Post, Req, Res, UseGuards } from "@nestjs
 import type { Request, Response } from "express";
 import { ApiBody, ApiTags } from "@nestjs/swagger";
 import { validateWithZod } from "../shared/zod-validation";
-import { cookieOf } from "../shared/request-cookie";
+import { AuthGuard } from "../shared/guards/auth.guard";
 import { CsrfGuard } from "../shared/guards/csrf.guard";
+import { requestAuthOf } from "../shared/request-auth";
 import { ApiOkCsrf, ApiOkUnauthorized, ApiOkValidationCsrf } from "../shared/swagger-responses";
 import { ApiCsrfHeader, ApiEndpoint, ApiSessionCookieAuth } from "../shared/swagger-route";
 import { UserService } from "./user.service";
@@ -26,6 +27,7 @@ function auditContextFromReq(req: Request): { ip: string; userAgent: string } {
 
 @ApiTags("users")
 @ApiSessionCookieAuth()
+@UseGuards(AuthGuard)
 @Controller("/api/v1/users")
 export class UserController {
   constructor(private readonly user: UserService) {}
@@ -34,7 +36,8 @@ export class UserController {
   @ApiOkUnauthorized("Profile response")
   @Get("/profile")
   async getProfile(@Req() req: Request, @Res() res: Response) {
-    const result = await this.user.getProfile({ sid: cookieOf(req, "sid") });
+    const auth = requestAuthOf(req);
+    const result = await this.user.getProfile({ sid: auth.sid });
     res.status(result.status).json(result.body);
   }
 
@@ -51,7 +54,8 @@ export class UserController {
       res.status(validated.response.status).json(validated.response.body);
       return;
     }
-    const result = await this.user.patchProfile({ sid: cookieOf(req, "sid"), ...validated.data });
+    const auth = requestAuthOf(req);
+    const result = await this.user.patchProfile({ sid: auth.sid, ...validated.data });
     res.status(result.status).json(result.body);
   }
 
@@ -72,8 +76,9 @@ export class UserController {
       res.status(validated.response.status).json(validated.response.body);
       return;
     }
+    const auth = requestAuthOf(req);
     const result = await this.user.changePassword({
-      sid: cookieOf(req, "sid"),
+      sid: auth.sid,
       currentPassword: validated.data.currentPassword,
       newPassword: validated.data.newPassword
     });
@@ -93,12 +98,13 @@ export class UserController {
       res.status(validated.response.status).json(validated.response.body);
       return;
     }
+    const auth = requestAuthOf(req);
     const result = await this.user.deactivate(
-      { sid: cookieOf(req, "sid"), password: validated.data.password },
+      { sid: auth.sid, password: validated.data.password },
       auditContextFromReq(req)
     );
     if (result.status === 200) {
-      res.setHeader("set-cookie", ["sid=; HttpOnly; Path=/; Max-Age=0", "csrfToken=; Path=/; Max-Age=0"]);
+      res.setHeader("set-cookie", ["csrfToken=; Path=/; Max-Age=0"]);
     }
     res.status(result.status).json(result.body);
   }
@@ -116,7 +122,8 @@ export class UserController {
       res.status(validated.response.status).json(validated.response.body);
       return;
     }
-    const result = await this.user.requestDeletion({ sid: cookieOf(req, "sid"), password: validated.data.password });
+    const auth = requestAuthOf(req);
+    const result = await this.user.requestDeletion({ sid: auth.sid, password: validated.data.password });
     res.status(result.status).json(result.body);
   }
 
@@ -126,7 +133,8 @@ export class UserController {
   @UseGuards(CsrfGuard)
   @Post("/cancel-deletion")
   async cancelDeletion(@Req() req: Request, @Res() res: Response) {
-    const result = await this.user.cancelDeletion({ sid: cookieOf(req, "sid") });
+    const auth = requestAuthOf(req);
+    const result = await this.user.cancelDeletion({ sid: auth.sid });
     res.status(result.status).json(result.body);
   }
 }

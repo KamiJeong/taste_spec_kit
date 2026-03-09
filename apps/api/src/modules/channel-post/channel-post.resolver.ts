@@ -1,9 +1,11 @@
 import { Args, Context, Field, Int, Mutation, ObjectType, Query, Resolver } from "@nestjs/graphql";
+import { UseGuards } from "@nestjs/common";
 import { GraphQLError } from "graphql";
 import type { Request } from "express";
 import { ERROR_CODES } from "@packages/contracts-auth";
 import { cookieOf } from "../shared/request-cookie";
-import { TokenService } from "../token/token.service";
+import { AuthGuard } from "../shared/guards/auth.guard";
+import { requestAuthOf } from "../shared/request-auth";
 import { validateWithZod } from "../shared/zod-validation";
 import { createChannelPostSchema, listChannelPostsQuerySchema } from "./channel-post.schemas";
 import { ChannelPostService } from "./channel-post.service";
@@ -80,33 +82,11 @@ class CreateChannelPostResult {
 }
 
 @Resolver()
+@UseGuards(AuthGuard)
 export class ChannelPostResolver {
-  constructor(
-    private readonly posts: ChannelPostService,
-    private readonly tokens: TokenService
-  ) {}
-
-  private extractBearerToken(req: Request): string | null {
-    const header = req.headers.authorization;
-    if (typeof header !== "string") return null;
-    const [scheme, value] = header.trim().split(/\s+/, 2);
-    if (scheme?.toLowerCase() !== "bearer" || !value) return null;
-    return value;
-  }
-
-  private resolveAuth(req: Request): { sid?: string; userId?: string } {
-    const sidFromCookie = cookieOf(req, "sid");
-    if (sidFromCookie) return { sid: sidFromCookie };
-    const bearer = this.extractBearerToken(req);
-    if (!bearer) return {};
-    const verified = this.tokens.verifyAccessToken(bearer);
-    if (!verified) return {};
-    return { userId: verified.userId };
-  }
+  constructor(private readonly posts: ChannelPostService) {}
 
   private ensureCsrfForMutation(req: Request): void {
-    const sid = cookieOf(req, "sid");
-    if (!sid) return;
     const csrfCookie = cookieOf(req, "csrfToken");
     const csrfHeader = req.headers["x-csrf-token"];
     const valid =
@@ -143,7 +123,7 @@ export class ChannelPostResolver {
       throw toGraphqlError(validated.response as ServiceResponse<unknown>);
     }
 
-    const auth = this.resolveAuth(context.req);
+    const auth = requestAuthOf(context.req);
     const result = await this.posts.listPosts({
       sid: auth.sid,
       userId: auth.userId,
@@ -175,7 +155,7 @@ export class ChannelPostResolver {
       throw toGraphqlError(validated.response as ServiceResponse<unknown>);
     }
 
-    const auth = this.resolveAuth(context.req);
+    const auth = requestAuthOf(context.req);
     const result = await this.posts.createPost(
       {
         sid: auth.sid,

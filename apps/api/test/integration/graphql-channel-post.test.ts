@@ -44,6 +44,8 @@ async function run() {
   const address = server.address();
   const port = typeof address === "object" && address ? address.port : 0;
   const baseUrl = `http://127.0.0.1:${port}`;
+  let authToken: string | undefined;
+  let csrfTokenForMutation: string | undefined;
 
   try {
     {
@@ -58,8 +60,8 @@ async function run() {
                   id
                   name
                   role
-                  creator { id email name emailVerified }
-                  users { role user { id email name emailVerified } }
+                  creator { id email name }
+                  users { role user { id email name } }
                 }
               }
             }
@@ -97,19 +99,20 @@ async function run() {
       const loginJson = (await login.json()) as any;
       const accessToken = loginJson?.data?.accessToken as string | undefined;
       assert.ok(typeof accessToken === "string" && accessToken.length > 0);
+      authToken = accessToken;
 
       const setCookie = login.headers.get("set-cookie");
-      const sid = readCookie(setCookie, "sid");
       const csrfToken = readCookie(setCookie, "csrfToken");
-      assert.ok(sid);
       assert.ok(csrfToken);
-      const cookie = `sid=${encodeURIComponent(sid!)}; csrfToken=${encodeURIComponent(csrfToken!)}`;
+      csrfTokenForMutation = csrfToken;
+      const csrfCookie = `csrfToken=${encodeURIComponent(csrfToken!)}`;
 
       const createChannel = await fetch(`${baseUrl}/api/v1/channels`, {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          cookie,
+          authorization: `Bearer ${accessToken}`,
+          cookie: csrfCookie,
           "x-csrf-token": csrfToken!
         },
         body: JSON.stringify({ name: "graphql-channel-safe-view" })
@@ -120,7 +123,7 @@ async function run() {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          cookie
+          authorization: `Bearer ${accessToken}`
         },
         body: JSON.stringify({
           query: `
@@ -131,8 +134,8 @@ async function run() {
                   name
                   ownerUserId
                   role
-                  creator { id email name emailVerified }
-                  users { role joinedAt updatedAt user { id email name emailVerified } }
+                  creator { id email name }
+                  users { role joinedAt updatedAt user { id email name } }
                 }
               }
             }
@@ -172,7 +175,9 @@ async function run() {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          authorization: `Bearer ${accessToken}`
+          authorization: `Bearer ${accessToken}`,
+          cookie: csrfCookie,
+          "x-csrf-token": csrfToken!
         },
         body: JSON.stringify({
           query: `
@@ -217,9 +222,16 @@ async function run() {
     }
 
     {
+      assert.ok(authToken);
+      assert.ok(csrfTokenForMutation);
       const response = await fetch(`${baseUrl}/graphql`, {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${authToken}`,
+          cookie: `csrfToken=${encodeURIComponent(csrfTokenForMutation)}`,
+          "x-csrf-token": csrfTokenForMutation
+        },
         body: JSON.stringify({
           query: `
             mutation CreateChannel($name: String!) {
@@ -235,9 +247,13 @@ async function run() {
     }
 
     {
+      assert.ok(authToken);
       const response = await fetch(`${baseUrl}/graphql`, {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${authToken}`
+        },
         body: JSON.stringify({
           query: `
             query ChannelPosts($channelId: String!, $limit: Int!) {

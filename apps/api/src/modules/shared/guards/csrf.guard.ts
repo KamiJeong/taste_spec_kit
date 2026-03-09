@@ -10,8 +10,6 @@ export class CsrfGuard implements CanActivate {
     const req = context.switchToHttp().getRequest<Request>();
     const res = context.switchToHttp().getResponse<Response>();
 
-    if (!cookieOf(req, "sid")) return true;
-
     const csrfCookie = cookieOf(req, "csrfToken");
     const csrfHeader = req.headers["x-csrf-token"];
     const valid =
